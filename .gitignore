@@ -2,7 +2,7 @@
 .hosting.env
 .env
 flasky.conf
-flasky-uwsgi.conf
+flasky-uwsgi.ini
 post-receive
 TODO
 venv
