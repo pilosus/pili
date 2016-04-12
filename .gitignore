@@ -1,0 +1,10 @@
+*~
+.hosting.env
+.env
+flasky.conf
+flasky-uwsgi.conf
+post-receive
+TODO
+venv
+tmp
+__pycache__
