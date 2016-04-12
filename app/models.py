@@ -76,14 +76,16 @@ class User(UserMixin, db.Model):
         import string
 
         admin_role = Role.query.filter_by(permissions=0xff).first()
-        admin = User(email=current_app.config['MMSE_ADMIN'],
-                     username=current_app.config['MMSE_ADMIN_NAME'],
-                     password=''.join(random.SystemRandom().\
-                                      choice(string.ascii_uppercase + string.digits) for _ in range(10)),
-                     role=admin_role,
-                     confirmed=True)
-        db.session.add(admin)
-        db.session.commit()
+        admin = User.query.filter_by(email=current_app.config['MMSE_ADMIN']).first()
+        if not admin:
+            admin_user = User(email=current_app.config['MMSE_ADMIN'],
+                              username=current_app.config['MMSE_ADMIN_NAME'],
+                              password=''.join(random.SystemRandom().\
+                                               choice(string.ascii_uppercase + string.digits) for _ in range(10)),
+                              role=admin_role,
+                              confirmed=True)
+            db.session.add(admin_user)
+            db.session.commit()
 
     @staticmethod
     def generate_fake(count=100):
@@ -119,7 +121,6 @@ class User(UserMixin, db.Model):
         if self.email is not None and self.avatar_hash is None:
             self.avatar_hash = hashlib.md5(
                 self.email.encode('utf-8')).hexdigest()
-        self.followed.append(Follow(followed=self))
 
     @property
     def password(self):
@@ -410,3 +411,11 @@ class Structure(db.Model):
     parent_id = db.Column(db.Integer, db.ForeignKey('categories.id'))
     distance = db.Column(db.Integer)
     
+class Upload(db.Model):
+    """Uploaded files.
+    """
+    __tablename__ = 'uploads'
+    id = db.Column(db.Integer, primary_key=True)
+    filename = db.Column(db.String(64), unique=True)
+    owner_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)

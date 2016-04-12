@@ -17,7 +17,7 @@ if os.path.exists('.hosting.env'):
     
 from app import create_app, db
 from app.models import User, Role, Permission, Post, Tag, \
-    Tagification, Category, Structure
+    Tagification, Category, Structure, Upload
 from flask.ext.script import Manager, Shell
 from flask.ext.migrate import Migrate, MigrateCommand
 
@@ -30,7 +30,7 @@ def make_shell_context():
     return dict(app=app, db=db, User=User, Role=Role,
                 Permission=Permission, Post=Post, Tag=Tag,
                 Tagification=Tagification, Category=Category,
-                Structure=Structure)
+                Structure=Structure, Upload=Upload)
 manager.add_command("shell", Shell(make_context=make_shell_context))
 manager.add_command('db', MigrateCommand)
 
@@ -77,9 +77,6 @@ def deploy():
 
     # create user roles
     Role.insert_roles()
-
-    # create self-follows for all users
-    User.add_self_follows()
 
     # add admin
     User.add_admin()

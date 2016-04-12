@@ -237,7 +237,12 @@ def uploads(dest=None):
         return redirect(url_for('.uploaded_file', filename=filename))
     else:
         filename = None
-    return render_template('ctrl/uploads.html', form=form, filename=filename)
+
+    page = request.args.get('page', 1, type=int)
+    images = [f for f in os.listdir(current_app.config['MMSE_UPLOADS']) \
+                  if os.path.isfile(os.path.join(current_app.config['MMSE_UPLOADS'], f))]
+    return render_template('ctrl/uploads.html', form=form, filename=filename,
+                           images=images)
 
 @ctrl.route('/files/<filename>')
 def uploaded_file(filename):
