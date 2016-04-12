@@ -1,0 +1,61 @@
+<ul class="categories">
+  {% for post in categories %}
+  <li class="category">
+    <div class="category-thumbnail">
+      <a href="{{ url_for('.user', username=category.author.username) }}">
+        <img class="img-rounded profile-thumbnail" src="{{ category.author.gravatar(size=40) }}">
+      </a>
+    </div>
+    <div class="category-content">
+      <div class="category-data">
+	by
+	<span class="glyphicon glyphicon-user"></span>
+	<a href="{{ url_for('.user', username=category.author.username) }}">
+	  {{ category.author.username }}
+	</a>
+	{{ moment(category.timestamp).fromNow() }}
+	{% if category.categories %}
+	under
+	{% for category in category.categories %}
+	<a href="{{ url_for('.category', alias=category.alias) }}">
+	  <span class="label label-info">{{ category.title }}</span>
+	</a>
+	{% endfor %}
+      {% endif %}
+
+      </div>
+      <div class="category-title">
+	<a href="{{ url_for('.category', id=category.id, alias=category.alias) }}">
+	  <h4>{{ category.title }}</h4>
+	</a>
+      </div>
+      <div class="category-author">
+      </div>
+      <div class="category-body">
+        {% if category.body_html %}
+        {{ category.body_html | safe }}
+        {% else %}
+        {{ category.body }}
+        {% endif %}
+      </div>
+     
+      <div class="category-footer">
+        {% if current_user == category.author %}
+        <a href="{{ url_for('.edit', id=category.id, alias=category.alias) }}">
+          <span class="label label-primary">Edit</span>
+        </a>
+        {% elif current_user.is_administrator() %}
+        <a href="{{ url_for('.edit', id=category.id, alias=category.alias) }}">
+          <span class="label label-danger">Edit [Admin]</span>
+        </a>
+        {% endif %}
+
+        <a href="{{ url_for('.category', id=category.id, alias=category.alias) }}#comments">
+          <span class="label label-primary">{{ category.comments.count() }} Comments</span>
+        </a>
+	
+      </div>
+    </div>
+  </li>
+  {% endfor %}
+</ul>

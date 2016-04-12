@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% import "_macros.html" as macros %}
+
+{% block title %}Flasky - Posts under {{ category.title }}{% endblock %}
+
+{% block page_content %}
+
+<h3>Posts under category {{ category.title }}</h3>
+<div class="post-tabs">
+    <ul class="nav nav-tabs">
+      <li{% if not show_followed %} class="active"{% endif %}>
+	<a href="{{ url_for('.show_all', page='category', alias=category.alias) }}">All</a>
+      </li>
+      {% if current_user.is_authenticated %}
+      <li{% if show_followed %} class="active"{% endif %}>
+	<a href="{{ url_for('.show_followed', page='category', alias=category.alias) }}">Followers</a>
+      </li>
+      {% endif %}
+    </ul>
+    {% include '_posts.html' %}
+</div>
+
+{% if pagination %}
+<div class="pagination">
+    {{ macros.pagination_widget(pagination, '.category', alias=category.alias) }}
+</div>
+{% endif %}
+
+{% endblock %}

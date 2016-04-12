@@ -1,0 +1,68 @@
+<ul class="comments">
+    {% for comment in comments %}
+    <li id="comment{{ comment.id }}" class="comment">
+        <div class="comment-thumbnail">
+            <a href="{{ url_for('.user', username=comment.author.username) }}">
+                <img class="img-rounded profile-thumbnail" src="{{ comment.author.gravatar(size=40) }}">
+            </a>
+        </div>
+        <div class="comment-content">
+            <div class="comment-date">{{ moment(comment.timestamp).fromNow() }}</div>
+            <div class="comment-author">
+	      <a href="{{ url_for('.user', username=comment.author.username) }}">
+		{# {{ comment.author.name if comment.author.name != None else comment.author.username }} #}
+		{{ comment.author.username }}
+	      </a>
+	      {% if expand %}
+	      commented on the
+	      {#  Change post.id for post.title when model is ready #}
+	      <a href="{{ url_for('.post', id=comment.post.id, alias=comment.post.alias) }}#comment{{ comment.id }}">
+		{{ comment.post.title }}
+	      </a>
+	      [<a class="" role="button" data-toggle="collapse" href="#collapse{{ comment.id }}"
+		  aria-expanded="false" aria-controls="collapse{{ comment.id }}">show</a>]
+	      
+	    </div>
+	    
+	    <div id="collapse{{ comment.id }}" class="collapse">
+	      <div class="well">
+		{{ comment.post.body_html | safe }}
+	      </div>
+	    </div>
+	    {% else %}
+	    </div>
+	    {% endif %}
+	    
+            <div class="comment-body">
+                {% if comment.disabled %}
+                <p><i>This comment has been disabled by a moderator.</i></p>
+                {% endif %}
+                {% if moderate or not comment.disabled %}
+                    {% if comment.body_html %}
+                        {{ comment.body_html | safe }}
+                    {% else %}
+                        {{ comment.body }}
+                    {% endif %}
+                {% endif %}
+            </div>
+
+	    {% if reply %}
+            <br>
+	      <a class="btn btn-primary btn-xs" 
+		 href="{{ url_for('.post', id=comment.post.id, alias=comment.post.alias, parent_id=comment.id, page=page) }}">
+		Reply
+	      </a>
+	    {% endif %}
+
+            {% if moderate %}
+              {% if comment.disabled %}
+               <a class="btn btn-default btn-xs" href="{{ url_for('.moderate_enable', id=comment.id, page=page) }}">Enable</a>
+              {% else %}
+                <a class="btn btn-danger btn-xs" href="{{ url_for('.moderate_disable', id=comment.id, page=page) }}">Disable</a>
+              {% endif %}
+	    {% endif %}
+
+        </div>
+    </li>
+    {% endfor %}
+</ul>

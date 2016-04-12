@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block title %}Flasky - Edit Post{% endblock %}
+
+{% block page_content %}
+<div class="page-header">
+    <h1>Edit Post</h1>
+</div>
+<div>
+  {# {{ wtf.quick_form(form) }} #}
+  <form class="form form-horizontal" method="post" role="form">
+    {{ form.hidden_tag() }}
+    {{ wtf.form_errors(form, hiddens="only") }}
+    {{ wtf.form_field(form.title) }}
+    {{ wtf.form_field(form.alias) }}
+    {{ wtf.form_field(form.body) }}
+    {# {{ wtf.form_field(form.categories) }} #}
+    <div class="form-group" id="tags-control">
+      {{ form.categories.label(class="control-label") }}
+      {{ form.categories(class="form-control typeahead", **{'data-role': 'tagsinput'}) }}
+    </div>
+    {{ wtf.form_field(form.submit) }}
+  </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+{{ pagedown.include_pagedown() }}
+{% endblock %}
