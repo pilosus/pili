@@ -64,6 +64,7 @@ class User(UserMixin, db.Model):
     last_seen = db.Column(db.DateTime(), default=datetime.utcnow)
     avatar_hash = db.Column(db.String(32))
     posts = db.relationship('Post', backref='author', lazy='dynamic')
+    images = db.relationship('Upload', backref='owner', lazy='dynamic')
 
     @staticmethod
     def add_admin():
@@ -415,7 +416,7 @@ class Upload(db.Model):
     """Uploaded files.
     """
     __tablename__ = 'uploads'
-    id = db.Column(db.Integer, primary_key=True)
-    filename = db.Column(db.String(64), unique=True)
+    filename = db.Column(db.String(64), primary_key=True)
+    title = db.Column(db.String(128)) # img alt/title
     owner_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)

@@ -56,9 +56,12 @@ def run_migrations_online():
 
     connection = engine.connect()
     context.configure(
-                connection=connection,
-                target_metadata=target_metadata
-                )
+        connection=connection,
+        target_metadata=target_metadata,
+        # https://alembic.readthedocs.org/en/latest/batch.html#batch-mode-with-autogenerate
+        # https://stackoverflow.com/questions/30394222/why-flask-migrate-cannot-upgrade-when-drop-column
+        render_as_batch=True
+    )
 
     try:
         with context.begin_transaction():

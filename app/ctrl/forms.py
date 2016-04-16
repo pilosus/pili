@@ -102,6 +102,7 @@ class UploadForm(Form):
                           FileRequired('File is required.'),
                           FileAllowed(['jpg', 'jpeg', 'png', 'gif'],
                                       'Only image files allowed.'), file_exists])
+    title = StringField("Title", validators=[Required(), Length(1, 128)])
     submit = SubmitField('Submit')
 
     # https://wtforms.readthedocs.org/en/latest/validators.html#custom-validators

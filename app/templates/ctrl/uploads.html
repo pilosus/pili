@@ -25,6 +25,8 @@
 	</span>{% endif %}
      </div>
 
+     {{ wtf.form_field(form.title) }}
+     
      <div class="form-group">
 	{{ wtf.form_field(form.submit) }}
      </div>
@@ -34,11 +36,16 @@
 <div>
   {% include 'ctrl/_uploads.html' %}
 </div>
-{% if pagination %}
+
 <div class="pagination">
-    {{ macros.pagination_widget(pagination, '.images') }}
+  {% for image in images %}
+  <a href="{{ url_for('.uploaded_file', filename=image ) }}">
+    <img src="{{ image | thumbnail('100x100', crop='fit', quality=75) }}"
+	 class="img-responsive img-thumbnail"
+	 title="{{ image }}" alt="{{ image }}">
+  </a>
+    {% endfor %}
 </div>
-{% endif %}
 {% endblock %}
 
 {% block scripts %}

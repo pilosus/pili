@@ -4,8 +4,9 @@ from flask.ext.login import login_required, current_user
 from flask.ext.sqlalchemy import get_debug_queries
 from . import ctrl
 from .forms import EditProfileForm, EditProfileAdminForm, PostForm, UploadForm
+from .. import db
 from ..models import Permission, Role, User, Post, \
-    Tag, Tagification
+    Tag, Tagification, Upload
 from ..decorators import admin_required, permission_required
 from ..filters import sanitize_alias, sanitize_tags, sanitize_upload, \
     get_added_removed, is_allowed_file
@@ -224,24 +225,23 @@ def structure():
     pass
 
 @ctrl.route('/upload', methods=['GET', 'POST'])
-@ctrl.route('/upload/<dest>', methods=['GET', 'POST'])
-def uploads(dest=None):
-    # https://flask-wtf.readthedocs.org/en/latest/form.html#module-flask_wtf.file
+def upload():
     form = UploadForm()
     if form.validate_on_submit():
-        if dest:
-            filename = secure_filename(dest)
-        else:
-            filename = secure_filename(form.image.data.filename)
+        # Save file
+        filename = secure_filename(form.image.data.filename)
         form.image.data.save(os.path.join(current_app.config['MMSE_UPLOADS'], filename))
-        return redirect(url_for('.uploaded_file', filename=filename))
-    else:
-        filename = None
+        # DB
+        upload = Upload(filename=filename, title=form.title.data,
+                      owner=current_user._get_current_object())
+        db.session.add(upload)
+        return redirect(url_for('.upload'))
 
+    # template rendering
     page = request.args.get('page', 1, type=int)
     images = [f for f in os.listdir(current_app.config['MMSE_UPLOADS']) \
                   if os.path.isfile(os.path.join(current_app.config['MMSE_UPLOADS'], f))]
-    return render_template('ctrl/uploads.html', form=form, filename=filename,
+    return render_template('ctrl/uploads.html', form=form, 
                            images=images)
 
 @ctrl.route('/files/<filename>')

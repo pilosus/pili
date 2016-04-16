@@ -32,7 +32,7 @@
 	    {% if current_user.can(Permission.EDIT_STRUCTURE) %}
 	      <li><a href="{{ url_for('ctrl.categories') }}">Categories</a></li>
 	      <li><a href="{{ url_for('ctrl.structure') }}">Structure</a></li>
-	      <li><a href="{{ url_for('ctrl.uploads') }}">Uploads</a></li>
+	      <li><a href="{{ url_for('ctrl.upload') }}">Upload</a></li>
 	    {% endif %}
 
 	      
