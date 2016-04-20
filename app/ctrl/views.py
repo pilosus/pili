@@ -9,7 +9,7 @@ from ..models import Permission, Role, User, Post, \
     Tag, Tagification, Upload
 from ..decorators import admin_required, permission_required
 from ..filters import sanitize_alias, sanitize_tags, sanitize_upload, \
-    get_added_removed, is_allowed_file
+    get_added_removed, is_allowed_file, find_thumbnail
 from werkzeug import secure_filename
 import os
 
@@ -224,8 +224,8 @@ def categories():
 def structure():
     pass
 
-@ctrl.route('/upload', methods=['GET', 'POST'])
-def upload():
+@ctrl.route('/uploads', methods=['GET', 'POST'])
+def uploads():
     form = UploadForm()
     if form.validate_on_submit():
         # Save file
@@ -235,20 +235,40 @@ def upload():
         upload = Upload(filename=filename, title=form.title.data,
                       owner=current_user._get_current_object())
         db.session.add(upload)
-        return redirect(url_for('.upload'))
-
-    # template rendering
+        return redirect(url_for('.uploads'))
+    # Render template with pagination
     page = request.args.get('page', 1, type=int)
-    images = [f for f in os.listdir(current_app.config['MMSE_UPLOADS']) \
-                  if os.path.isfile(os.path.join(current_app.config['MMSE_UPLOADS'], f))]
-    return render_template('ctrl/uploads.html', form=form, 
-                           images=images)
+    pagination = Upload.query.order_by(Upload.timestamp.desc()).paginate(
+        page, per_page=current_app.config['MMSE_IMAGES_PER_PAGE'],
+        error_out=False)
+    images = pagination.items
+    return render_template('ctrl/uploads.html', form=form, images=images,
+                           pagination=pagination)
 
-@ctrl.route('/files/<filename>')
-def uploaded_file(filename):
-    return send_from_directory(
-        current_app.config['MMSE_UPLOADS'],
-        filename)
+
+@ctrl.route('/upload/<action>/<filename>', methods=['GET', 'POST'])
+@permission_required(Permission.WRITE_ARTICLES)
+def uploaded_file(action, filename):
+    upload = Upload.query.get_or_404(filename)
+    if action == 'view':
+        return send_from_directory(current_app.config['MMSE_UPLOADS'], filename)
+    elif action == 'remove':
+        # Check permissions
+        if not (current_user.can(Permission.ADMINISTER) or \
+            current_user.id == upload.owner.id):
+            flash('You have no permission to remove {0}.'.format(filename))
+            return redirect(url_for('ctrl.uploads'))
+        # Remove item in DB
+        db.session.delete(upload)
+        # Remove file on disk
+        os.remove(os.path.join(current_app.config['MMSE_UPLOADS'], filename))
+        # Remove thumbnails if any
+        for thumb in os.listdir(current_app.config['MEDIA_THUMBNAIL_FOLDER']):
+            if thumb.startswith(find_thumbnail(filename)):
+                os.remove(os.path.join(current_app.config['MEDIA_THUMBNAIL_FOLDER'], thumb))
+        # Redirect
+        flash('{0} has been removed.'.format(filename))
+        return redirect(url_for('ctrl.uploads'))
 
 @ctrl.route('/logs')
 def logs():

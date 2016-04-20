@@ -26,9 +26,6 @@
         <div class="navbar-collapse collapse">
             <ul class="nav navbar-nav">
                   <li><a href="{{ url_for('main.index') }}">Home</a></li>
-                {% if current_user.is_authenticated %}
-                  <li><a href="{{ url_for('main.user', username=current_user.username) }}">Profile</a></li>
-                {% endif %}
 		{% if current_user.can(Permission.WRITE_ARTICLES) %}
 		  <li><a href="{{ url_for('ctrl.posts') }}">Control Panel</a></li>
 		{% endif %}
@@ -41,6 +38,9 @@
                         {{ current_user.username }} <b class="caret"></b>
                     </a>
                     <ul class="dropdown-menu">
+		      {% if current_user.is_authenticated %}
+                      <li><a href="{{ url_for('main.user', username=current_user.username) }}">Profile</a></li>
+                      {% endif %}
                       <li><a href="{{ url_for('auth.change_password') }}">Change Password</a></li>
                       <li><a href="{{ url_for('auth.change_email_request') }}">Change Email</a></li>
                       <li><a href="{{ url_for('auth.logout') }}">Log Out</a></li>

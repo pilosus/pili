@@ -14,6 +14,7 @@ class Permission:
     READ = 0x01
     WRITE_ARTICLES = 0x02
     EDIT_STRUCTURE = 0x04
+    #UPLOAD_IMAGES = 0x08
     ADMINISTER = 0x80
 
 

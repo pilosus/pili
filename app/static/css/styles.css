@@ -110,3 +110,8 @@ div.flask-pagedown-preview h3 {
 .bootstrap-tagsinput {
   width: 100% !important;
 }
+
+/* Table */
+.table.img-list > tbody > tr > td {
+     vertical-align: middle;
+}

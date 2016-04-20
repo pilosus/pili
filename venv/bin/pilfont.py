@@ -1,4 +1,4 @@
-#!/home/vrs/git/mmse/venv/bin/python3
+#!/Users/vitaly/git/mmse/venv/bin/python3.5
 #
 # The Python Imaging Library
 # $Id$

@@ -65,3 +65,14 @@ def get_added_removed(new, old):
 
     return added, removed
     
+def find_thumbnail(filename):
+    """Return a string containing regexp for thumbnail file.
+
+    Regexp consists of filename without file extension and trailing
+    underscore.
+
+    Assume: secure_filename by Werkzeug rename uploads so that file
+    extension is always present.
+
+    """
+    return '.'.join(filename.split('.')[:-1]) + '_'

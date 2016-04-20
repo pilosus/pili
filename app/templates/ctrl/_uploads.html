@@ -1,1 +1,57 @@
-{#  #}
+<div class="table-responsive">
+  <table class="table img-list table-condensed">
+    <thead>
+      <tr>
+	<th>Image</th>
+	<th>Filename</th>	
+	<th>Title</th>
+	<th>Owner</th>
+	<th>Upload time</th>
+	<th>Operations</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for image in images %}
+      <tr>
+	<td>
+	  <a href="{{ url_for('.uploaded_file', filename=image.filename, action='view' ) }}" target="_blank">
+	    <img src="{{ image.filename | thumbnail('100x100', crop='fit', quality=75) }}"
+		 class="img-responsive img-thumbnail"
+		 title="{{ image.filename }}" alt="{{ image.filename }}">
+	  </a>
+
+	</td>
+
+	<td>
+	  {{ image.filename }}
+	</td>
+
+	
+	<td>
+	  {{ image.title }}
+	</td>
+	
+	<td>
+	  <a href="{{ url_for('.user', username=image.owner.username) }}">
+	    {{ image.owner.username }}
+	  </a>
+	</td>
+	
+	<td>
+	  {{ moment(image.timestamp).fromNow() }}
+	</td>
+	
+	<td>
+	  <ul class="list-inline">
+	  {% if current_user.can(Permission.ADMINISTER) or current_user.id == image.owner.id %}
+	    <li><a href="{{ url_for('.uploaded_file', filename=image.filename, action='remove' ) }}" title="Remove"><span class="glyphicon glyphicon-remove"></a></li>
+	  {% endif %}
+	    <li><a href="" title="Use in Post"><span class="glyphicon glyphicon-pencil"></a></li>
+	    <li><a href="" title="Use in Category"><span class="glyphicon glyphicon-folder-open"></a></li>
+	  </ul>
+	</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>

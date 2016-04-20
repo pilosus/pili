@@ -27,22 +27,20 @@
         <div class="navbar-collapse collapse">
           <ul class="nav navbar-nav">
 	    {% if current_user.can(Permission.WRITE_ARTICLES) %}
-              <li {% if page == 'posts' %}class="active"{% endif %}><a href="{{ url_for('ctrl.posts') }}">Posts</a></li>
+            <li {% if page == 'posts' %}class="active"{% endif %}><a href="{{ url_for('ctrl.posts') }}">Posts</a></li>
+	    <li {% if page == 'uploads' %}class="active"{% endif %}><a href="{{ url_for('ctrl.uploads') }}">Uploads</a></li>
 	    {% endif %}
 	    {% if current_user.can(Permission.EDIT_STRUCTURE) %}
-	      <li><a href="{{ url_for('ctrl.categories') }}">Categories</a></li>
-	      <li><a href="{{ url_for('ctrl.structure') }}">Structure</a></li>
-	      <li><a href="{{ url_for('ctrl.upload') }}">Upload</a></li>
+	    <li {% if page == 'categories' %}class="active"{% endif %}><a href="{{ url_for('ctrl.categories') }}">Categories</a></li>
+	    <li {% if page == 'structure' %}class="active"{% endif %}><a href="{{ url_for('ctrl.structure') }}">Structure</a></li>
 	    {% endif %}
 
 	      
 	    {% if current_user.can(Permission.ADMINISTER) %}
-	      <li><a href="{{ url_for('ctrl.logs') }}">Logs</a></li>
+	    <li><a href="{{ url_for('ctrl.logs') }}">Logs</a></li>
+	    <li><a href="">Users</a></li>
 	    {% endif %}
 	      
-            {% if current_user.is_authenticated %}
-              <li><a href="{{ url_for('auth.user', username=current_user.username) }}">Profile</a></li>
-            {% endif %}
             </ul>
             <ul class="nav navbar-nav navbar-right">
                 {% if current_user.is_authenticated %}
@@ -52,9 +50,12 @@
                         {{ current_user.username }} <b class="caret"></b>
                     </a>
                     <ul class="dropdown-menu">
-                        <li><a href="{{ url_for('auth.change_password') }}">Change Password</a></li>
-                        <li><a href="{{ url_for('auth.change_email_request') }}">Change Email</a></li>
-                        <li><a href="{{ url_for('auth.logout') }}">Log Out</a></li>
+		      {% if current_user.is_authenticated %}
+                      <li><a href="{{ url_for('auth.user', username=current_user.username) }}">Profile</a></li>
+		      {% endif %}
+                      <li><a href="{{ url_for('auth.change_password') }}">Change Password</a></li>
+                      <li><a href="{{ url_for('auth.change_email_request') }}">Change Email</a></li>
+                      <li><a href="{{ url_for('auth.logout') }}">Log Out</a></li>
                     </ul>
                 </li>
                 {% else %}
