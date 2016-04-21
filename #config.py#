@@ -21,6 +21,7 @@ class Config:
     MMSE_ADMIN = os.environ.get('MMSE_ADMIN') or 'samigullinv@gmail.com' # app admin email
     MMSE_ADMIN_NAME = os.environ.get('MMSE_ADMIN_NAME') or 'Administrator'
     MMSE_POSTS_PER_PAGE = os.environ.get('MMSE_POSTS_PER_PAGE') or 10
+    MMSE_CATEGORIES_PER_PAGE = os.environ.get('MMSE_CATEGORIES_PER_PAGE') or 10
     MMSE_TAGS_PER_PAGE = os.environ.get('MMSE_TAGS_PER_PAGE') or 100
     MMSE_IMAGES_PER_PAGE = os.environ.get('MMSE_IMAGES_PER_PAGE') or 5
     MMSE_SLOW_DB_QUERY_TIME = 0.5

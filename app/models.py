@@ -11,10 +11,43 @@ from . import db, login_manager
 
 
 class Permission:
+    """Permission for App's users.
+
+    READ: - read articles
+
+    READ used for downgrading users who abused default rights. They
+    still can read, but cannot write, upload files or edit
+    structure. In order to reclaim default rights, administrator's
+    action needed.
+
+    WRITE_ARTICLES: - write and edit articles
+
+    WRITE_ARTICLES allows user to write articles, but assign them only
+    to categories already existed and use image files already uploaded
+    by other users.
+
+    UPLOAD_FILES: - upload files
+                  - remove own uploaded files
+
+    UPLOAD_FILES used to grant permission of uploading image files for
+    articles, categories, etc. Introduced as a separate permission
+    since many users abuse image copyrights.
+
+    EDIT_STRUCTURE: - create and edit site menu
+                    - create and edit categories
+
+    EDIT_STRUCTURE used to work with webstite menu.
+
+    ADMINISTER: - read logs
+                - change other users roles
+                - confirm users registration
+                - send invitations to new users
+
+    """
     READ = 0x01
     WRITE_ARTICLES = 0x02
-    EDIT_STRUCTURE = 0x04
-    #UPLOAD_IMAGES = 0x08
+    UPLOAD_FILES = 0x04
+    EDIT_STRUCTURE = 0x08
     ADMINISTER = 0x80
 
 
@@ -32,10 +65,16 @@ class Role(db.Model):
         roles = {
             'Pariah': (Permission.READ, False),
             'Writer': (Permission.READ |
-                            Permission.WRITE_ARTICLES, True),
+                       Permission.WRITE_ARTICLES, True),
             'Editor': (Permission.READ |
                        Permission.WRITE_ARTICLES |
+                       Permission.UPLOAD_FILES |
                        Permission.EDIT_STRUCTURE, False),
+            'Moderator': (Permission.READ |
+                          Permission.WRITE_ARTICLES |
+                          Permission.UPLOAD_FILES |
+                          Permission.EDIT_STRUCTURE |
+                          Permission.ADMINISTER, False),
             'Administrator': (0xff, False)
         }
         for r in roles:
@@ -280,6 +319,7 @@ class Post(db.Model):
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     body = db.Column(db.Text)
     body_html = db.Column(db.Text)
+    image_id = db.Column(db.String(64), db.ForeignKey('uploads.id'))
     featured = db.Column(db.Boolean, default=False, index=True)
     # 1-to-many relationship Category/Post
     category_id = db.Column(db.Integer, db.ForeignKey('categories.id'))
@@ -311,12 +351,8 @@ class Post(db.Model):
 
     @staticmethod
     def on_changed_body(target, value, oldvalue, initiator):
-        allowed_tags = ['a', 'abbr', 'acronym', 'b', 'blockquote', 'code',
-                        'em', 'i', 'img', 'li', 'ol', 'pre', 'strong', 'ul',
-                        'h1', 'h2', 'h3', 'p', 'div', 'span']
-        allowed_attrs = {'*': ['class', 'id'],
-                         'a': ['href', 'rel'],
-                         'img': ['src', 'alt']}
+        allowed_tags = current_app.config['MMSE_ALLOWED_TAGS']
+        allowed_attrs = current_app.config['MMSE_ALLOWED_ATTRIBUTES']
         target.body_html = bleach.linkify(bleach.clean(
             markdown(value, output_format='html'),
             tags=allowed_tags, attributes=allowed_attrs, strip=True))
@@ -379,18 +415,15 @@ class Category(db.Model):
     alias = db.Column(db.String(64), unique=True)
     body = db.Column(db.Text)
     body_html = db.Column(db.Text)
+    image_id = db.Column(db.String(64), db.ForeignKey('uploads.id'))
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     posts = db.relationship('Post', backref='category', lazy='dynamic',
                                foreign_keys=[Post.category_id])
 
     @staticmethod
     def on_changed_body(target, value, oldvalue, initiator):
-        allowed_tags = ['a', 'abbr', 'acronym', 'b', 'blockquote', 'code',
-                        'em', 'i', 'img', 'li', 'ol', 'pre', 'strong', 'ul',
-                        'h1', 'h2', 'h3', 'p', 'div', 'span']
-        allowed_attrs = {'*': ['class', 'id'],
-                         'a': ['href', 'rel'],
-                         'img': ['src', 'alt']}
+        allowed_tags = current_app.config['MMSE_ALLOWED_TAGS']
+        allowed_attrs = current_app.config['MMSE_ALLOWED_ATTRIBUTES']
         target.body_html = bleach.linkify(bleach.clean(
             markdown(value, output_format='html'),
             tags=allowed_tags, attributes=allowed_attrs, strip=True))
@@ -417,7 +450,30 @@ class Upload(db.Model):
     """Uploaded files.
     """
     __tablename__ = 'uploads'
-    filename = db.Column(db.String(64), primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
+    filename = db.Column(db.String(64), unique=True)
     title = db.Column(db.String(128)) # img alt/title
     owner_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+    posts = db.relationship('Post', backref='image', lazy='dynamic')
+    categories = db.relationship('Category', backref='image', lazy='dynamic')
+
+    def to_json(self):
+        json_tag = {
+            'url': url_for('api.get_upload', filename=self.filename, _external=True),
+            'id': self.id,
+            'filename': self.filename,            
+            'title': self.title,
+            'owner_id': self.owner_id,
+            'posts': url_for('api.get_upload_posts', filename=self.filename,
+                                _external=True),
+            'categories': url_for('api.get_upload_categories', filename=self.filename,
+                                  _external=True)
+
+        }
+        return json_tag
+
+    
+    def __repr__(self):
+        return '<Upload %r>' % self.filename
+    

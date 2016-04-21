@@ -225,6 +225,7 @@ def structure():
     pass
 
 @ctrl.route('/uploads', methods=['GET', 'POST'])
+@permission_required(Permission.UPLOAD_FILES)
 def uploads():
     form = UploadForm()
     if form.validate_on_submit():
@@ -235,6 +236,7 @@ def uploads():
         upload = Upload(filename=filename, title=form.title.data,
                       owner=current_user._get_current_object())
         db.session.add(upload)
+        flash("File {0} has been successfully uploaded.".format(filename))
         return redirect(url_for('.uploads'))
     # Render template with pagination
     page = request.args.get('page', 1, type=int)
@@ -247,7 +249,7 @@ def uploads():
 
 
 @ctrl.route('/upload/<action>/<filename>', methods=['GET', 'POST'])
-@permission_required(Permission.WRITE_ARTICLES)
+@permission_required(Permission.UPLOAD_FILES)
 def uploaded_file(action, filename):
     upload = Upload.query.get_or_404(filename)
     if action == 'view':
@@ -269,6 +271,10 @@ def uploaded_file(action, filename):
         # Redirect
         flash('{0} has been removed.'.format(filename))
         return redirect(url_for('ctrl.uploads'))
+    else:
+        flash('There is no such action.')
+        return redirect(url_for('ctrl.uploads'))
+        
 
 @ctrl.route('/logs')
 def logs():

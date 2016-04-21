@@ -65,7 +65,13 @@ def profile(length=25, profile_dir=None):
                                       profile_dir=profile_dir)
     app.run()
 
-
+@manager.command
+def initialize():
+    """Create all databases, initialize migration scripts before deploying."""
+    from flask.ext.migrate import init
+    db.create_all()
+    init()
+    
 @manager.command
 def deploy():
     """Run deployment tasks."""
@@ -81,5 +87,6 @@ def deploy():
     # add admin
     User.add_admin()
 
+    
 if __name__ == '__main__':
     manager.run()

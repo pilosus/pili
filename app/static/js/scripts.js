@@ -29,4 +29,11 @@ $(document).ready(function(){
 	focusBody();
     }
 
+    /**
+       Popup for action confirmation
+     **/
+    
+    $('.confirm').on('click', function () {
+        return confirm('Are you sure?');
+    });
 });
