@@ -108,10 +108,35 @@ div.flask-pagedown-preview h3 {
 
 /* Bootstrap Tagsinput  */
 .bootstrap-tagsinput {
-  width: 100% !important;
+    width: 100% !important;
+}
+
+.label-block {
+    display: block;
+}
+
+#uploads-control .tt-menu {
+    max-height: 100px;
+    overflow-y: auto;
+}
+
+.tt-suggestion.tt-cursor {
+  color: #fff;
+  background-color: #0097cf;
+}
+
+.tt-menu {
+  width: 100%;
+  margin: 12px 0;
+  padding: 8px 0;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  box-shadow: 0 5px 10px rgba(0,0,0,.2);
 }
 
 /* Table */
 .table.img-list > tbody > tr > td {
-     vertical-align: middle;
+    vertical-align: middle;
 }

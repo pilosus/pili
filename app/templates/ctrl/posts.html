@@ -69,7 +69,31 @@
 {% block scripts %}
 {{ super() }}
 {{ pagedown.include_pagedown() }}
-<script type="text/javascript">
+<script>
+  var tags = new Bloodhound({
+  datumTokenizer: Bloodhound.tokenizers.obj.whitespace('name'),
+  queryTokenizer: Bloodhound.tokenizers.whitespace,
+  prefetch: {
+    url: "{{ url_for('api.get_tags_list') }}",
+    filter: function(list) {
+        return $.map(list.tags, function(tag) {
+        return { name: tag }; });
+    }
+  }
+});
+tags.initialize();
+
+$('#tags-control .typeahead').tagsinput({
+  typeaheadjs: {
+    name: 'tags',
+    displayKey: 'name',
+    valueKey: 'name',
+    source: tags.ttAdapter()
+  }
+});
+</script>
+
+<script>
   $(function () {
     $('#datetimepicker1').datetimepicker();
   });

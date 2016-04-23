@@ -3,10 +3,11 @@ from flask import render_template, redirect, url_for, abort, flash, request,\
 from flask.ext.login import login_required, current_user
 from flask.ext.sqlalchemy import get_debug_queries
 from . import ctrl
-from .forms import EditProfileForm, EditProfileAdminForm, PostForm, UploadForm
+from .forms import EditProfileForm, EditProfileAdminForm, PostForm, UploadForm, \
+    CategoryForm
 from .. import db
 from ..models import Permission, Role, User, Post, \
-    Tag, Tagification, Upload
+    Tag, Tagification, Category, Upload
 from ..decorators import admin_required, permission_required
 from ..filters import sanitize_alias, sanitize_tags, sanitize_upload, \
     get_added_removed, is_allowed_file, find_thumbnail
@@ -216,9 +217,27 @@ def after_request(response):
     return response
 
 # TODO
-@ctrl.route('/categories')
+@ctrl.route('/categories', methods=['GET', 'POST'])
 def categories():
-    pass
+    form = CategoryForm()
+    if form.validate_on_submit():
+        category = Category(body=form.body.data,
+                            title=form.title.data,
+                            alias=sanitize_alias(form.alias.data),
+                            author=current_user._get_current_object())
+        db.session.add(category)
+        flash("Category has been successfully created.")
+        return redirect(url_for('ctrl.categories'))
+    # Render template with pagination
+    page = request.args.get('page', 1, type=int)
+    pagination = Category.query.order_by(Category.timestamp.desc()).paginate(
+        page, per_page=current_app.config['MMSE_POSTS_PER_PAGE'],
+        error_out=False)
+    categories = pagination.items
+    return render_template('ctrl/categories.html', form=form,
+                           categories=categories,
+                           pagination=pagination)
+
 
 @ctrl.route('/structure')
 def structure():
@@ -279,4 +298,8 @@ def uploaded_file(action, filename):
 @ctrl.route('/logs')
 def logs():
     return render_template('ctrl/logs.html')
+
+@ctrl.route('/test')
+def test():
+    return render_template('ctrl/test.html')
 

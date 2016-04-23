@@ -17,16 +17,13 @@
     {{ wtf.form_field(form.title) }}
     {{ wtf.form_field(form.alias) }}
     {{ wtf.form_field(form.body) }}
-    <div class="form-group">
+
+    <div class="form-group" id="uploads-control">
       {{ form.image.label(class="control-label") }}
-      {{ form.image(class="") }}
+      {{ form.image(class="form-control typeahead", **{'data-role': 'tagsinput'}) }}
     </div>
     
-    <div class="form-group" id="tags-control">
-      {{ form.tags.label(class="control-label") }}
-      {{ form.tags(class="form-control typeahead", **{'data-role': 'tagsinput'}) }}
-    </div>
-    {{ wtf.form_field(form.category) }}
+
     <div class="form-group">
       {# {{ wtf.form_field(form.featured) }} #}
       {{ form.featured.label(class="control-label") }}
@@ -57,11 +54,11 @@
   {% endif %}
 </div>
 <div>
-  {% include '_posts.html' %}
+  {% include 'ctrl/_categories.html' %}
 </div>
 {% if pagination %}
 <div class="pagination">
-  {{ macros.pagination_widget(pagination, '.posts') }}
+  {{ macros.pagination_widget(pagination, '.categories') }}
 </div>
 {% endif %}
 {% endblock %}
@@ -69,9 +66,40 @@
 {% block scripts %}
 {{ super() }}
 {{ pagedown.include_pagedown() }}
-<script type="text/javascript">
+
+
+{#
+ https://bootstrap-tagsinput.github.io/bootstrap-tagsinput/examples/
+ https://twitter.github.io/typeahead.js/examples/#prefetch
+#}
+<script>
+var uploads = new Bloodhound({
+  datumTokenizer: Bloodhound.tokenizers.obj.whitespace('name'),
+  queryTokenizer: Bloodhound.tokenizers.whitespace,
+  prefetch: {
+    url: "{{ url_for('api.get_uploads_list') }}",
+    filter: function(list) {
+      return $.map(list.uploads, function(upload) {
+        return { name: upload }; });
+    }
+  }
+});
+
+uploads.initialize();
+
+$('#uploads-control .typeahead').tagsinput({
+  typeaheadjs: {
+    name: 'uploads',
+    displayKey: 'name',
+    valueKey: 'name',
+    source: uploads.ttAdapter()
+  }
+});
+</script>
+
+<script>
   $(function () {
-  $('#datetimepicker1').datetimepicker();
+    $('#datetimepicker1').datetimepicker();
   });
 </script>
 {% endblock %}

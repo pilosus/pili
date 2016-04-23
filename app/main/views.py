@@ -47,6 +47,13 @@ def post(id, alias, parent_id=None):
     post = Post.query.get_or_404(id)
     return render_template('post.html', posts=[post], pagination=pagination)
 
+# TODO
+@main.route('/category/<int:id>-<alias>', methods=['GET'])
+def category(id, alias, parent_id=None):
+    category = Category.query.get_or_404(id)
+    return render_template('category.html', categories=[category], pagination=pagination)
+
+
 @main.route('/shutdown')
 def server_shutdown():
     if not current_app.testing:

@@ -43,6 +43,9 @@
 	    <li><a href="{{ url_for('ctrl.logs') }}">Logs</a></li>
 	    <li><a href="">Users</a></li>
 	    {% endif %}
+
+	    {# DEBUG #}
+	    <li {% if page == 'test' %}class="active"{% endif %}><a href="{{ url_for('ctrl.test') }}"><span class="glyphicon glyphicon-flag"></span> Test</a></li>
 	      
             </ul>
             <ul class="nav navbar-nav navbar-right">
@@ -86,32 +89,8 @@
 {% block scripts %}
 {{ super() }}
 {{ moment.include_moment() }}
-
 <script src="{{ url_for('static', filename='js/typeahead.bundle.js') }}"></script>
 <script src="{{ url_for('static', filename='js/bootstrap-tagsinput.js') }}"></script>
 <script src="{{ url_for('static', filename='js/bootstrap-datetimepicker.js') }}"></script>
 <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
-<script>
-var tags = new Bloodhound({
-  datumTokenizer: Bloodhound.tokenizers.obj.whitespace('name'),
-  queryTokenizer: Bloodhound.tokenizers.whitespace,
-  prefetch: {
-    url: "{{ url_for('api.get_tags_list') }}",
-    filter: function(list) {
-        return $.map(list.tags, function(tag) {
-        return { name: tag }; });
-    }
-  }
-});
-tags.initialize();
-
-$('#tags-control .typeahead').tagsinput({
-  typeaheadjs: {
-    name: 'tags',
-    displayKey: 'name',
-    valueKey: 'name',
-    source: tags.ttAdapter()
-  }
-});
-</script>
 {% endblock %}

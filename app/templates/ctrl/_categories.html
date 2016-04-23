@@ -1,5 +1,5 @@
 <ul class="categories">
-  {% for post in categories %}
+  {% for category in categories %}
   <li class="category">
     <div class="category-thumbnail">
       <a href="{{ url_for('.user', username=category.author.username) }}">
@@ -16,9 +16,9 @@
 	{{ moment(category.timestamp).fromNow() }}
 	{% if category.categories %}
 	under
-	{% for category in category.categories %}
-	<a href="{{ url_for('.category', alias=category.alias) }}">
-	  <span class="label label-info">{{ category.title }}</span>
+	{% for post in category.posts %}
+	<a href="{{ url_for('.post', id=post.id, alias=post.alias) }}">
+	  <span class="label label-info">{{ post.title }}</span>
 	</a>
 	{% endfor %}
       {% endif %}

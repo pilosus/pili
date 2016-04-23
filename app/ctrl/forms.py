@@ -85,12 +85,14 @@ class CategoryForm(Form):
                                            'Alias must contain only lowercase '
                                            'letters and dashes')])
     body = PageDownField("Text", validators=[Required()])
+    image = StringField("Image", validators=[Length(0, 64)])
+    timestamp = DateTimeField("Date and time", format='%Y-%m-%d %H:%M:%S')
     category = SelectField("Category", coerce=int)
     featured = BooleanField('Featured')
     submit = SubmitField('Submit')
 
     def __init__(self, *args, **kwargs):
-        super(PostForm, self).__init__(*args, **kwargs)
+        super(CategoryForm, self).__init__(*args, **kwargs)
         self.category.choices = [(category.id, category.name)
                                 for category in Category.query.order_by(Category.timestamp.desc()).all()]
 

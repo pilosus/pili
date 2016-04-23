@@ -4,6 +4,7 @@ from ..models import Post, Permission, Category, Upload
 from . import api
 from .decorators import permission_required
 from .errors import forbidden
+import json
 
 @api.route('/uploads/')
 def get_uploads():
@@ -35,6 +36,13 @@ def get_uploads_list():
         'uploads': [upload.filename for upload in uploads]
     })
 
+@api.route('/uploads/filenames2.json')
+def get_uploads_list2():
+    """Return a list of upload titles."""
+    uploads = Upload.query.all()
+    # Considered unsafe
+    return json.dumps([upload.filename for upload in uploads])
+    
 @api.route('/uploads/<filename>')
 def get_upload(filename):
     upload = Upload.query.filter_by(filename=filename).first_or_404()

@@ -104,6 +104,7 @@ class User(UserMixin, db.Model):
     last_seen = db.Column(db.DateTime(), default=datetime.utcnow)
     avatar_hash = db.Column(db.String(32))
     posts = db.relationship('Post', backref='author', lazy='dynamic')
+    categories = db.relationship('Category', backref='author', lazy='dynamic')
     images = db.relationship('Upload', backref='owner', lazy='dynamic')
 
     @staticmethod
@@ -411,6 +412,7 @@ class Category(db.Model):
     """
     __tablename__ = 'categories'
     id = db.Column(db.Integer, primary_key=True)
+    author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     title = db.Column(db.String(64))
     alias = db.Column(db.String(64), unique=True)
     body = db.Column(db.Text)
