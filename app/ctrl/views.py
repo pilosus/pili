@@ -12,6 +12,7 @@ from ..decorators import admin_required, permission_required
 from ..filters import sanitize_alias, sanitize_tags, sanitize_upload, \
     get_added_removed, is_allowed_file, find_thumbnail
 from werkzeug import secure_filename
+from datetime import datetime
 import os
 
 @ctrl.route('/', methods=['GET', 'POST'])
@@ -53,6 +54,7 @@ def posts():
         error_out=False)
     posts = pagination.items
     return render_template('ctrl/posts.html', form=form, posts=posts,
+                           datetimepicker=datetime.utcnow(),
                            pagination=pagination)
 
 @ctrl.route('/tag/<alias>')
@@ -236,6 +238,7 @@ def categories():
     categories = pagination.items
     return render_template('ctrl/categories.html', form=form,
                            categories=categories,
+                           datetimepicker=datetime.utcnow(),
                            pagination=pagination)
 
 
@@ -267,10 +270,10 @@ def uploads():
                            pagination=pagination)
 
 
-@ctrl.route('/upload/<action>/<filename>', methods=['GET', 'POST'])
+@ctrl.route('/files/<action>/<filename>', methods=['GET', 'POST'])
 @permission_required(Permission.UPLOAD_FILES)
 def uploaded_file(action, filename):
-    upload = Upload.query.get_or_404(filename)
+    upload = Upload.query.filter_by(filename=filename).first_or_404()
     if action == 'view':
         return send_from_directory(current_app.config['MMSE_UPLOADS'], filename)
     elif action == 'remove':
@@ -293,7 +296,6 @@ def uploaded_file(action, filename):
     else:
         flash('There is no such action.')
         return redirect(url_for('ctrl.uploads'))
-        
 
 @ctrl.route('/logs')
 def logs():

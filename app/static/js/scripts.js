@@ -36,4 +36,12 @@ $(document).ready(function(){
     $('.confirm').on('click', function () {
         return confirm('Are you sure?');
     });
+
+    /**
+       Fix typeahead styling for input text field for uploads search.
+       Should not affect tagsinput input fields.
+    **/
+    
+    $('span.twitter-typeahead').has('#image').css('display', 'block');
+    
 });

@@ -25,12 +25,18 @@
 {{ super() }}
 {{ pagedown.include_pagedown() }}
 
+
+{#
+ https://bootstrap-tagsinput.github.io/bootstrap-tagsinput/examples/
+ https://twitter.github.io/typeahead.js/examples/#prefetch
+#}
+
 {# Final solution for Firefox, Chrome #}
 <script>
   var uploads = new Bloodhound({
     datumTokenizer: Bloodhound.tokenizers.whitespace,
     queryTokenizer: Bloodhound.tokenizers.whitespace,
-    prefetch: "..{{ url_for('api.get_uploads_list') }}"
+    prefetch: "..{{ url_for('api.get_uploads_list2') }}"
   });
 
   $('#uploads-control .typeahead').typeahead({
@@ -96,6 +102,7 @@
 </script>
 #}
 
+{# https://eonasdan.github.io/bootstrap-datetimepicker/Options/ #}
 <script>
   $(function () {
     $('#datetimepicker1').datetimepicker();

@@ -59,9 +59,7 @@ class PostForm(Form):
                                            'letters and dashes')])
     timestamp = DateTimeField("Date and time", format='%Y-%m-%d %H:%M:%S')
     body = PageDownField("Text", validators=[Required()])
-    image = FileField("Image File", validators=[Regexp('^(\w|-|_|\.)+\.jpg|jpeg|png$', 0,
-                                                       'Image file name must contain only '
-                                                       'letters, dashes, underscores and dots')])
+    image = StringField("Image", validators=[Length(0, 64)])
     tags = StringField("Tags", validators=[Length(0, 64)])
     featured = BooleanField('Featured')
     category = SelectField("Category", coerce=int)

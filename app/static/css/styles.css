@@ -113,6 +113,7 @@ div.flask-pagedown-preview h3 {
 
 .label-block {
     display: block;
+    text-align: left;
 }
 
 #uploads-control .tt-menu {
@@ -135,6 +136,7 @@ div.flask-pagedown-preview h3 {
   border-radius: 8px;
   box-shadow: 0 5px 10px rgba(0,0,0,.2);
 }
+
 
 /* Table */
 .table.img-list > tbody > tr > td {

@@ -1,0 +1,270 @@
+# -*- mode: rst -*-
+
+=========
+Using App
+=========
+
+.. _prepare-env:
+-------------------
+Prepare environment
+-------------------
+
+#. (Optional) Create a virtualenv: `virtualenv -p path-to-python venv`
+#. Activate virtualenv: `source venv/bin/activate`
+#. Install dependencies with the virtualenv: `pip install -r requirements/unix[prod|dev|...].txt`
+#. Edit config files:
+
+   * .hosting.env (unix config)
+   * .env (heroku config)
+   * config.py (common config)
+
+Alternatively, configuration can be set using `export variable=value` in the command line.
+
+.. _prepare-db:
+----------------
+Prepare database
+----------------
+
+#. Create all DB tables, initialize flask-migrate:
+
+   * `python manage.py initialize`
+
+#. Upgrade DB schema, insert roles, add app's administrator:
+
+   * `python manage.py deploy`
+
+
+.. _migrate_db:
+-----------------
+Migrate DB schema
+-----------------
+
+#. Whenever DB schema changed:
+
+   * `python manage.py db migrate` (check and edit the latest created file in `migrations/versions/*.py`)
+   * `python manage.py db upgrade`
+     
+.. _run_locally:
+----------------------
+Running server locally
+----------------------
+
+Now that DB is deployed, the app can be accessed through the local
+webserver: `python manage.py runserver` at http://127.0.0.0:5000.
+
+.. _heroku-deploy:
+==================
+Heroku Deployments
+==================
+
+#. Login to Heroku using Heroku Toolbelt: `heroku login`
+#. (Optional) If app does not exist, create it: `heroky create app_name`
+#. (Optional) `DB provisioning`_:
+
+   * `heroku addons:create heroku-postgresql:hobby-dev`
+   * `heroku pg:promote DATABASE_URL`
+   * `heroku pg:promote HEROKU_POSTGRESQL_COPPER` (DB link name may differ)
+   * `heroku pg:info`
+
+#. Set `buildpack`_: `heroku buildpacks:set heroku/python`
+#. Set configs:
+
+   * `heroku config:set FLASK_CONFIG=heroku`
+   * `heroku config:set MAIL_USERNAME=<your-gmail-username>`
+   * `heroku config:set MAIL_PASSWORD=<your-gmail-password`
+
+#. Add gunicorn webservers to `requirements/heroku.txt`
+#. Add requirement files: Procfile with content of: `web: gunicorn manage:app`
+#. Deploy with git push: `git push heroku master`
+#. Run on Heroku: `heroku run python manage.py deploy`
+#. View logs: `heroku logs` or `heroku logs -t` (tail)
+
+.. _heroku-locally:
+--------------------------
+Testing Heroku app locally
+--------------------------
+
+In order to test Heroku app locally, `heroku local` command is
+used. Alternatively, `foreman` should be installed.
+
+#. Dump environment variables into `.env` file
+#. Deploy using foreman: `foreman run python manage.py deploy`
+#. Run with `foreman start`
+
+If apps fails, then DB deploy needed to be done beforehand:
+
+#. Run shell with `foreman run python manage.py shell`
+#. Create DB in the shell: `>>> db.create_all()`
+#. Deploy with `foreman run python manage.py deploy`
+     
+.. _DB provisioning: https://devcenter.heroku.com/articles/heroku-postgresql#provisioning-the-add-on
+.. _buildpack: https://devcenter.heroku.com/articles/buildpacks
+
+.. _vps:
+=================
+Deployment on VPS
+=================
+
+External programs needed for deployment:
+
+#. Git (see section :ref:`git`)
+#. PostgreSQL (see section :ref:`postgres`)
+#. uWSGI server (can be isntalled using `pip`, see :ref:`uwsgi`)
+   
+.. _git:
+---------------
+Configuring Git
+---------------
+
+#. Create a directory for the app: `sudo mkdir /var/www/app.name/`
+#. Make `git` user the owner of the dir: `sudo chown -R git:git /var/www/app.name/`
+#. Add a `post-receive` hook to bare-init repo, that checks out files to `/var/www/app.name/` after `git push`
+
+See also `Deployment with git`_.
+.. _Deployment with git: https://www.digitalocean.com/community/tutorials/how-to-use-git-hooks-to-automate-development-and-deployment-tasks
+   
+.. _postgres:
+----------------------
+Configuring PostgreSQL
+----------------------
+
+#. Set password for `postgres` user: `passwd postgres`
+#. Log in as db user: `sudo -i -u postgres`
+#. Create new user: `[postgres]$ createuser --interactive`
+#. Create new db: `[postgres]$ createdb db_name`
+#. Connect to the db: `sudo -i -u postgres psql -h localhost:5432 -u user1 -W db_name`
+#. Set password `[psql shell] \password`
+#. Info about connection `[psql shell] \conninfo`
+#. Info about db, tables, users: `[psql shell] \d`, `\dt`, `\du`
+
+See also `PostgreSQL setup and config`_, `PostgreSQL on CentOS 7`_ and `PostgreSQL authentication`_.
+.. _PostgreSQL setup and config: https://wiki.archlinux.org/index.php/PostgreSQL
+.. _PostgreSQL on CentOS 7: https://www.digitalocean.com/community/tutorials/how-to-install-and-use-postgresql-on-centos-7
+.. _PostgreSQL authentication: https://stackoverflow.com/questions/2942485/psql-fatal-ident-authentication-failed-for-user-postgres
+
+.. _uwsgi:
+------------------------
+Configuring uWSGI server
+------------------------
+
+uWSGI is a production-ready webserver. It also has a mechanism to
+startup `uwsgi` server for all the apps installed (vassals), which is
+called `emperor`.
+
+#. Create settings ini file under called `/etc/uwsgi/vassals/flasky-uwsgi.ini`
+#. Make a symbolic link in the app's directory: `ln -s /var/www/flasky.pilosus.org/flasky-uwsgi.ini flasky-uwsgi.ini`
+#. Start `uwsgi` server installed via `pip`:
+
+   * Activate `virtualenv` with `source venv/bin/activate`
+   * Start server: `[vrs@pilosus.org/var/www/falsky.pilosus.org/] $ sudo $(which uwsgi) --ini flasky-uwsgi.ini`
+     
+#. Activate `emperor`: `(venv) [vrs] $ sudo $(which uwsgi) --emperor /etc/uwsgi/vassals`
+   Command should be run with sudo under `vrs` (`$ sudo -i -u vrs`), since `git` user has no right for sudo.
+#. (Optional) Alternatively, one can start uWSGI without emperor: `sudo $(which uwsgi) --ini flasky-uwsgi.ini`.
+   `$(which uwsgi)` expands to a path of the uwsgi installed in the virtualenv.
+
+Vassal (app tracked by emperor) will be respawn whenever its config file changes.
+
+==========
+Files used
+==========
+
+#. Git:
+
+   * .gitignore
+   * venv/
+   * post-receive
+
+#. Heroku:
+
+   * Procfile
+   * requirements.txt
+
+#. Foreman:
+
+   * .env
+
+#. uWSGI:
+
+   * flasky-uwsgi.ini
+
+#. nginx:
+
+   * flasky.conf
+     
+#. App config:
+
+   * .hosting.env
+
+
+===========     
+DB recovery
+===========
+
+--------------------------------
+Testing, development environment
+--------------------------------
+
+When working locally, screwed database may be fixed by the following steps:
+
+#. Remove the old DB and `migrations/` folder:
+   `rm -r migrations/ && rm data-dev.sqlite`
+
+#. Get the DB and `migrations/` from backup:
+   `git checkout -f data-dev.sqlite`
+   `git checkout -f migrations/`
+
+#. Migrate to the new schema:
+   `python manage.py db migrate`
+
+#. Update DB:
+   `python manage.py db upgrade`
+     
+===========     
+App's Shell
+===========
+
+Examples:
+
+Look up body of the comment with id == 10:
+    Comment().query.filter(Comment.id==10).first().body
+
+Get list of users with the role == 'Writer'
+    [i for i in Role.query.filter(Role.name == 'Writer').first().users]
+
+Get list of comments to Post with id == 111
+    [p for p in Post.query.filter(Post.id == 111).first().comments]
+
+Get list of replies to Comment with id == 28
+    [r for r in Comment.query.filter(Comment.id == 28).first().replies]
+
+Get parent comment of the reply with id 29 (parent attribute exists due to backref='parent' in models):
+    Reply.query.filter(Reply.id == 29).first().parent
+
+Get all replies to comments written by user 'Pilosus'
+    user = User.query.filter(User.username == 'Pilosus').first()
+    db.session.query(Comment, Reply).join(Reply, Comment.id == Reply.parent_id).filter(Comment.author_id == user.id).order_by(Comment.timestamp.desc()).all()
+    or even better:
+    Comment.query.join(Reply, Comment.id == Reply.id).filter(Reply.repliee_id == user.id).order_by(Comment.timestamp.desc()).all()
+
+Show db.Model's schema, foriegn keys, etc:
+    User.__table__.columns
+    User.__table__.foreign_keys
+    User.__table__.constraints
+    User.__table__.indexes
+
+=================
+3rd-party Modules
+=================
+
+#. Moment.js
+   http://momentjs.com/docs/#/displaying/format/
+
+#. Bootstrap 3 Datetimepicker
+   https://eonasdan.github.io/bootstrap-datetimepicker/Options/
+
+   
+
+
+##### http://www.sphinx-doc.org/en/stable/rest.html #####
+
