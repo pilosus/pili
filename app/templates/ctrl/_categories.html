@@ -1,3 +1,65 @@
+<div class="table-responsive">
+  <table class="table img-list table-condensed">
+    <thead>
+      <tr>
+	<th>Image</th>	
+	<th>Title</th>
+	<th>Alias</th>	
+	<th>Description</th>
+	<th>Author</th>
+	<th>Created</th>
+	<th>Operations</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for category in categories %}
+      <tr>
+	<td width="150px">
+	  <a href="{{ url_for('.uploaded_file', filename=category.image.filename, action='view' ) }}" target="_blank">
+	    <img src="{{ category.image.filename | thumbnail('100x100', crop='fit', quality=75) }}"
+		 class="img-responsive img-thumbnail"
+		 title="{{ category.image.filename }}" alt="{{ category.image.filename }}">
+	  </a>
+	</td>
+	
+	<td>
+	  {{ category.title }}
+	</td>
+
+	<td>
+	  {{ category.alias }}
+	</td>
+
+	<td>
+          {% if category.body_html %}
+            {{ category.body_html | safe }}
+          {% else %}
+            {{ category.body }}
+          {% endif %}
+	</td>
+
+	<td>
+	  <a href="{{ url_for('.user', username=category.author.username) }}">
+	    {{ category.author.username }}
+	  </a>
+	</td>
+	
+	<td>
+	  {{ moment(category.timestamp).fromNow() }}
+	</td>
+	
+	<td>
+	  ...
+	</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+
+{#
+
 <ul class="categories">
   {% for category in categories %}
   <li class="category">
@@ -14,7 +76,7 @@
 	  {{ category.author.username }}
 	</a>
 	{{ moment(category.timestamp).fromNow() }}
-	{% if category.categories %}
+	{% if category.posts %}
 	under
 	{% for post in category.posts %}
 	<a href="{{ url_for('.post', id=post.id, alias=post.alias) }}">
@@ -22,7 +84,6 @@
 	</a>
 	{% endfor %}
       {% endif %}
-
       </div>
       <div class="category-title">
 	<a href="{{ url_for('.category', id=category.id, alias=category.alias) }}">
@@ -33,9 +94,9 @@
       </div>
       <div class="category-body">
         {% if category.body_html %}
-        {{ category.body_html | safe }}
+          {{ category.body_html | safe }}
         {% else %}
-        {{ category.body }}
+          {{ category.body }}
         {% endif %}
       </div>
      
@@ -50,8 +111,8 @@
         </a>
         {% endif %}
 
-        <a href="{{ url_for('.category', id=category.id, alias=category.alias) }}#comments">
-          <span class="label label-primary">{{ category.comments.count() }} Comments</span>
+        <a href="{{ url_for('.category', id=category.id, alias=category.alias) }}#posts">
+          <span class="label label-primary">{{ category.posts.count() }} Posts</span>
         </a>
 	
       </div>
@@ -59,3 +120,5 @@
   </li>
   {% endfor %}
 </ul>
+
+#}

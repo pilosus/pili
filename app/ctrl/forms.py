@@ -67,8 +67,9 @@ class PostForm(Form):
 
     def __init__(self, *args, **kwargs):
         super(PostForm, self).__init__(*args, **kwargs)
-        self.category.choices = [(category.id, category.name)
-                                for category in Category.query.order_by(Category.timestamp.desc()).all()]
+        self.category.choices = [(category.id, category.title)
+                                for category in Category.query.order_by\
+                                 (Category.timestamp.desc()).all()]
 
     def validate_image(self, field):
         if field.data:
@@ -85,14 +86,13 @@ class CategoryForm(Form):
     body = PageDownField("Text", validators=[Required()])
     image = StringField("Image", validators=[Length(0, 64)])
     timestamp = DateTimeField("Date and time", format='%Y-%m-%d %H:%M:%S')
-    category = SelectField("Category", coerce=int)
     featured = BooleanField('Featured')
     submit = SubmitField('Submit')
 
-    def __init__(self, *args, **kwargs):
-        super(CategoryForm, self).__init__(*args, **kwargs)
-        self.category.choices = [(category.id, category.name)
-                                for category in Category.query.order_by(Category.timestamp.desc()).all()]
+    #def __init__(self, *args, **kwargs):
+    #    super(CategoryForm, self).__init__(*args, **kwargs)
+    #    self.category.choices = [(category.id, category.name)
+    #                            for category in Category.query.order_by(Category.timestamp.desc()).all()]
 
 class UploadForm(Form):
     # https://flask-wtf.readthedocs.org/en/latest/form.html#module-flask_wtf.file

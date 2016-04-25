@@ -418,6 +418,7 @@ class Category(db.Model):
     body = db.Column(db.Text)
     body_html = db.Column(db.Text)
     image_id = db.Column(db.String(64), db.ForeignKey('uploads.id'))
+    featured = db.Column(db.Boolean, default=False, index=True)
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     posts = db.relationship('Post', backref='category', lazy='dynamic',
                                foreign_keys=[Post.category_id])

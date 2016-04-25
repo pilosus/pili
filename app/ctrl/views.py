@@ -219,14 +219,24 @@ def after_request(response):
     return response
 
 # TODO
+@ctrl.route('/category')
+def category(id, alias):
+    pass
+
+
+# TODO
 @ctrl.route('/categories', methods=['GET', 'POST'])
 def categories():
     form = CategoryForm()
     if form.validate_on_submit():
-        category = Category(body=form.body.data,
+        upload = Upload.query.filter_by(filename=form.image.data).first()
+        category = Category(author=current_user._get_current_object(),
                             title=form.title.data,
                             alias=sanitize_alias(form.alias.data),
-                            author=current_user._get_current_object())
+                            body=form.body.data,
+                            image=upload,
+                            featured=form.featured.data,
+                            timestamp=form.timestamp.data)
         db.session.add(category)
         flash("Category has been successfully created.")
         return redirect(url_for('ctrl.categories'))
