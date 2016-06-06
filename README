@@ -263,7 +263,16 @@ Show db.Model's schema, foriegn keys, etc:
 #. Bootstrap 3 Datetimepicker
    https://eonasdan.github.io/bootstrap-datetimepicker/Options/
 
-   
+
+===
+Git
+===
+
+Exclude files that have been commited to repo:
+
+* git rm -r --cached .
+* git add .
+* git commit -m '.gitignore fix'
 
 
 ##### http://www.sphinx-doc.org/en/stable/rest.html #####
