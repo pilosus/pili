@@ -1,4 +1,4 @@
-#!/Users/vitaly/git/mmse/venv/bin/python3.5
+#!/Users/vitaly/git/dfp/venv/bin/python3.5
 """PILdriver, an image-processing calculator using PIL.
 
 An instance of class PILDriver is essentially a software stack machine

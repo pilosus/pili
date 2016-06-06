@@ -19,35 +19,44 @@ import os
 def posts():
     form = PostForm()
     if current_user.can(Permission.WRITE_ARTICLES) and \
-            form.validate_on_submit():
+       form.validate_on_submit():
         ## add post
-        post = Post(body=form.body.data,
-                    title=form.title.data,
+        upload = Upload.query.filter_by(filename=form.image.data).first()
+        category = Category.query.filter_by(id=form.category.data).first()
+        post = Post(title=form.title.data,
                     alias=sanitize_alias(form.alias.data),
-                    author=current_user._get_current_object())
+                    timestamp=form.timestamp.data,
+                    body=form.body.data,
+                    author=current_user._get_current_object(),
+                    image=upload,
+                    featured=form.featured.data,
+                    category=category)
         db.session.add(post)
         
         ## add tags
         tags = sanitize_tags(form.tags.data)
         if tags:
-            tag_aliases = [sanitize_alias(c) for c in tags]
-            for c in zip(tags, tag_aliases):
-                tag_title = c[0]
-                tag_alias = c[1]
-                tag = Tag.query.filter(Tag.alias == \
-                                                 tag_alias).first()
-                ## add a single tag if it doesn't exist yet
+            tag_aliases = [sanitize_alias(t) for t in tags]
+            for t in zip(tags, tag_aliases):
+                tag_title = t[0]
+                tag_alias = t[1]
+                tag = Tag.query.filter(Tag.alias == tag_alias).first()
+                # add a single tag if it doesn't exist yet
                 if not tag:
                     tag = Tag(title=tag_title, alias=tag_alias)
                     db.session.add(tag)
                 
                 # flush session to obtain post.id and tag.id
                 db.session.flush()
-                cl = Tagification(tag_id=tag.id, post_id=post.id)
-                db.session.add(cl)
+                tagification = Tagification.query.filter_by\
+                               (tag_id=tag.id, post_id=post.id).first()
+                # add entry to M-to-M posts-tags table
+                if not tagification:
+                    cl = Tagification(tag_id=tag.id, post_id=post.id)
+                    db.session.add(cl)
 
         flash('Your post has been published.')
-        return redirect(url_for('.index'))
+        return redirect(url_for('.posts'))
     page = request.args.get('page', 1, type=int)
     pagination = Post.query.order_by(Post.timestamp.desc()).paginate(
         page, per_page=current_app.config['MMSE_POSTS_PER_PAGE'],

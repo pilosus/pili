@@ -1,11 +1,10 @@
-#!/Users/vitaly/git/mmse/venv/bin/python3.5
-
-# -*- coding: utf-8 -*-
-import re
+#!/Users/vitaly/git/dfp/venv/bin/python3.5
+# EASY-INSTALL-ENTRY-SCRIPT: 'coverage==3.7.1','console_scripts','coverage'
+__requires__ = 'coverage==3.7.1'
 import sys
-
-from coverage import main
+from pkg_resources import load_entry_point
 
 if __name__ == '__main__':
-    sys.argv[0] = re.sub(r'(-script\.pyw|\.exe)?$', '', sys.argv[0])
-    sys.exit(main())
+    sys.exit(
+        load_entry_point('coverage==3.7.1', 'console_scripts', 'coverage')()
+    )

@@ -71,10 +71,6 @@ class PostForm(Form):
                                 for category in Category.query.order_by\
                                  (Category.timestamp.desc()).all()]
 
-    def validate_image(self, field):
-        if field.data:
-            raise ValidationError('Bad filename.')
-            
             
 
 class CategoryForm(Form):

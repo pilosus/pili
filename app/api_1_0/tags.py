@@ -4,6 +4,7 @@ from ..models import Post, Permission, Tag
 from . import api
 from .decorators import permission_required
 from .errors import forbidden
+import json
 
 @api.route('/tags/')
 def get_tags():
@@ -32,6 +33,13 @@ def get_tags_list():
     return jsonify({
         'tags': [tag.title for tag in tags]
     })
+
+@api.route('/tags/titles2.json')
+def get_tags_list2():
+    """Return a list of tag titles."""
+    tags = Tag.query.all()
+    # Considered unsafe
+    return json.dumps([tag.title for tag in tags])
 
 @api.route('/tags/<alias>')
 def get_tag(alias):

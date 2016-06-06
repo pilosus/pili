@@ -11,9 +11,10 @@
 <div>
     {% if current_user.can(Permission.WRITE_ARTICLES) %}
     {# {{ wtf.quick_form(form) }} #}
-    <form class="form form-horizontal" method="post" role="form" enctype="multipart/form-data">
+    <form class="form form-horizontal" method="post" role="form">
       {{ form.hidden_tag() }}
-      {{ wtf.form_errors(form, hiddens="only") }}
+      {# {{ wtf.form_errors(form, hiddens="only") }} #}
+      {{ wtf.form_errors(form, hiddens=True) }}
       {{ wtf.form_field(form.title) }}
       {{ wtf.form_field(form.alias) }}
       {{ wtf.form_field(form.body) }}
@@ -26,6 +27,7 @@
 	{{ form.tags.label(class="control-label") }}
 	{{ form.tags(class="form-control typeahead", **{'data-role': 'tagsinput'}) }}
       </div>
+      
       {{ wtf.form_field(form.category) }}
       <div class="form-group">
         {# {{ wtf.form_field(form.featured) }} #}
@@ -71,6 +73,34 @@
 {{ pagedown.include_pagedown() }}
 
 <script>
+{#
+https://twitter.github.io/typeahead.js/examples/
+https://bootstrap-tagsinput.github.io/bootstrap-tagsinput/examples/
+#}
+var tags = new Bloodhound({
+  datumTokenizer: Bloodhound.tokenizers.obj.whitespace('name'),
+  queryTokenizer: Bloodhound.tokenizers.whitespace,
+  prefetch: {
+    url: "{{ url_for('api.get_tags_list2') }}",
+    filter: function(list) {
+        return $.map(list, function(tag) {
+        return { name: tag }; });
+    }
+  }
+});
+tags.initialize();
+
+$('#tags-control .typeahead').tagsinput({
+  typeaheadjs: {
+    name: 'tags',
+    displayKey: 'name',
+    valueKey: 'name',
+    source: tags.ttAdapter()
+  }
+});
+</script>
+
+<script>
   var uploads = new Bloodhound({
     datumTokenizer: Bloodhound.tokenizers.whitespace,
     queryTokenizer: Bloodhound.tokenizers.whitespace,
@@ -93,7 +123,7 @@
      $('#datetimepicker1').datetimepicker({
 	 locale: moment.locale(),
 	 sideBySide: true,
-	 format: 'DD/MM/YYYY HH:mm:ss',
+	 format: 'YYYY-MM-DD HH:mm:ss',
 	 defaultDate: "{{ datetimepicker }}"
      });
  });
