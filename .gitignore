@@ -6,4 +6,5 @@ flasky-uwsgi.ini
 post-receive
 TODO
 tmp
+venv
 __pycache__
