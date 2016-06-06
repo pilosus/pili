@@ -4,41 +4,41 @@ import os
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 class Config:
-    SECRET_KEY = os.environ.get('SECRET_KEY') or 'One, Two, Fredy is Coming for You'
+    SECRET_KEY = os.environ.get('SECRET_KEY')
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024 # 16 Mb
     SSL_DISABLE = False
     SQLALCHEMY_COMMIT_ON_TEARDOWN = True
     SQLALCHEMY_RECORD_QUERIES = True
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    MAIL_SERVER = os.environ.get('MAIL_SERVER') or 'mail.gandi.net'
+    MAIL_SERVER = os.environ.get('MAIL_SERVER')
     MAIL_PORT = os.environ.get('MAIL_PORT') or 587
     MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS') or True
     MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
-    MMSE_APP_NAME = 'MMSE'
-    MMSE_MAIL_SUBJECT_PREFIX = '[{0}] '.format(MMSE_APP_NAME)
-    MMSE_MAIL_SENDER = '{0} Mailer <mailer@pilosus.org>'.format(MMSE_APP_NAME)
-    MMSE_ADMIN = os.environ.get('MMSE_ADMIN') or 'samigullinv@gmail.com' # app admin email
-    MMSE_ADMIN_NAME = os.environ.get('MMSE_ADMIN_NAME') or 'Administrator'
-    MMSE_POSTS_PER_PAGE = os.environ.get('MMSE_POSTS_PER_PAGE') or 10
-    MMSE_CATEGORIES_PER_PAGE = os.environ.get('MMSE_CATEGORIES_PER_PAGE') or 10
-    MMSE_TAGS_PER_PAGE = os.environ.get('MMSE_TAGS_PER_PAGE') or 100
-    MMSE_IMAGES_PER_PAGE = os.environ.get('MMSE_IMAGES_PER_PAGE') or 5
-    MMSE_SLOW_DB_QUERY_TIME = 0.5
-    MMSE_SHOW_ALL_FOLLOWED = ['index', 'tag']
-    MMSE_STATIC_DIR = os.path.join(basedir, 'app/static')
-    MMSE_UPLOADS = os.path.join(MMSE_STATIC_DIR, 'uploads')
-    MMSE_ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'gif', 'png']
+    PILI_APP_NAME = 'PILI'
+    PILI_MAIL_SUBJECT_PREFIX = '[{0}] '.format(PILI_APP_NAME)
+    PILI_MAIL_SENDER = '{0} Mailer <mailer@pilosus.org>'.format(PILI_APP_NAME)
+    PILI_ADMIN = os.environ.get('PILI_ADMIN') or 'samigullinv@gmail.com' # app admin email
+    PILI_ADMIN_NAME = os.environ.get('PILI_ADMIN_NAME') or 'Administrator'
+    PILI_POSTS_PER_PAGE = os.environ.get('PILI_POSTS_PER_PAGE') or 10
+    PILI_CATEGORIES_PER_PAGE = os.environ.get('PILI_CATEGORIES_PER_PAGE') or 10
+    PILI_TAGS_PER_PAGE = os.environ.get('PILI_TAGS_PER_PAGE') or 100
+    PILI_IMAGES_PER_PAGE = os.environ.get('PILI_IMAGES_PER_PAGE') or 5
+    PILI_SLOW_DB_QUERY_TIME = 0.5
+    PILI_SHOW_ALL_FOLLOWED = ['index', 'tag']
+    PILI_STATIC_DIR = os.path.join(basedir, 'app/static')
+    PILI_UPLOADS = os.path.join(PILI_STATIC_DIR, 'uploads')
+    PILI_ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'gif', 'png']
     ##  Flask-thumbnails settings
-    MEDIA_FOLDER = MMSE_UPLOADS
+    MEDIA_FOLDER = PILI_UPLOADS
     MEDIA_URL = '/static/uploads/'
-    MEDIA_THUMBNAIL_FOLDER = os.path.join(MMSE_UPLOADS, 'thumbnails') # chmod 775
+    MEDIA_THUMBNAIL_FOLDER = os.path.join(PILI_UPLOADS, 'thumbnails') # chmod 775
     MEDIA_THUMBNAIL_URL = '/static/uploads/thumbnails/'
     ## Allowed html tags and attributes
-    MMSE_ALLOWED_TAGS = ['a', 'abbr', 'acronym', 'b', 'blockquote', 'code',
+    PILI_ALLOWED_TAGS = ['a', 'abbr', 'acronym', 'b', 'blockquote', 'code',
                          'em', 'i', 'img', 'li', 'ol', 'pre', 'strong', 'ul',
                          'h1', 'h2', 'h3', 'p', 'div', 'span']
-    MMSE_ALLOWED_ATTRIBUTES = {'*': ['class', 'id'],
+    PILI_ALLOWED_ATTRIBUTES = {'*': ['class', 'id'],
                                'a': ['href', 'rel'],
                                'img': ['src', 'alt']}
     
@@ -80,9 +80,9 @@ class ProductionConfig(Config):
                 secure = ()
         mail_handler = SMTPHandler(
             mailhost=(cls.MAIL_SERVER, cls.MAIL_PORT),
-            fromaddr=cls.MMSE_MAIL_SENDER,
-            toaddrs=[cls.MMSE_ADMIN],
-            subject=cls.MMSE_MAIL_SUBJECT_PREFIX + ' Application Error',
+            fromaddr=cls.PILI_MAIL_SENDER,
+            toaddrs=[cls.PILI_ADMIN],
+            subject=cls.PILI_MAIL_SUBJECT_PREFIX + ' Application Error',
             credentials=credentials,
             secure=secure)
         mail_handler.setLevel(logging.ERROR)

@@ -59,7 +59,7 @@ def posts():
         return redirect(url_for('.posts'))
     page = request.args.get('page', 1, type=int)
     pagination = Post.query.order_by(Post.timestamp.desc()).paginate(
-        page, per_page=current_app.config['MMSE_POSTS_PER_PAGE'],
+        page, per_page=current_app.config['PILI_POSTS_PER_PAGE'],
         error_out=False)
     posts = pagination.items
     return render_template('ctrl/posts.html', form=form, posts=posts,
@@ -71,7 +71,7 @@ def tag(alias):
     tag = Tag.query.filter_by(alias=alias).first_or_404()
     page = request.args.get('page', 1, type=int)
     pagination = tag.posts.query.order_by(Post.timestamp.desc()).paginate(
-        page, per_page=current_app.config['MMSE_POSTS_PER_PAGE'],
+        page, per_page=current_app.config['PILI_POSTS_PER_PAGE'],
         error_out=False)    
     posts = pagination.items
     return render_template('tag.html', tag=tag,
@@ -82,7 +82,7 @@ def user(username):
     user = User.query.filter_by(username=username).first_or_404()
     page = request.args.get('page', 1, type=int)
     pagination = user.posts.order_by(Post.timestamp.desc()).paginate(
-        page, per_page=current_app.config['MMSE_POSTS_PER_PAGE'],
+        page, per_page=current_app.config['PILI_POSTS_PER_PAGE'],
         error_out=False)
     posts = pagination.items
     return render_template('user.html', user=user, posts=posts,
@@ -221,7 +221,7 @@ def server_shutdown():
 @ctrl.after_app_request
 def after_request(response):
     for query in get_debug_queries():
-        if query.duration >= current_app.config['MMSE_SLOW_DB_QUERY_TIME']:
+        if query.duration >= current_app.config['PILI_SLOW_DB_QUERY_TIME']:
             current_app.logger.warning('Slow query: %s\nParameters: %s\nDuration: %fs\nContext: %s\n' \
                                        % (query.statement, query.parameters, query.duration,
                                           query.context))
@@ -252,7 +252,7 @@ def categories():
     # Render template with pagination
     page = request.args.get('page', 1, type=int)
     pagination = Category.query.order_by(Category.timestamp.desc()).paginate(
-        page, per_page=current_app.config['MMSE_POSTS_PER_PAGE'],
+        page, per_page=current_app.config['PILI_POSTS_PER_PAGE'],
         error_out=False)
     categories = pagination.items
     return render_template('ctrl/categories.html', form=form,
@@ -272,7 +272,7 @@ def uploads():
     if form.validate_on_submit():
         # Save file
         filename = secure_filename(form.image.data.filename)
-        form.image.data.save(os.path.join(current_app.config['MMSE_UPLOADS'], filename))
+        form.image.data.save(os.path.join(current_app.config['PILI_UPLOADS'], filename))
         # DB
         upload = Upload(filename=filename, title=form.title.data,
                       owner=current_user._get_current_object())
@@ -282,7 +282,7 @@ def uploads():
     # Render template with pagination
     page = request.args.get('page', 1, type=int)
     pagination = Upload.query.order_by(Upload.timestamp.desc()).paginate(
-        page, per_page=current_app.config['MMSE_IMAGES_PER_PAGE'],
+        page, per_page=current_app.config['PILI_IMAGES_PER_PAGE'],
         error_out=False)
     images = pagination.items
     return render_template('ctrl/uploads.html', form=form, images=images,
@@ -294,7 +294,7 @@ def uploads():
 def uploaded_file(action, filename):
     upload = Upload.query.filter_by(filename=filename).first_or_404()
     if action == 'view':
-        return send_from_directory(current_app.config['MMSE_UPLOADS'], filename)
+        return send_from_directory(current_app.config['PILI_UPLOADS'], filename)
     elif action == 'remove':
         # Check permissions
         if not (current_user.can(Permission.ADMINISTER) or \
@@ -304,7 +304,7 @@ def uploaded_file(action, filename):
         # Remove item in DB
         db.session.delete(upload)
         # Remove file on disk
-        os.remove(os.path.join(current_app.config['MMSE_UPLOADS'], filename))
+        os.remove(os.path.join(current_app.config['PILI_UPLOADS'], filename))
         # Remove thumbnails if any
         for thumb in os.listdir(current_app.config['MEDIA_THUMBNAIL_FOLDER']):
             if thumb.startswith(find_thumbnail(filename)):

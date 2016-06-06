@@ -14,7 +14,7 @@ def get_user_posts(id):
     user = User.query.get_or_404(id)
     page = request.args.get('page', 1, type=int)
     pagination = user.posts.order_by(Post.timestamp.desc()).paginate(
-        page, per_page=current_app.config['MMSE_POSTS_PER_PAGE'],
+        page, per_page=current_app.config['PILI_POSTS_PER_PAGE'],
         error_out=False)
     posts = pagination.items
     prev = None
@@ -36,7 +36,7 @@ def get_user_followed_posts(id):
     user = User.query.get_or_404(id)
     page = request.args.get('page', 1, type=int)
     pagination = user.followed_posts.order_by(Post.timestamp.desc()).paginate(
-        page, per_page=current_app.config['MMSE_POSTS_PER_PAGE'],
+        page, per_page=current_app.config['PILI_POSTS_PER_PAGE'],
         error_out=False)
     posts = pagination.items
     prev = None

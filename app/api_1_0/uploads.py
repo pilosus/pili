@@ -10,7 +10,7 @@ import json
 def get_uploads():
     page = request.args.get('page', 1, type=int)
     pagination = Upload.query.paginate(
-        page, per_page=current_app.config['MMSE_IMAGES_PER_PAGE'],
+        page, per_page=current_app.config['PILI_IMAGES_PER_PAGE'],
         error_out=False)
     uploads = pagination.items
     prev = None
@@ -53,7 +53,7 @@ def get_upload_posts(filename):
     upload = Upload.query.filter_by(filename=filename).first_or_404()
     page = request.args.get('page', 1, type=int)
     pagination = upload.posts.order_by(Post.timestamp.asc()).paginate(
-        page, per_page=current_app.config['MMSE_POSTS_PER_PAGE'],
+        page, per_page=current_app.config['PILI_POSTS_PER_PAGE'],
         error_out=False)
     posts = pagination.items
     prev = None
@@ -74,7 +74,7 @@ def get_upload_categories(filename):
     upload = Upload.query.filter_by(filename=filename).first_or_404()
     page = request.args.get('page', 1, type=int)
     pagination = upload.categories.order_by(Category.timestamp.asc()).paginate(
-        page, per_page=current_app.config['MMSE_CATEGORIES_PER_PAGE'],
+        page, per_page=current_app.config['PILI_CATEGORIES_PER_PAGE'],
         error_out=False)
     categories = pagination.items
     prev = None

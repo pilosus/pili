@@ -40,10 +40,10 @@ def sanitize_upload(s):
 
 def is_allowed_file(filename):
     return '.' in filename and \
-           filename.rsplit('.', 1)[1] in current_app.config['MMSE_ALLOWED_EXTENSIONS']
+           filename.rsplit('.', 1)[1] in current_app.config['PILI_ALLOWED_EXTENSIONS']
 
 def file_exists(form, field):
-    if os.path.isfile(os.path.join(current_app.config['MMSE_UPLOADS'], field.data.filename)):
+    if os.path.isfile(os.path.join(current_app.config['PILI_UPLOADS'], field.data.filename)):
         raise ValidationError('File already exists.')
 
 def get_added_removed(new, old):

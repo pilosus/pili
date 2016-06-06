@@ -10,7 +10,7 @@ import json
 def get_tags():
     page = request.args.get('page', 1, type=int)
     pagination = Tag.query.paginate(
-        page, per_page=current_app.config['FLASKY_TAGS_PER_PAGE'],
+        page, per_page=current_app.config['PILI_TAGS_PER_PAGE'],
         error_out=False)
     tags = pagination.items
     prev = None
@@ -51,7 +51,7 @@ def get_tag_posts(alias):
     tag = Tag.query.filter_by(alias=alias).first_or_404()
     page = request.args.get('page', 1, type=int)
     pagination = tag.posts.order_by(Post.timestamp.asc()).paginate(
-        page, per_page=current_app.config['MMSE_POSTS_PER_PAGE'],
+        page, per_page=current_app.config['PILI_POSTS_PER_PAGE'],
         error_out=False)
     posts = pagination.items
     prev = None

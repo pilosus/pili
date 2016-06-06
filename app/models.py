@@ -118,10 +118,10 @@ class User(UserMixin, db.Model):
         import string
 
         admin_role = Role.query.filter_by(permissions=0xff).first()
-        admin = User.query.filter_by(email=current_app.config['MMSE_ADMIN']).first()
+        admin = User.query.filter_by(email=current_app.config['PILI_ADMIN']).first()
         if not admin:
-            admin_user = User(email=current_app.config['MMSE_ADMIN'],
-                              username=current_app.config['MMSE_ADMIN_NAME'],
+            admin_user = User(email=current_app.config['PILI_ADMIN'],
+                              username=current_app.config['PILI_ADMIN_NAME'],
                               password=''.join(random.SystemRandom().\
                                                choice(string.ascii_uppercase + string.digits) for _ in range(10)),
                               role=admin_role,
@@ -156,7 +156,7 @@ class User(UserMixin, db.Model):
     def __init__(self, **kwargs):
         super(User, self).__init__(**kwargs)
         if self.role is None:
-            if self.email == current_app.config['MMSE_ADMIN']:
+            if self.email == current_app.config['PILI_ADMIN']:
                 self.role = Role.query.filter_by(permissions=0xff).first()
             if self.role is None:
                 self.role = Role.query.filter_by(default=True).first()
@@ -352,8 +352,8 @@ class Post(db.Model):
 
     @staticmethod
     def on_changed_body(target, value, oldvalue, initiator):
-        allowed_tags = current_app.config['MMSE_ALLOWED_TAGS']
-        allowed_attrs = current_app.config['MMSE_ALLOWED_ATTRIBUTES']
+        allowed_tags = current_app.config['PILI_ALLOWED_TAGS']
+        allowed_attrs = current_app.config['PILI_ALLOWED_ATTRIBUTES']
         target.body_html = bleach.linkify(bleach.clean(
             markdown(value, output_format='html'),
             tags=allowed_tags, attributes=allowed_attrs, strip=True))
@@ -425,8 +425,8 @@ class Category(db.Model):
 
     @staticmethod
     def on_changed_body(target, value, oldvalue, initiator):
-        allowed_tags = current_app.config['MMSE_ALLOWED_TAGS']
-        allowed_attrs = current_app.config['MMSE_ALLOWED_ATTRIBUTES']
+        allowed_tags = current_app.config['PILI_ALLOWED_TAGS']
+        allowed_attrs = current_app.config['PILI_ALLOWED_ATTRIBUTES']
         target.body_html = bleach.linkify(bleach.clean(
             markdown(value, output_format='html'),
             tags=allowed_tags, attributes=allowed_attrs, strip=True))
