@@ -43,6 +43,10 @@ Migrate DB schema
 
    * `python manage.py db migrate` (check and edit the latest created file in `migrations/versions/*.py`)
    * `python manage.py db upgrade`
+
+
+#. SQLite 3 ALTER table doesn't work:
+   https://github.com/miguelgrinberg/Flask-Migrate/issues/61
      
 .. _run_locally:
 ----------------------
@@ -274,6 +278,13 @@ Exclude files that have been commited to repo:
 * git add .
 * git commit -m '.gitignore fix'
 
+=================================
+Getting IP addresses behind proxy
+=================================
+
+https://stackoverflow.com/questions/3759981/get-ip-address-of-visitors-using-python-flask
+https://stackoverflow.com/questions/22868900/how-do-i-safely-get-the-users-real-ip-address-in-flask-using-mod-wsgi
+  
 
 ##### http://www.sphinx-doc.org/en/stable/rest.html #####
 

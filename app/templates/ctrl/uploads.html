@@ -3,7 +3,7 @@
 {% import "bootstrap/wtf.html" as wtf %}
 {% import "_macros.html" as macros %}
 
-{% block title %}File Uploads - MMSE{% endblock %}
+{% block title %}File Uploads - Pili{% endblock %}
 
 {% block page_content %}
 <div class="page-header">
@@ -11,7 +11,7 @@
 </div>
 
 <div>
-  {% if current_user.can(Permission.UPLOAD_FILES) %}
+  {% if current_user.can(Permission.UPLOAD) %}
   <form class="form form-horizontal" method="post" role="form" enctype="multipart/form-data">
     {{ form.hidden_tag() }}
     {{ wtf.form_errors(form, hiddens="only") }}

@@ -13,41 +13,44 @@ from . import db, login_manager
 class Permission:
     """Permission for App's users.
 
-    READ: - read articles
+    READ: 
+        - read articles
 
-    READ used for downgrading users who abused default rights. They
-    still can read, but cannot write, upload files or edit
-    structure. In order to reclaim default rights, administrator's
-    action needed.
+    FOLLOW:
+        - follow users
 
-    WRITE_ARTICLES: - write and edit articles
+    WRITE: 
+        - write articles
+        - edit articles
+        - create categories
+        - edit categories
 
-    WRITE_ARTICLES allows user to write articles, but assign them only
-    to categories already existed and use image files already uploaded
-    by other users.
+    UPLOAD: 
+        - upload files
+        - remove own uploaded files
 
-    UPLOAD_FILES: - upload files
-                  - remove own uploaded files
+    COMMENT: 
+        - comment to articles
+        - reply to other comment
 
-    UPLOAD_FILES used to grant permission of uploading image files for
-    articles, categories, etc. Introduced as a separate permission
-    since many users abuse image copyrights.
+    MODERATE: 
+        - remove comment
+        - block user
 
-    EDIT_STRUCTURE: - create and edit site menu
-                    - create and edit categories
-
-    EDIT_STRUCTURE used to work with webstite menu.
-
-    ADMINISTER: - read logs
-                - change other users roles
-                - confirm users registration
-                - send invitations to new users
+    ADMINISTER: 
+        - read logs
+        - change other users roles
+        - confirm users registration
+        - send invitations to new users
 
     """
     READ = 0x01
-    WRITE_ARTICLES = 0x02
-    UPLOAD_FILES = 0x04
-    EDIT_STRUCTURE = 0x08
+    FOLLOW = 0x02
+    WRITE = 0x04
+    COMMENT = 0x08
+    
+    UPLOAD = 0x10
+    MODERATE = 0x20
     ADMINISTER = 0x80
 
 
@@ -63,17 +66,26 @@ class Role(db.Model):
     @staticmethod
     def insert_roles():
         roles = {
-            'Pariah': (Permission.READ, False),
+            'Pariah': (Permission.READ |
+                       Permission.FOLLOW, False),
+            'Reader': (Permission.READ |
+                       Permission.FOLLOW |
+                       Permission.COMMENT, True),
             'Writer': (Permission.READ |
-                       Permission.WRITE_ARTICLES, True),
+                       Permission.FOLLOW |
+                       Permission.COMMENT |
+                       Permission.WRITE, False),
             'Editor': (Permission.READ |
-                       Permission.WRITE_ARTICLES |
-                       Permission.UPLOAD_FILES |
-                       Permission.EDIT_STRUCTURE, False),
+                       Permission.FOLLOW |
+                       Permission.COMMENT |
+                       Permission.WRITE |
+                       Permission.UPLOAD, False),
             'Moderator': (Permission.READ |
-                          Permission.WRITE_ARTICLES |
-                          Permission.UPLOAD_FILES |
-                          Permission.EDIT_STRUCTURE |
+                          Permission.FOLLOW |
+                          Permission.COMMENT |
+                          Permission.WRITE |
+                          Permission.UPLOAD |
+                          Permission.UPLOAD |
                           Permission.ADMINISTER, False),
             'Administrator': (0xff, False)
         }
@@ -89,6 +101,41 @@ class Role(db.Model):
     def __repr__(self):
         return '<Role %r>' % self.name
 
+class Reply(db.Model):
+    """Association table for one-to-many relationship between comments.
+
+    Reply is a Comment itself, but addressed to other specific Comment.
+    """
+    __tablename__ = 'replies'
+    # child comment by which user replies
+    id = db.Column(db.Integer, db.ForeignKey('comments.id'),
+                   primary_key=True)
+    # parent comment to which user replies
+    parent_id = db.Column(db.Integer, db.ForeignKey('comments.id'))
+    # user who replied to a comment
+    replier_id = db.Column(db.Integer, db.ForeignKey('users.id'),
+                           primary_key=True)
+    # user whos comment was replied
+    repliee_id = db.Column(db.Integer, db.ForeignKey('users.id'),
+                           primary_key=True)
+
+    def __repr__(self):
+        return '<Reply: comment %r replies to comment %r>' % (self.id, self.parent_id)
+    
+class Follow(db.Model):
+    """Self-referential many-to-many relationship for User model.
+
+    Many-to-many relationship is decomposed to two one-to-many
+    relationships, as SQLAlchemy cannot use give access to the custom
+    fields in association table used tranparently.
+    """
+    __tablename__ = 'follows'
+    follower_id = db.Column(db.Integer, db.ForeignKey('users.id'),
+                            primary_key=True)
+    followed_id = db.Column(db.Integer, db.ForeignKey('users.id'),
+                            primary_key=True)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
@@ -105,7 +152,43 @@ class User(UserMixin, db.Model):
     avatar_hash = db.Column(db.String(32))
     posts = db.relationship('Post', backref='author', lazy='dynamic')
     categories = db.relationship('Category', backref='author', lazy='dynamic')
+    tags = db.relationship('Tag', backref='author', lazy='dynamic')  
     images = db.relationship('Upload', backref='owner', lazy='dynamic')
+    # one-to-many relationship as a part of many-to-many Follows model
+
+    # lazy parameter set to 'select' by default, which means that
+    # items are loaded lazily using separate SELECT statements.
+    # 'joined' means that all items are to be loaded from the
+    # single db query.
+    # 'dynamic' returns queries instead of items itself, so the further
+    # filters could be applied.
+    
+    # http://docs.sqlalchemy.org/en/latest/orm/relationship_api.html\
+    # ?highlight=lazy#sqlalchemy.orm.relationship.params.lazy
+    followed = db.relationship('Follow',
+                               foreign_keys=[Follow.follower_id],
+                               backref=db.backref('follower', lazy='joined'),
+                               lazy='dynamic',
+                               cascade='all, delete-orphan')
+    followers = db.relationship('Follow',
+                                foreign_keys=[Follow.followed_id],
+                                backref=db.backref('followed', lazy='joined'),
+                                lazy='dynamic',
+                                cascade='all, delete-orphan')
+    comments = db.relationship('Comment', backref='author', lazy='dynamic')
+    # replies by the user
+    replies = db.relationship('Reply',
+                              foreign_keys=[Reply.repliee_id],
+                              backref=db.backref('repliee', lazy='joined'),
+                              lazy='dynamic',
+                              cascade='all, delete-orphan')
+    # replies to the user
+    messages = db.relationship('Reply',
+                              foreign_keys=[Reply.replier_id],
+                              backref=db.backref('replier', lazy='joined'),
+                              lazy='dynamic',
+                              cascade='all, delete-orphan')
+
 
     @staticmethod
     def add_admin():
@@ -153,6 +236,15 @@ class User(UserMixin, db.Model):
             except IntegrityError:
                 db.session.rollback()
 
+    @staticmethod
+    def add_self_follows():
+        for user in User.query.all():
+            if not user.is_following(user):
+                user.follow(user)
+                db.session.add(user)
+                db.session.commit()
+
+                
     def __init__(self, **kwargs):
         super(User, self).__init__(**kwargs)
         if self.role is None:
@@ -163,6 +255,7 @@ class User(UserMixin, db.Model):
         if self.email is not None and self.avatar_hash is None:
             self.avatar_hash = hashlib.md5(
                 self.email.encode('utf-8')).hexdigest()
+        self.followed.append(Follow(followed=self))
 
     @property
     def password(self):
@@ -251,7 +344,30 @@ class User(UserMixin, db.Model):
         return '{url}/{hash}?s={size}&d={default}&r={rating}'.format(
             url=url, hash=hash, size=size, default=default, rating=rating)
 
+    def follow(self, user):
+        if not self.is_following(user):
+            f = Follow(follower=self, followed=user)
+            db.session.add(f)
 
+    def unfollow(self, user):
+        f = self.followed.filter_by(followed_id=user.id).first()
+        if f:
+            db.session.delete(f)
+
+    def is_following(self, user):
+        return self.followed.filter_by(
+            followed_id=user.id).first() is not None
+
+    def is_followed_by(self, user):
+        return self.followers.filter_by(
+            follower_id=user.id).first() is not None
+
+    @property
+    def followed_posts(self):
+        return Post.query.join(Follow, Follow.followed_id == Post.author_id)\
+            .filter(Follow.follower_id == self.id)
+    
+    
     def to_json(self):
         json_user = {
             'url': url_for('api.get_post', id=self.id, _external=True),
@@ -293,6 +409,64 @@ login_manager.anonymous_user = AnonymousUser
 def load_user(user_id):
     return User.query.get(int(user_id))
 
+class Comment(db.Model):
+    __tablename__ = 'comments'
+    id = db.Column(db.Integer, primary_key=True)
+    body = db.Column(db.Text)
+    body_html = db.Column(db.Text)
+    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+    disabled = db.Column(db.Boolean)
+    author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    post_id = db.Column(db.Integer, db.ForeignKey('posts.id'))
+    ## http://docs.sqlalchemy.org/en/latest/orm/join_conditions.html
+    # there several fields in Reply class whose foreign_keys are
+    # 'comment.id' that's why we need an explicit use of foreign_keys
+    # dict in 'replies' field here.
+
+    # backref adds attribute 'parent' to Reply.
+
+    # cascade options effectively destroys links to association table
+    # 'replies' if any comment referring to it is deleted, i.e. to
+    # delete the entries that point to a record that was deleted
+    replies = db.relationship('Reply',
+                              foreign_keys=[Reply.parent_id],
+                              backref=db.backref('parent', lazy='joined'),
+                              lazy='dynamic',
+                              cascade='all, delete-orphan')
+
+    @staticmethod
+    def on_changed_body(target, value, oldvalue, initiator):
+        allowed_tags = current_app.config['PILI_ALLOWED_COMMENT_TAGS']
+        target.body_html = bleach.linkify(bleach.clean(
+            markdown(value, output_format='html'),
+            tags=allowed_tags, strip=True))
+
+    def to_json(self):
+        json_comment = {
+            'url': url_for('api.get_comment', id=self.id, _external=True),
+            'post': url_for('api.get_post', id=self.post_id, _external=True),
+            'body': self.body,
+            'body_html': self.body_html,
+            'timestamp': self.timestamp,
+            'author': url_for('api.get_user', id=self.author_id,
+                              _external=True),
+        }
+        return json_comment
+
+    @staticmethod
+    def from_json(json_comment):
+        body = json_comment.get('body')
+        if body is None or body == '':
+            raise ValidationError('comment does not have a body')
+        return Comment(body=body)
+
+    def __repr__(self):
+        return '<Comment %r>' % self.id
+
+
+db.event.listen(Comment.body, 'set', Comment.on_changed_body)
+
+
 ### Association table for many-to-many relationship Tag/Post.
 #classifications = db.Table('classifications',
 #                           db.Column('tag_id', db.Integer, db.ForeignKey('tags.id')),
@@ -306,6 +480,7 @@ class Tagification(db.Model):
                             primary_key=True)
     post_id = db.Column(db.Integer, db.ForeignKey('posts.id'),
                         primary_key=True)
+    
     def __repr__(self):
         return '<Tagification: tag %r contains post %r>' %\
             (self.tag_id, self.post_id)
@@ -322,6 +497,12 @@ class Post(db.Model):
     body_html = db.Column(db.Text)
     image_id = db.Column(db.String(64), db.ForeignKey('uploads.id'))
     featured = db.Column(db.Boolean, default=False, index=True)
+    commenting = db.Column(db.Boolean, default=True, index=True)
+    
+    # 1-to-many Post/Comment
+    # https://stackoverflow.com/questions/18677309/flask-sqlalchemy-relationship-error
+    comments = db.relationship('Comment', backref='post', lazy='dynamic',
+                               foreign_keys=[Comment.post_id])
     # 1-to-many relationship Category/Post
     category_id = db.Column(db.Integer, db.ForeignKey('categories.id'))
     # many-to-many relationship Tag/Post
@@ -366,6 +547,9 @@ class Post(db.Model):
             'timestamp': self.timestamp,
             'author': url_for('api.get_user', id=self.author_id,
                               _external=True),
+            'comments': url_for('api.get_post_comments', id=self.id,
+                                _external=True),
+            'comment_count': self.comments.count()
         }
         return json_post
 
@@ -389,6 +573,7 @@ class Tag(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(64))
     alias = db.Column(db.String(64), unique=True)
+    author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
 
     def to_json(self):
         json_tag = {

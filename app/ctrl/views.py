@@ -18,7 +18,7 @@ import os
 @ctrl.route('/', methods=['GET', 'POST'])
 def posts():
     form = PostForm()
-    if current_user.can(Permission.WRITE_ARTICLES) and \
+    if current_user.can(Permission.WRITE) and \
        form.validate_on_submit():
         ## add post
         upload = Upload.query.filter_by(filename=form.image.data).first()
@@ -266,7 +266,7 @@ def structure():
     pass
 
 @ctrl.route('/uploads', methods=['GET', 'POST'])
-@permission_required(Permission.UPLOAD_FILES)
+@permission_required(Permission.UPLOAD)
 def uploads():
     form = UploadForm()
     if form.validate_on_submit():
@@ -290,7 +290,7 @@ def uploads():
 
 
 @ctrl.route('/files/<action>/<filename>', methods=['GET', 'POST'])
-@permission_required(Permission.UPLOAD_FILES)
+@permission_required(Permission.UPLOAD)
 def uploaded_file(action, filename):
     upload = Upload.query.filter_by(filename=filename).first_or_404()
     if action == 'view':

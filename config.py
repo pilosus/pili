@@ -15,15 +15,16 @@ class Config:
     MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS') or True
     MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
-    PILI_APP_NAME = 'PILI'
+    PILI_APP_NAME = 'Pili'
     PILI_MAIL_SUBJECT_PREFIX = '[{0}] '.format(PILI_APP_NAME)
-    PILI_MAIL_SENDER = '{0} Mailer <mailer@pilosus.org>'.format(PILI_APP_NAME)
+    PILI_MAIL_SENDER = '{0} Mailer <{1}>'.format(PILI_APP_NAME, MAIL_USERNAME)
     PILI_ADMIN = os.environ.get('PILI_ADMIN') or 'samigullinv@gmail.com' # app admin email
     PILI_ADMIN_NAME = os.environ.get('PILI_ADMIN_NAME') or 'Administrator'
     PILI_POSTS_PER_PAGE = os.environ.get('PILI_POSTS_PER_PAGE') or 10
     PILI_CATEGORIES_PER_PAGE = os.environ.get('PILI_CATEGORIES_PER_PAGE') or 10
     PILI_TAGS_PER_PAGE = os.environ.get('PILI_TAGS_PER_PAGE') or 100
-    PILI_IMAGES_PER_PAGE = os.environ.get('PILI_IMAGES_PER_PAGE') or 5
+    PILI_IMAGES_PER_PAGE = os.environ.get('PILI_IMAGES_PER_PAGE') or 10
+    PILI_COMMENTS_PER_PAGE = os.environ.get('PILI_COMMENTS_PER_PAGE') or 100
     PILI_SLOW_DB_QUERY_TIME = 0.5
     PILI_SHOW_ALL_FOLLOWED = ['index', 'tag']
     PILI_STATIC_DIR = os.path.join(basedir, 'app/static')
@@ -41,7 +42,8 @@ class Config:
     PILI_ALLOWED_ATTRIBUTES = {'*': ['class', 'id'],
                                'a': ['href', 'rel'],
                                'img': ['src', 'alt']}
-    
+    PILI_ALLOWED_COMMENT_TAGS = ['a', 'abbr', 'acronym', 'b', 'code', 'em',
+                                 'i', 'strong']
 
     @staticmethod
     def init_app(app):

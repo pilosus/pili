@@ -14,8 +14,16 @@
 	  {{ post.author.username }}
 	</a>
 	{{ moment(post.timestamp).fromNow() }}
-	{% if post.tags.count() %}
+
+	{% if post.category %}
 	under
+	<a href="{{ url_for('main.category', id=post.category.id, alias=post.category.alias) }}">
+	  <span class="label label-success">{{ post.category.title }}</span>
+	</a> category
+	{% endif %}
+	
+	{% if post.tags.count() %}
+	with tags 
 	{% for tag in post.tags %}
 	<a href="{{ url_for('main.tag', alias=tag.alias) }}">
 	  <span class="label label-info">{{ tag.title }}</span>

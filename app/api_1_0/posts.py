@@ -34,7 +34,7 @@ def get_post(id):
 
 
 @api.route('/posts/', methods=['POST'])
-@permission_required(Permission.WRITE_ARTICLES)
+@permission_required(Permission.WRITE)
 def new_post():
     post = Post.from_json(request.json)
     post.author = g.current_user
@@ -45,7 +45,7 @@ def new_post():
 
 
 @api.route('/posts/<int:id>', methods=['PUT'])
-@permission_required(Permission.WRITE_ARTICLES)
+@permission_required(Permission.WRITE)
 def edit_post(id):
     post = Post.query.get_or_404(id)
     if g.current_user != post.author and \

@@ -16,7 +16,7 @@ if os.path.exists('.hosting.env'):
             os.environ[var[0]] = var[1]
     
 from app import create_app, db
-from app.models import User, Role, Permission, Post, Tag, \
+from app.models import User, Role, Permission, Reply, Follow, Post, Tag, \
     Tagification, Category, Structure, Upload
 from flask.ext.script import Manager, Shell
 from flask.ext.migrate import Migrate, MigrateCommand
@@ -86,6 +86,9 @@ def deploy():
 
     # add admin
     User.add_admin()
+
+    # add self-follows
+    User.add_self_follows()
 
     
 if __name__ == '__main__':

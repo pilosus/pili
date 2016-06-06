@@ -62,6 +62,7 @@ class PostForm(Form):
     image = StringField("Image", validators=[Length(0, 64)])
     tags = StringField("Tags", validators=[Length(0, 64)])
     featured = BooleanField('Featured')
+    commenting = BooleanField('Commenting')    
     category = SelectField("Category", coerce=int)
     submit = SubmitField('Submit')
 

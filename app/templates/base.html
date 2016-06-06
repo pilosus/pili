@@ -1,6 +1,6 @@
 {% extends "bootstrap/base.html" %}
 
-{% block title %}Flasky{% endblock %}
+{% block title %}Pili{% endblock %}
 
 {% block head %}
 {{ super() }}
@@ -26,7 +26,7 @@
         <div class="navbar-collapse collapse">
             <ul class="nav navbar-nav">
                   <li><a href="{{ url_for('main.index') }}">Home</a></li>
-		{% if current_user.can(Permission.WRITE_ARTICLES) %}
+		{% if current_user.can(Permission.WRITE) %}
 		  <li><a href="{{ url_for('ctrl.posts') }}">Control Panel</a></li>
 		{% endif %}
             </ul>

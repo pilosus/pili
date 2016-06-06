@@ -2,14 +2,14 @@
 {% extends "ctrl/base.html" %}
 {% import "bootstrap/wtf.html" as wtf %}
 {% import "_macros.html" as macros %}
-{% block title %}Posts - MMSE{% endblock %}
+{% block title %}Posts - Pili{% endblock %}
 
 {% block page_content %}
 <div class="page-header">
     <h1>Hello, {% if current_user.is_authenticated %}{{ current_user.username }}{% else %}Stranger{% endif %}!</h1>
 </div>
 <div>
-    {% if current_user.can(Permission.WRITE_ARTICLES) %}
+    {% if current_user.can(Permission.WRITE) %}
     {# {{ wtf.quick_form(form) }} #}
     <form class="form form-horizontal" method="post" role="form">
       {{ form.hidden_tag() }}
@@ -35,6 +35,11 @@
 	{{ form.featured(class="") }}
       </div>
 
+      <div class="form-group">
+	{{ form.commenting.label(class="control-label") }}
+	{{ form.commenting(checked=True, class="") }}
+      </div>
+      
       <div class="form-group">
 	<div class="container">
 	  <div class="row">
