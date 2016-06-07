@@ -30,6 +30,7 @@ def posts():
                     author=current_user._get_current_object(),
                     image=upload,
                     featured=form.featured.data,
+                    commenting=form.commenting.data,
                     category=category)
         db.session.add(post)
         

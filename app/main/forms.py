@@ -48,17 +48,6 @@ class EditProfileAdminForm(Form):
                 User.query.filter_by(username=field.data).first():
             raise ValidationError('Username already in use.')
 
-
-class PostForm(Form):
-    title = StringField("Title", validators=[Required(), Length(1, 128)])
-    alias = StringField("URL Alias", validators=[
-        Required(), Length(1, 128), Regexp('^(\w|-)+$', 0,
-                                           'Alias must have only lowercase '
-                                           'letters and dashes')])
-    body = PageDownField("What's up?", validators=[Required()])
-    categories = StringField(validators=[Length(0, 64)])
-    submit = SubmitField('Submit')
-
 class CommentForm(Form):
     body = StringField('Enter your comment', validators=[Required()])
     submit = SubmitField('Submit')

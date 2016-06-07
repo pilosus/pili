@@ -46,12 +46,13 @@
                 {% endif %}
             </div>
 
-	    {% if reply %}
-            <br>
+	    {% if not comment.disabled %}
+ 	      {% if reply %}
 	      <a class="btn btn-primary btn-xs" 
 		 href="{{ url_for('.post', id=comment.post.id, alias=comment.post.alias, parent_id=comment.id, page=page) }}">
 		Reply
 	      </a>
+	      {% endif %}
 	    {% endif %}
 
             {% if moderate %}

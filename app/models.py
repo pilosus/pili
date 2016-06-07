@@ -497,7 +497,7 @@ class Post(db.Model):
     body_html = db.Column(db.Text)
     image_id = db.Column(db.String(64), db.ForeignKey('uploads.id'))
     featured = db.Column(db.Boolean, default=False, index=True)
-    commenting = db.Column(db.Boolean, default=True, index=True)
+    commenting = db.Column(db.Boolean, index=True)
     
     # 1-to-many Post/Comment
     # https://stackoverflow.com/questions/18677309/flask-sqlalchemy-relationship-error

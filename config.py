@@ -25,6 +25,7 @@ class Config:
     PILI_TAGS_PER_PAGE = os.environ.get('PILI_TAGS_PER_PAGE') or 100
     PILI_IMAGES_PER_PAGE = os.environ.get('PILI_IMAGES_PER_PAGE') or 10
     PILI_COMMENTS_PER_PAGE = os.environ.get('PILI_COMMENTS_PER_PAGE') or 100
+    PILI_FOLLOWERS_PER_PAGE = os.environ.get('PILI_FOLLOWERS_PER_PAGE') or 100
     PILI_SLOW_DB_QUERY_TIME = 0.5
     PILI_SHOW_ALL_FOLLOWED = ['index', 'tag']
     PILI_STATIC_DIR = os.path.join(basedir, 'app/static')

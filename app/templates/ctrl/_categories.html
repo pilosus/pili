@@ -15,11 +15,17 @@
       {% for category in categories %}
       <tr>
 	<td width="150px">
+	  {% if category.image %}
 	  <a href="{{ url_for('.uploaded_file', filename=category.image.filename, action='view' ) }}" target="_blank">
 	    <img src="{{ category.image.filename | thumbnail('100x100', crop='fit', quality=75) }}"
 		 class="img-responsive img-thumbnail"
 		 title="{{ category.image.filename }}" alt="{{ category.image.filename }}">
 	  </a>
+
+	  {% else %}
+	  <span class="glyphicon glyphicon-remove" title="No Image"></span>
+	  {% endif %}
+	  
 	</td>
 	
 	<td>

@@ -20,7 +20,7 @@
       {{ wtf.form_field(form.body) }}
       <div class="form-group" id="uploads-control">
 	{{ form.image.label(class="control-label") }}
-	{{ form.image(class="form-control typeahead") }}
+	{{ form.image(class="form-control typeahead", **{'data-role': 'uploadinput'}) }}
       </div>
       
       <div class="form-group" id="tags-control">
@@ -37,7 +37,7 @@
 
       <div class="form-group">
 	{{ form.commenting.label(class="control-label") }}
-	{{ form.commenting(checked=True, class="") }}
+	{{ form.commenting(class="") }}
       </div>
       
       <div class="form-group">
@@ -64,7 +64,7 @@
     {% endif %}
 </div>
 <div>
-  {% include '_posts.html' %}
+  {% include 'main/_posts.html' %}
 </div>
 {% if pagination %}
 <div class="pagination">
@@ -82,17 +82,13 @@
 https://twitter.github.io/typeahead.js/examples/
 https://bootstrap-tagsinput.github.io/bootstrap-tagsinput/examples/
 #}
+
 var tags = new Bloodhound({
-  datumTokenizer: Bloodhound.tokenizers.obj.whitespace('name'),
-  queryTokenizer: Bloodhound.tokenizers.whitespace,
-  prefetch: {
-    url: "{{ url_for('api.get_tags_list2') }}",
-    filter: function(list) {
-        return $.map(list, function(tag) {
-        return { name: tag }; });
-    }
-  }
+    datumTokenizer: Bloodhound.tokenizers.obj.whitespace('name'),
+    queryTokenizer: Bloodhound.tokenizers.whitespace,
+    prefetch: "..{{ url_for('api.get_tags_list2') }}"
 });
+
 tags.initialize();
 
 $('#tags-control .typeahead').tagsinput({

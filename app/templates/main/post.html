@@ -1,0 +1,33 @@
+{% extends "main/base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+{% import "main/_macros.html" as macros %}
+
+{% block title %}{{ posts[0].title }}{{ super() }}{% endblock %}
+
+{% block page_content %}
+{% include 'main/_posts.html' %}
+
+{% if posts[0].commenting %}
+<h4 id="comments">Comments</h4>
+{% if current_user.can(Permission.COMMENT) %}
+<div class="comment-form">
+  {{ wtf.quick_form(form) }}
+</div>
+{% endif %}
+
+{% set reply = True %}
+{% if current_user.can(Permission.MODERATE) %}
+{% set moderate = True %}
+{% endif %}
+
+{% include 'main/_comments.html' %}
+
+{% if pagination %}
+<div class="pagination">
+  {{ macros.pagination_widget(pagination, 'main.post', fragment='#comments', id=posts[0].id, alias=posts[0].alias) }}
+</div>
+{% endif %}
+
+{% endif %} {# commenting ebanbled? #}
+
+{% endblock %}
