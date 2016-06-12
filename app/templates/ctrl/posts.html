@@ -77,18 +77,20 @@
 {{ super() }}
 {{ pagedown.include_pagedown() }}
 
+
 <script>
-{#
-https://twitter.github.io/typeahead.js/examples/
-https://bootstrap-tagsinput.github.io/bootstrap-tagsinput/examples/
-#}
-
 var tags = new Bloodhound({
-    datumTokenizer: Bloodhound.tokenizers.obj.whitespace('name'),
-    queryTokenizer: Bloodhound.tokenizers.whitespace,
-    prefetch: "..{{ url_for('api.get_tags_list2') }}"
+  datumTokenizer: Bloodhound.tokenizers.obj.whitespace('name'),
+  queryTokenizer: Bloodhound.tokenizers.whitespace,
+  prefetch: {
+    url: "{{ url_for('api.get_tags_list2') }}",
+    cache: false,
+    filter: function(list) {
+      return $.map(list, function(tag) {
+        return { name: tag }; });
+    }
+  }
 });
-
 tags.initialize();
 
 $('#tags-control .typeahead').tagsinput({
@@ -105,7 +107,10 @@ $('#tags-control .typeahead').tagsinput({
   var uploads = new Bloodhound({
     datumTokenizer: Bloodhound.tokenizers.whitespace,
     queryTokenizer: Bloodhound.tokenizers.whitespace,
-    prefetch: "..{{ url_for('api.get_uploads_list2') }}"
+    prefetch: {
+     url: "{{ url_for('api.get_uploads_list2') }}",
+     cache: false,
+    }
   });
 
   $('#uploads-control .typeahead').typeahead({
@@ -115,7 +120,7 @@ $('#tags-control .typeahead').tagsinput({
   {
     name: 'uploads',
     limit: 10,
-    source: uploads
+    source: uploads,
   });
 </script>
 

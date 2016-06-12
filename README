@@ -267,6 +267,11 @@ Show db.Model's schema, foriegn keys, etc:
 #. Bootstrap 3 Datetimepicker
    https://eonasdan.github.io/bootstrap-datetimepicker/Options/
 
+#. Typeahead.js
+   https://twitter.github.io/typeahead.js/examples/
+
+#. Bootstrap Tagsinput
+   https://bootstrap-tagsinput.github.io/bootstrap-tagsinput/examples/
 
 ===
 Git
@@ -287,4 +292,6 @@ https://stackoverflow.com/questions/22868900/how-do-i-safely-get-the-users-real-
   
 
 ##### http://www.sphinx-doc.org/en/stable/rest.html #####
+
+
 
