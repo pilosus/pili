@@ -141,15 +141,32 @@ def post(id, alias, parent_id=None):
 @ctrl.route('/edit/<int:id>-<alias>', methods=['GET', 'POST'])
 @login_required
 def edit(id, alias):
+    """Edit an existing post.
+    
+    User has to be logged in and be either:
+    - Author of the post
+    - Editor (role)
+    - Administrator (role)
+    """
     post = Post.query.get_or_404(id)
     if current_user != post.author and \
-            not current_user.can(Permission.ADMINISTER):
+            not (current_user.has_role('Administrator') or \
+                 current_user.has_role('Editor')):
         abort(403)
     form = PostForm()
     if form.validate_on_submit():
-        post.body = form.body.data
+        upload = Upload.query.filter_by(filename=form.image.data).first()
+        category = Category.query.filter_by(id=form.category.data).first()
+
         post.title = form.title.data
         post.alias = sanitize_alias(form.alias.data)
+        post.timestamp = form.timestamp.data
+        post.body = form.body.data
+        post.image = upload
+        post.featured = form.featured.data
+        post.commenting = form.commenting.data
+        post.category = category
+
         db.session.add(post)
 
         ### update tags
@@ -202,12 +219,19 @@ def edit(id, alias):
                 db.session.delete(tag)
         
         flash('The post has been updated.')
-        return redirect(url_for('.post', id=post.id, alias=post.alias))
-    form.body.data = post.body
+        return redirect(url_for('main.post', id=post.id, alias=post.alias))
     form.title.data = post.title
     form.alias.data = post.alias
+    form.timestamp.data = post.timestamp
+    form.body.data = post.body
+    if post.image:
+        form.image.data = post.image.filename
+    form.featured.data = post.featured
+    form.commenting.data = post.commenting
+    form.category.data = post.category
     form.tags.data =', '.join([c.title for c in post.tags.all()])
-    return render_template('edit_post.html', form=form)
+    return render_template('ctrl/edit_post.html', form=form,
+                           datetimepicker=datetime.utcnow())
 
 @ctrl.route('/shutdown')
 def server_shutdown():

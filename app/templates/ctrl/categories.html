@@ -2,7 +2,7 @@
 {% extends "ctrl/base.html" %}
 {% import "bootstrap/wtf.html" as wtf %}
 {% import "_macros.html" as macros %}
-{% block title %}Categories - Pili{% endblock %}
+{% block title %}Categories - {{ super() }}{% endblock %}
 
 {% block page_content %}
 <div class="page-header">

@@ -36,7 +36,7 @@
       </div>
       <div class="post-title">
 	<a href="{{ url_for('main.post', id=post.id, alias=post.alias) }}">
-	  <h4>{{ post.title }}</h4>
+	  <h4>{{ post.title }}</h4> 
 	</a>
       </div>
       <div class="post-author">
@@ -51,15 +51,15 @@
      
       <div class="post-footer">
         {% if current_user == post.author %}
-        {# <a href="{{ url_for('.edit', id=post.id, alias=post.alias) }}">
-          <span class="label label-primary">Edit</span>
+        <a href="{{ url_for('ctrl.edit', id=post.id, alias=post.alias) }}">
+          <span class="label label-default">Edit</span>
         </a>
-	#} 
-        {% elif current_user.is_administrator() %}
-        {# <a href="{{ url_for('.edit', id=post.id, alias=post.alias) }}">
+
+        {% elif current_user.has_role('Administrator') or 
+	current_user.has_role('Editor')  %}
+        <a href="{{ url_for('ctrl.edit', id=post.id, alias=post.alias) }}">
           <span class="label label-danger">Edit [Admin]</span>
         </a>
-	#}
         {% endif %}
 
 	{% if post.commenting %}

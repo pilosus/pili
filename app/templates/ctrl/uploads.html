@@ -3,7 +3,7 @@
 {% import "bootstrap/wtf.html" as wtf %}
 {% import "_macros.html" as macros %}
 
-{% block title %}File Uploads - Pili{% endblock %}
+{% block title %}File Uploads - {{ super() }}{% endblock %}
 
 {% block page_content %}
 <div class="page-header">

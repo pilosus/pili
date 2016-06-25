@@ -327,6 +327,9 @@ class User(UserMixin, db.Model):
         return self.role is not None and \
             (self.role.permissions & permissions) == permissions
 
+    def has_role(self, role_name):
+        return self.role.name == role_name
+    
     def is_administrator(self):
         return self.can(Permission.ADMINISTER)
 
@@ -495,7 +498,7 @@ class Post(db.Model):
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     body = db.Column(db.Text)
     body_html = db.Column(db.Text)
-    image_id = db.Column(db.String(64), db.ForeignKey('uploads.id'))
+    image_id = db.Column(db.Integer, db.ForeignKey('uploads.id'))
     featured = db.Column(db.Boolean, default=False, index=True)
     commenting = db.Column(db.Boolean, index=True)
     
