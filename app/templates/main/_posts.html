@@ -17,7 +17,7 @@
 
 	{% if post.category %}
 	under
-	<a href="{{ url_for('main.category', id=post.category.id, alias=post.category.alias) }}">
+	<a href="{{ url_for('main.category', alias=post.category.alias) }}">
 	  <span class="label label-success">{{ post.category.title }}</span>
 	</a> category
 	{% endif %}

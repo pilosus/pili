@@ -27,7 +27,7 @@ class Config:
     PILI_COMMENTS_PER_PAGE = os.environ.get('PILI_COMMENTS_PER_PAGE') or 100
     PILI_FOLLOWERS_PER_PAGE = os.environ.get('PILI_FOLLOWERS_PER_PAGE') or 100
     PILI_SLOW_DB_QUERY_TIME = 0.5
-    PILI_SHOW_ALL_FOLLOWED = ['index', 'tag']
+    PILI_SHOW_ALL_FOLLOWED = ['index', 'tag', 'category']
     PILI_STATIC_DIR = os.path.join(basedir, 'app/static')
     PILI_UPLOADS = os.path.join(PILI_STATIC_DIR, 'uploads')
     PILI_ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'gif', 'png']

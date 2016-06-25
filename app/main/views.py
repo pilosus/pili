@@ -6,7 +6,7 @@ from . import main
 from .forms import EditProfileForm, EditProfileAdminForm, CommentForm
 from .. import db
 from ..models import Permission, Role, User, Post, \
-    Tag, Tagification, Comment, Reply
+    Tag, Tagification, Comment, Reply, Category
 from ..decorators import admin_required, permission_required
 from ..filters import sanitize_alias, sanitize_tags, get_added_removed
 
@@ -31,12 +31,47 @@ def index():
 def tag(alias):
     tag = Tag.query.filter_by(alias=alias).first_or_404()
     page = request.args.get('page', 1, type=int)
-    pagination = tag.posts.query.order_by(Post.timestamp.desc()).paginate(
+
+
+    show_followed = False
+    if current_user.is_authenticated:
+        show_followed = bool(request.cookies.get('show_followed', ''))
+    if show_followed:
+        query = current_user.followed_posts.filter(Post.tags.contains(tag))
+    else:
+        query = tag.posts
+    pagination = query.order_by(Post.timestamp.desc()).paginate(
+        page, per_page=current_app.config['PILI_POSTS_PER_PAGE'],
+        error_out=False)
+    posts = pagination.items
+    return render_template('main/tag.html', tag=tag, posts=posts,
+                           show_followed=show_followed, pagination=pagination)
+
+    
+    pagination = tag.posts.order_by(Post.timestamp.desc()).paginate(
         page, per_page=current_app.config['PILI_POSTS_PER_PAGE'],
         error_out=False)    
     posts = pagination.items
-    return render_template('tag.html', tag=tag,
+    return render_template('main/tag.html', tag=tag,
                            pagination=pagination, posts=posts)
+
+"""
+    category = Category.query.filter_by(alias=alias).first_or_404()
+    page = request.args.get('page', 1, type=int)
+    show_followed = False
+    if current_user.is_authenticated:
+        show_followed = bool(request.cookies.get('show_followed', ''))
+    if show_followed:
+        query = current_user.followed_posts.filter(Post.category == category)
+    else:
+        query = category.posts
+    pagination = query.order_by(Post.timestamp.desc()).paginate(
+        page, per_page=current_app.config['PILI_POSTS_PER_PAGE'],
+        error_out=False)
+    posts = pagination.items
+    return render_template('main/category.html', category=category, posts=posts,
+                           show_followed=show_followed, pagination=pagination)
+"""
 
 @main.route('/user/<username>')
 def user(username):
@@ -96,10 +131,23 @@ def post(id, alias, parent_id=None):
     return render_template('main/post.html', posts=[post], form=form,
                            comments=comments, pagination=pagination)
 
-@main.route('/category/<int:id>-<alias>', methods=['GET'])
-def category(id, alias, parent_id=None):
-    category = Category.query.get_or_404(id)
-    return render_template('category.html', categories=[category], pagination=pagination)
+@main.route('/category/<alias>', methods=['GET'])
+def category(alias):
+    category = Category.query.filter_by(alias=alias).first_or_404()
+    page = request.args.get('page', 1, type=int)
+    show_followed = False
+    if current_user.is_authenticated:
+        show_followed = bool(request.cookies.get('show_followed', ''))
+    if show_followed:
+        query = current_user.followed_posts.filter(Post.category == category)
+    else:
+        query = category.posts
+    pagination = query.order_by(Post.timestamp.desc()).paginate(
+        page, per_page=current_app.config['PILI_POSTS_PER_PAGE'],
+        error_out=False)
+    posts = pagination.items
+    return render_template('main/category.html', category=category, posts=posts,
+                           show_followed=show_followed, pagination=pagination)
 
 @main.route('/follow/<username>')
 @login_required
@@ -111,10 +159,10 @@ def follow(username):
         return redirect(url_for('.index'))
     if current_user.is_following(user):
         flash('You are already following this user.')
-        return redirect(url_for('.user', username=username))
+        return redirect(url_for('main.user', username=username))
     current_user.follow(user)
     flash('You are now following %s.' % username)
-    return redirect(url_for('.user', username=username))
+    return redirect(url_for('main.user', username=username))
 
 
 @main.route('/unfollow/<username>')
@@ -249,7 +297,7 @@ def moderate():
         page, per_page=current_app.config['PILI_COMMENTS_PER_PAGE'],
         error_out=False)
     comments = pagination.items
-    return render_template('moderate.html', comments=comments,
+    return render_template('main/moderate.html', comments=comments,
                            pagination=pagination, page=page)
 
 
