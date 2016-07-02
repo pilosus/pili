@@ -406,6 +406,9 @@ class AnonymousUser(AnonymousUserMixin):
     def is_administrator(self):
         return False
 
+    def has_role(self, role_name):
+        return False
+    
 login_manager.anonymous_user = AnonymousUser
 
 @login_manager.user_loader

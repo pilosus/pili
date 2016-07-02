@@ -32,7 +32,6 @@ def tag(alias):
     tag = Tag.query.filter_by(alias=alias).first_or_404()
     page = request.args.get('page', 1, type=int)
 
-
     show_followed = False
     if current_user.is_authenticated:
         show_followed = bool(request.cookies.get('show_followed', ''))
@@ -55,24 +54,6 @@ def tag(alias):
     return render_template('main/tag.html', tag=tag,
                            pagination=pagination, posts=posts)
 
-"""
-    category = Category.query.filter_by(alias=alias).first_or_404()
-    page = request.args.get('page', 1, type=int)
-    show_followed = False
-    if current_user.is_authenticated:
-        show_followed = bool(request.cookies.get('show_followed', ''))
-    if show_followed:
-        query = current_user.followed_posts.filter(Post.category == category)
-    else:
-        query = category.posts
-    pagination = query.order_by(Post.timestamp.desc()).paginate(
-        page, per_page=current_app.config['PILI_POSTS_PER_PAGE'],
-        error_out=False)
-    posts = pagination.items
-    return render_template('main/category.html', category=category, posts=posts,
-                           show_followed=show_followed, pagination=pagination)
-"""
-
 @main.route('/user/<username>')
 def user(username):
     user = User.query.filter_by(username=username).first_or_404()
@@ -84,9 +65,9 @@ def user(username):
     return render_template('user.html', user=user, posts=posts,
                            pagination=pagination)
 
-@main.route('/post/<int:id>-<alias>', methods=['GET', 'POST'])
-@main.route('/post/<int:id>-<alias>/reply/<int:parent_id>', methods=['GET', 'POST'])
-def post(id, alias, parent_id=None):
+@main.route('/<category>/<int:id>-<alias>', methods=['GET', 'POST'])
+@main.route('/<category>/<int:id>-<alias>/reply/<int:parent_id>', methods=['GET', 'POST'])
+def post(category, id, alias, parent_id=None):
     # https://stackoverflow.com/questions/17873820/flask-url-for-with-multiple-parameters
     post = Post.query.get_or_404(id)
     form = CommentForm()
@@ -96,8 +77,8 @@ def post(id, alias, parent_id=None):
         # parent comment should be under the current post
         if parent_comment.post_id != id:
             flash('Operation is not permitted.')
-            return redirect(url_for('.post', id=post.id, \
-                                    alias=post.alias, page=-1))
+            return redirect(url_for('main.post', category=post.category.alias,
+                                    id=post.id, alias=post.alias, page=-1))
     if form.validate_on_submit():
         comment = Comment(body=form.body.data, \
                           post=post, \
@@ -116,7 +97,8 @@ def post(id, alias, parent_id=None):
             db.session.add(reply)
             
         flash('Your comment has been published.')
-        return redirect(url_for('main.post', id=post.id, alias=post.alias, page=-1))
+        return redirect(url_for('main.post', category=post.category.id,
+                                id=post.id, alias=post.alias, page=-1))
     page = request.args.get('page', 1, type=int)
     if page == -1:
         page = (post.comments.count() - 1) // \
@@ -148,6 +130,28 @@ def category(alias):
     posts = pagination.items
     return render_template('main/category.html', category=category, posts=posts,
                            show_followed=show_followed, pagination=pagination)
+
+@main.route('/category/<cat_alias>/tag/<tag_alias>', methods=['GET'])
+def category_tag(cat_alias, tag_alias):
+    category = Category.query.filter_by(alias=cat_alias).first_or_404()
+    tag = Tag.query.filter_by(alias=tag_alias).first_or_404()
+    page = request.args.get('page', 1, type=int)
+    show_followed = False
+    if current_user.is_authenticated:
+        show_followed = bool(request.cookies.get('show_followed', ''))
+    if show_followed:
+        query = current_user.followed_posts.filter(Post.category == category)
+    else:
+        query = category.posts
+    pagination = query.filter(Post.tags.contains(tag))\
+                      .order_by(Post.timestamp.desc()).paginate(
+                          page, per_page=current_app.config['PILI_POSTS_PER_PAGE'],
+                          error_out=False)
+    posts = pagination.items
+    return render_template('main/category_tag.html', category=category,
+                           tag=tag, posts=posts, show_followed=show_followed,
+                           pagination=pagination)
+
 
 @main.route('/follow/<username>')
 @login_required

@@ -219,7 +219,8 @@ def edit(id, alias):
                 db.session.delete(tag)
         
         flash('The post has been updated.')
-        return redirect(url_for('main.post', id=post.id, alias=post.alias))
+        return redirect(url_for('main.post', category=post.category.alias,
+                                id=post.id, alias=post.alias))
     form.title.data = post.title
     form.alias.data = post.alias
     form.timestamp.data = post.timestamp

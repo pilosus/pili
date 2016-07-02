@@ -21,21 +21,20 @@
 	  <span class="label label-success">{{ post.category.title }}</span>
 	</a> category
 	{% endif %}
-	
-	{% if post.tags.count() %}
-	with <span class="glyphicon glyphicon-tag"></span>
-	{% for tag in post.tags %}
-	<a href="{{ url_for('main.tag', alias=tag.alias) }}">
-	  {{ tag.title }}
-	{#  <span class="label label-info">{{ tag.title }}</span> #}
-	</a>
-	{% if not loop.last %},{% endif %}
-	{% endfor %}
-      {% endif %}
+
+  	  {% if post.tags.count() %}
+	  with <span class="glyphicon glyphicon-tag"></span>
+	  {% for tag in post.tags %}
+	  <a href="{{ url_for('main.tag', alias=tag.alias) }}">
+	    {{ tag.title }}
+	  </a>
+	  {% if not loop.last %},{% endif %}
+	  {% endfor %}
+	{% endif %}
 
       </div>
       <div class="post-title">
-	<a href="{{ url_for('main.post', id=post.id, alias=post.alias) }}">
+	<a href="{{ url_for('main.post', category=post.category.alias, id=post.id, alias=post.alias) }}">
 	  <h4>{{ post.title }}</h4> 
 	</a>
       </div>
@@ -63,7 +62,7 @@
         {% endif %}
 
 	{% if post.commenting %}
-        <a href="{{ url_for('main.post', id=post.id, alias=post.alias) }}#comments">
+        <a href="{{ url_for('main.post', category=post.category.alias, id=post.id, alias=post.alias) }}#comments">
           <span class="label label-primary">{{ post.comments.count() }} Comments</span>
         </a>
 	{% endif %}
