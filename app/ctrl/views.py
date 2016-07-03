@@ -4,7 +4,7 @@ from flask.ext.login import login_required, current_user
 from flask.ext.sqlalchemy import get_debug_queries
 from . import ctrl
 from .forms import EditProfileForm, EditProfileAdminForm, PostForm, UploadForm, \
-    CategoryForm
+    CategoryForm, EditCategoryForm
 from .. import db
 from ..models import Permission, Role, User, Post, \
     Tag, Tagification, Category, Upload
@@ -133,14 +133,9 @@ def edit_profile_admin(id):
     form.about_me.data = user.about_me
     return render_template('edit_profile.html', form=form, user=user)
 
-@ctrl.route('/post/<int:id>-<alias>', methods=['GET'])
-def post(id, alias, parent_id=None):
-    post = Post.query.get_or_404(id)
-    return render_template('post.html', posts=[post], pagination=pagination)
-
-@ctrl.route('/edit/<int:id>-<alias>', methods=['GET', 'POST'])
+@ctrl.route('/edit-post/<int:id>/<alias>', methods=['GET', 'POST'])
 @login_required
-def edit(id, alias):
+def edit_post(id, alias):
     """Edit an existing post.
     
     User has to be logged in and be either:
@@ -225,13 +220,48 @@ def edit(id, alias):
     form.alias.data = post.alias
     form.timestamp.data = post.timestamp
     form.body.data = post.body
-    if post.image:
-        form.image.data = post.image.filename
+    form.image.data = upload
+    
     form.featured.data = post.featured
     form.commenting.data = post.commenting
     form.category.data = post.category
     form.tags.data =', '.join([c.title for c in post.tags.all()])
     return render_template('ctrl/edit_post.html', form=form,
+                           datetimepicker=datetime.utcnow())
+
+@ctrl.route('/edit-category/<alias>', methods=['GET', 'POST'])
+@login_required
+@permission_required(Permission.STRUCTURE)
+def edit_category(alias):
+    """Edit an existing category.
+    """
+    category = Category.query.filter_by(alias=alias).first_or_404()
+    
+    form = EditCategoryForm()
+    if form.validate_on_submit():
+        upload = Upload.query.filter_by(filename=form.image.data).first()
+
+        category.title = form.title.data
+        category.alias = form.alias.data
+        category.body = form.body.data
+        category.image = upload
+        category.featured = form.featured.data
+        category.timestamp = form.timestamp.data
+
+        db.session.add(category)
+        flash("Category '{0}' has been successfully updated.".\
+              format(category.title), 'success')
+        return redirect(url_for('main.category', alias=category.alias))
+    # Render prefilled form
+    form.title.data = category.title
+    form.alias.data = category.alias
+    form.body.data = category.body
+    if category.image:
+        form.image.data = category.image.filename
+    form.featured.data = category.featured
+    form.timestamp.data = category.timestamp
+
+    return render_template('ctrl/edit_category.html', form=form,
                            datetimepicker=datetime.utcnow())
 
 @ctrl.route('/shutdown')
@@ -254,6 +284,7 @@ def after_request(response):
     return response
 
 @ctrl.route('/categories', methods=['GET', 'POST'])
+@permission_required(Permission.STRUCTURE)
 def categories():
     form = CategoryForm()
     if form.validate_on_submit():

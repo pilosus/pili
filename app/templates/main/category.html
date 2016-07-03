@@ -6,6 +6,21 @@
 {% block page_content %}
 
 <h3>Posts under category {{ category.title }}</h3>
+
+<div class="category">
+  <div class="category-image">
+    <img class="img-rounded" src="{{ category.image.filename }}">
+  </div>
+  
+  <div class="category-body">
+    {% if category.body_html %}
+      {{ category.body_html | safe }}
+    {% else %}
+      {{ category.body }}
+    {% endif %}
+  </div>
+</div>
+
 <div class="post-tabs">
     <ul class="nav nav-tabs">
       <li{% if not show_followed %} class="active"{% endif %}>

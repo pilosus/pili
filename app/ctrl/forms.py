@@ -73,8 +73,7 @@ class PostForm(Form):
                                  (Category.timestamp.desc()).all()]
 
             
-
-class CategoryForm(Form):
+class EditCategoryForm(Form):
     title = StringField("Title", validators=[Required(), Length(1, 128)])
     alias = StringField("URL alias", validators=[
         Required(), Length(1, 128), Regexp('^(\w|-)+$', 0,
@@ -86,15 +85,15 @@ class CategoryForm(Form):
     featured = BooleanField('Featured')
     submit = SubmitField('Submit')
 
+    #def validate_alias(self, field):
+    #    if Category.query.filter_by(alias=field.data).first():
+    #        raise ValidationError('Category with such alias already exists.')
+
+
+class CategoryForm(EditCategoryForm):
     def validate_alias(self, field):
         if Category.query.filter_by(alias=field.data).first():
             raise ValidationError('Category with such alias already exists.')
-
-
-    #def __init__(self, *args, **kwargs):
-    #    super(CategoryForm, self).__init__(*args, **kwargs)
-    #    self.category.choices = [(category.id, category.name)
-    #                            for category in Category.query.order_by(Category.timestamp.desc()).all()]
 
 class UploadForm(Form):
     # https://flask-wtf.readthedocs.org/en/latest/form.html#module-flask_wtf.file

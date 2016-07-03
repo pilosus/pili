@@ -1,12 +1,12 @@
 {% set page = 'categories' %}
 {% extends "ctrl/base.html" %}
 {% import "bootstrap/wtf.html" as wtf %}
-{% import "_macros.html" as macros %}
-{% block title %}Categories - {{ super() }}{% endblock %}
+
+{% block title %}Edit category - {{ super() }}{% endblock %}
 
 {% block page_content %}
 <div class="page-header">
-  <h1>Create Category</h1>
+    <h1>Edit Category</h1>
 </div>
 <div>
   {% if current_user.can(Permission.STRUCTURE) %}
@@ -51,25 +51,46 @@
   </form>
   {% endif %}
 </div>
-<div>
-  {% include 'ctrl/_categories.html' %}
-</div>
-{% if pagination %}
-<div class="pagination">
-  {{ macros.pagination_widget(pagination, '.categories') }}
-</div>
-{% endif %}
 {% endblock %}
 
 {% block scripts %}
 {{ super() }}
 {{ pagedown.include_pagedown() }}
 
+
+<script>
+var tags = new Bloodhound({
+  datumTokenizer: Bloodhound.tokenizers.obj.whitespace('name'),
+  queryTokenizer: Bloodhound.tokenizers.whitespace,
+  prefetch: {
+    url: "{{ url_for('api.get_tags_list2') }}",
+    cache: false,
+    filter: function(list) {
+      return $.map(list, function(tag) {
+        return { name: tag }; });
+    }
+  }
+});
+tags.initialize();
+
+$('#tags-control .typeahead').tagsinput({
+  typeaheadjs: {
+    name: 'tags',
+    displayKey: 'name',
+    valueKey: 'name',
+    source: tags.ttAdapter()
+  }
+});
+</script>
+
 <script>
   var uploads = new Bloodhound({
     datumTokenizer: Bloodhound.tokenizers.whitespace,
     queryTokenizer: Bloodhound.tokenizers.whitespace,
-    prefetch: "..{{ url_for('api.get_uploads_list2') }}"
+    prefetch: {
+     url: "{{ url_for('api.get_uploads_list2') }}",
+     cache: false,
+    }
   });
 
   $('#uploads-control .typeahead').typeahead({
@@ -79,7 +100,7 @@
   {
     name: 'uploads',
     limit: 10,
-    source: uploads
+    source: uploads,
   });
 </script>
 
