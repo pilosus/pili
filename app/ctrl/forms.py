@@ -86,6 +86,11 @@ class CategoryForm(Form):
     featured = BooleanField('Featured')
     submit = SubmitField('Submit')
 
+    def validate_alias(self, field):
+        if Category.query.filter_by(alias=field.data).first():
+            raise ValidationError('Category with such alias already exists.')
+
+
     #def __init__(self, *args, **kwargs):
     #    super(CategoryForm, self).__init__(*args, **kwargs)
     #    self.category.choices = [(category.id, category.name)

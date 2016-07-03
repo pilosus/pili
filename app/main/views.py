@@ -65,8 +65,8 @@ def user(username):
     return render_template('user.html', user=user, posts=posts,
                            pagination=pagination)
 
-@main.route('/<category>/<int:id>-<alias>', methods=['GET', 'POST'])
-@main.route('/<category>/<int:id>-<alias>/reply/<int:parent_id>', methods=['GET', 'POST'])
+@main.route('/<category>/<int:id>/<alias>', methods=['GET', 'POST'])
+@main.route('/<category>/<int:id>/<alias>/reply/<int:parent_id>', methods=['GET', 'POST'])
 def post(category, id, alias, parent_id=None):
     # https://stackoverflow.com/questions/17873820/flask-url-for-with-multiple-parameters
     post = Post.query.get_or_404(id)
@@ -76,7 +76,7 @@ def post(category, id, alias, parent_id=None):
         repliee = parent_comment.author
         # parent comment should be under the current post
         if parent_comment.post_id != id:
-            flash('Operation is not permitted.')
+            flash('Operation is not permitted.', 'warning')
             return redirect(url_for('main.post', category=post.category.alias,
                                     id=post.id, alias=post.alias, page=-1))
     if form.validate_on_submit():
@@ -96,7 +96,7 @@ def post(category, id, alias, parent_id=None):
                           repliee=repliee)
             db.session.add(reply)
             
-        flash('Your comment has been published.')
+        flash('Your comment has been published.', 'success')
         return redirect(url_for('main.post', category=post.category.id,
                                 id=post.id, alias=post.alias, page=-1))
     page = request.args.get('page', 1, type=int)
@@ -159,13 +159,13 @@ def category_tag(cat_alias, tag_alias):
 def follow(username):
     user = User.query.filter_by(username=username).first()
     if user is None:
-        flash('Invalid user.')
+        flash('Invalid user.', 'warning')
         return redirect(url_for('.index'))
     if current_user.is_following(user):
-        flash('You are already following this user.')
+        flash('You are already following this user.', 'warning')
         return redirect(url_for('main.user', username=username))
     current_user.follow(user)
-    flash('You are now following %s.' % username)
+    flash('You are now following {0}.'.format(username), 'success')
     return redirect(url_for('main.user', username=username))
 
 
@@ -175,13 +175,13 @@ def follow(username):
 def unfollow(username):
     user = User.query.filter_by(username=username).first()
     if user is None:
-        flash('Invalid user.')
+        flash('Invalid user.', 'warning')
         return redirect(url_for('.index'))
     if not current_user.is_following(user):
-        flash('You are not following this user.')
+        flash('You are not following this user.', 'warning')
         return redirect(url_for('.user', username=username))
     current_user.unfollow(user)
-    flash('You are not following %s anymore.' % username)
+    flash('You are not following {0} anymore.'.format(username), 'warning')
     return redirect(url_for('.user', username=username))
 
 
@@ -189,7 +189,7 @@ def unfollow(username):
 def followers(username):
     user = User.query.filter_by(username=username).first()
     if user is None:
-        flash('Invalid user.')
+        flash('Invalid user.', 'warning')
         return redirect(url_for('.index'))
     page = request.args.get('page', 1, type=int)
     pagination = user.followers.paginate(
@@ -206,7 +206,7 @@ def followers(username):
 def followed_by(username):
     user = User.query.filter_by(username=username).first()
     if user is None:
-        flash('Invalid user.')
+        flash('Invalid user.', 'warning')
         return redirect(url_for('.index'))
     page = request.args.get('page', 1, type=int)
     pagination = user.followed.paginate(
@@ -223,7 +223,7 @@ def comments(username):
     # .fisrt_or_404() could be used also
     user = User.query.filter_by(username=username).first()
     if user is None:
-        flash('Invalid user.')
+        flash('Invalid user.', 'warning')
         return redirect(url_for('.index'))
     page = request.args.get('page', 1, type=int)
     pagination = user.comments.order_by(Comment.timestamp.desc()).paginate(

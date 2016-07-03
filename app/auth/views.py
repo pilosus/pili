@@ -35,7 +35,7 @@ def login():
         if user is not None and user.verify_password(form.password.data):
             login_user(user, form.remember_me.data)
             return redirect(request.args.get('next') or url_for('main.index'))
-        flash('Invalid username or password.')
+        flash('Invalid username or password.', 'warning')
     return render_template('auth/login.html', form=form)
 
 
@@ -43,7 +43,7 @@ def login():
 @login_required
 def logout():
     logout_user()
-    flash('You have been logged out.')
+    flash('You have been logged out.', 'info')
     return redirect(url_for('main.index'))
 
 
@@ -59,7 +59,7 @@ def register():
         token = user.generate_confirmation_token()
         send_email(user.email, 'Confirm Your Account',
                    'auth/email/confirm', user=user, token=token)
-        flash('A confirmation email has been sent to you by email.')
+        flash('A confirmation email has been sent to you by email.', 'info')
         return redirect(url_for('auth.login'))
     return render_template('auth/register.html', form=form)
 
@@ -70,9 +70,9 @@ def confirm(token):
     if current_user.confirmed:
         return redirect(url_for('main.index'))
     if current_user.confirm(token):
-        flash('You have confirmed your account. Thanks!')
+        flash('You have confirmed your account. Thanks!', 'success')
     else:
-        flash('The confirmation link is invalid or has expired.')
+        flash('The confirmation link is invalid or has expired.', 'warning')
     return redirect(url_for('main.index'))
 
 
@@ -82,7 +82,7 @@ def resend_confirmation():
     token = current_user.generate_confirmation_token()
     send_email(current_user.email, 'Confirm Your Account',
                'auth/email/confirm', user=current_user, token=token)
-    flash('A new confirmation email has been sent to you by email.')
+    flash('A new confirmation email has been sent to you by email.', 'info')
     return redirect(url_for('main.index'))
 
 
@@ -94,10 +94,10 @@ def change_password():
         if current_user.verify_password(form.old_password.data):
             current_user.password = form.password.data
             db.session.add(current_user)
-            flash('Your password has been updated.')
+            flash('Your password has been updated.', 'success')
             return redirect(url_for('main.index'))
         else:
-            flash('Invalid password.')
+            flash('Invalid password.', 'warning')
     return render_template("auth/change_password.html", form=form)
 
 
@@ -115,9 +115,9 @@ def password_reset_request():
                        user=user, token=token,
                        next=request.args.get('next'))
             flash('An email with instructions to reset your password has been '
-                  'sent to you.')
+                  'sent to you.', 'info')
         else:
-            flash('No such email registered.')
+            flash('No such email registered.', 'warning')
         return redirect(url_for('auth.login'))
     return render_template('auth/reset_password.html', form=form)
 
@@ -132,7 +132,7 @@ def password_reset(token):
         if user is None:
             return redirect(url_for('main.index'))
         if user.reset_password(token, form.password.data):
-            flash('Your password has been updated.')
+            flash('Your password has been updated.', 'success')
             return redirect(url_for('auth.login'))
         else:
             return redirect(url_for('main.index'))
@@ -151,10 +151,10 @@ def change_email_request():
                        'auth/email/change_email',
                        user=current_user, token=token)
             flash('An email with instructions to confirm your new email '
-                  'address has been sent to you.')
+                  'address has been sent to you.', 'info')
             return redirect(url_for('main.index'))
         else:
-            flash('Invalid email or password.')
+            flash('Invalid email or password.', 'warning')
     return render_template("auth/change_email.html", form=form)
 
 
@@ -162,9 +162,9 @@ def change_email_request():
 @login_required
 def change_email(token):
     if current_user.change_email(token):
-        flash('Your email address has been updated.')
+        flash('Your email address has been updated.', 'success')
     else:
-        flash('Invalid request.')
+        flash('Invalid request.', 'warning')
     return redirect(url_for('main.index'))
 
 @auth.route('/user/<username>')

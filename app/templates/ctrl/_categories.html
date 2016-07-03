@@ -55,7 +55,11 @@
 	</td>
 	
 	<td>
-	  ...
+	  <ul class="list-inline">
+	  {% if current_user.can(Permission.ADMINISTER) or current_user.id == image.owner.id %}
+	    <li><a href="{{ url_for('ctrl.category', action='remove', alias=category.alias ) }}" title="Remove" class="confirm"><span class="glyphicon glyphicon-remove"></span></a></li>
+	    {% endif %}
+	  </ul>
 	</td>
       </tr>
       {% endfor %}

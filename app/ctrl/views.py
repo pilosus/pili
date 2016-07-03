@@ -56,7 +56,7 @@ def posts():
                     cl = Tagification(tag_id=tag.id, post_id=post.id)
                     db.session.add(cl)
 
-        flash('Your post has been published.')
+        flash('Your post has been published.', 'success')
         return redirect(url_for('.posts'))
     page = request.args.get('page', 1, type=int)
     pagination = Post.query.order_by(Post.timestamp.desc()).paginate(
@@ -99,7 +99,7 @@ def edit_profile():
         current_user.location = form.location.data
         current_user.about_me = form.about_me.data
         db.session.add(current_user)
-        flash('Your profile has been updated.')
+        flash('Your profile has been updated.', 'success')
         return redirect(url_for('.user', username=current_user.username))
     form.name.data = current_user.name
     form.location.data = current_user.location
@@ -122,7 +122,7 @@ def edit_profile_admin(id):
         user.location = form.location.data
         user.about_me = form.about_me.data
         db.session.add(user)
-        flash('The profile has been updated.')
+        flash('The profile has been updated.', 'success')
         return redirect(url_for('.user', username=user.username))
     form.email.data = user.email
     form.username.data = user.username
@@ -218,7 +218,7 @@ def edit(id, alias):
             if not other_cl:
                 db.session.delete(tag)
         
-        flash('The post has been updated.')
+        flash('The post has been updated.', 'success')
         return redirect(url_for('main.post', category=post.category.alias,
                                 id=post.id, alias=post.alias))
     form.title.data = post.title
@@ -253,13 +253,6 @@ def after_request(response):
                                           query.context))
     return response
 
-# TODO
-@ctrl.route('/category')
-def category(id, alias):
-    pass
-
-
-# TODO
 @ctrl.route('/categories', methods=['GET', 'POST'])
 def categories():
     form = CategoryForm()
@@ -273,7 +266,7 @@ def categories():
                             featured=form.featured.data,
                             timestamp=form.timestamp.data)
         db.session.add(category)
-        flash("Category has been successfully created.")
+        flash("Category has been successfully created.", 'success')
         return redirect(url_for('ctrl.categories'))
     # Render template with pagination
     page = request.args.get('page', 1, type=int)
@@ -286,6 +279,22 @@ def categories():
                            datetimepicker=datetime.utcnow(),
                            pagination=pagination)
 
+
+@ctrl.route('/category/<action>/<alias>', methods=['GET', 'POST'])
+@permission_required(Permission.ADMINISTER)
+def category(action, alias):
+    category = Category.query.filter_by(alias=alias).first_or_404()
+    if action == 'edit':
+        pass
+    elif action == 'remove':
+        if category.posts.count():
+            flash("Category '{0}' is not empty and cannot be removed".\
+                  format(category.title), 'warning')
+        else:
+            flash("Category '{0}' has been removed".\
+                  format(category.title), 'success')
+            db.session.delete(category)
+    return redirect(url_for('ctrl.categories'))
 
 @ctrl.route('/structure')
 def structure():
@@ -303,7 +312,8 @@ def uploads():
         upload = Upload(filename=filename, title=form.title.data,
                       owner=current_user._get_current_object())
         db.session.add(upload)
-        flash("File {0} has been successfully uploaded.".format(filename))
+        flash("File '{0}' has been successfully uploaded.".format(filename),
+              'success')
         return redirect(url_for('.uploads'))
     # Render template with pagination
     page = request.args.get('page', 1, type=int)
@@ -325,7 +335,8 @@ def uploaded_file(action, filename):
         # Check permissions
         if not (current_user.can(Permission.ADMINISTER) or \
             current_user.id == upload.owner.id):
-            flash('You have no permission to remove {0}.'.format(filename))
+            flash("You have no permission to remove '{0}'.".format(filename),
+                  'warning')
             return redirect(url_for('ctrl.uploads'))
         # Remove item in DB
         db.session.delete(upload)
@@ -336,10 +347,10 @@ def uploaded_file(action, filename):
             if thumb.startswith(find_thumbnail(filename)):
                 os.remove(os.path.join(current_app.config['MEDIA_THUMBNAIL_FOLDER'], thumb))
         # Redirect
-        flash('{0} has been removed.'.format(filename))
+        flash("File '{0}' has been removed.".format(filename), 'success')
         return redirect(url_for('ctrl.uploads'))
     else:
-        flash('There is no such action.')
+        flash('There is no such action.', 'warning')
         return redirect(url_for('ctrl.uploads'))
 
 @ctrl.route('/logs')
