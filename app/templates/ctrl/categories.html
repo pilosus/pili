@@ -10,7 +10,6 @@
 </div>
 <div>
   {% if current_user.can(Permission.STRUCTURE) %}
-  {# {{ wtf.quick_form(form) }} #}
   <form class="form form-horizontal" method="post" role="form">
     {{ form.hidden_tag() }}
     {{ wtf.form_errors(form, hiddens="only") }}
@@ -59,11 +58,61 @@
   {{ macros.pagination_widget(pagination, '.categories') }}
 </div>
 {% endif %}
+
+{# {{ wtf.quick_form(remove_form) }} #}
+<form method="post" id="removal">
+    {{ remove_form.hidden_tag() }}
+    {{ remove_form.id }}
+</form>
+
 {% endblock %}
 
 {% block scripts %}
 {{ super() }}
 {{ pagedown.include_pagedown() }}
+
+<script>
+ $('.remove').click( function() {
+     var itemID = $(this).data('id');
+     var postURL = "{{ url_for('ctrl.remove_category', id=0) }}".slice(0, -1) + itemID;
+
+     var remove = confirm('Are you sure?');
+     if (remove == true) {
+	 $.ajax({
+             url: postURL,
+             type: 'POST',
+             dataType: 'json',
+             data: $('form#removal').serialize(),
+	     success: function(response) {
+		 var flash = "<div class='alert alert-" + response['status'] + "'>" +
+	     		     "<button type='button' class='close' data-dismiss='alert'>&times;</button>" +
+	     		     response['message'] + "</div>";
+		 // save message to localStorage
+		 window.onbeforeunload = function() {
+		     localStorage.setItem('message', flash);
+		 }
+		 // reload the page
+		 location.reload();
+
+		 $('html,body').scrollTop(0);
+             },
+             error: function(jqXHR, textStatus, errorThrown) {
+		 console.log('Error code: ' + jqXHR.status);
+             }
+	 });
+     }
+ });
+</script>
+
+<script>
+ $( document ).ready(function() {
+     var message = localStorage.getItem('message');
+     if (message !== null) {
+	 $('.page-header').before(message);
+     }
+     localStorage.removeItem('message');
+ });
+</script>
 
 <script>
   var uploads = new Bloodhound({

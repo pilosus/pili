@@ -57,7 +57,8 @@
 	    <li><a href="{{ url_for('main.category', alias=category.alias ) }}" title="View"><span class="glyphicon glyphicon-eye-open"></span></a></li>
 	    {% if current_user.can(Permission.STRUCTURE) %}
 	    <li><a href="{{ url_for('ctrl.edit_category', alias=category.alias ) }}" title="Edit"><span class="glyphicon glyphicon-pencil"></span></a></li>
-	    <li><a href="{{ url_for('ctrl.category', action='remove', alias=category.alias ) }}" title="Remove" class="confirm"><span class="glyphicon glyphicon-remove"></span></a></li>
+	    {# <li><a href="{{ url_for('ctrl.category', action='remove', alias=category.alias ) }}" title="Remove" class="confirm"><span class="glyphicon glyphicon-remove"></span></a></li> #}
+	    <li><a href="" title="Remove" class="remove" data-id={{ category.id }}><span class="glyphicon glyphicon-remove"></span></a></li>
 	    {% endif %}
 	  </ul>
 	</td>

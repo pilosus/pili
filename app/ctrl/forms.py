@@ -1,6 +1,6 @@
 from flask.ext.wtf import Form
 from wtforms import StringField, TextAreaField, BooleanField, SelectField,\
-    SubmitField, DateTimeField
+    SubmitField, DateTimeField, HiddenField
 from flask.ext.wtf.file import FileField, FileRequired, FileAllowed
 from wtforms.validators import Required, Length, Email, Regexp
 from wtforms import ValidationError
@@ -107,4 +107,8 @@ class UploadForm(Form):
     submit = SubmitField('Submit')
 
     # https://wtforms.readthedocs.org/en/latest/validators.html#custom-validators
+    
+class RemoveEntryForm(Form):
+    """Remove a post, a category, an upload or other type of entry."""
+    id = HiddenField('Entry id', validators=[Required()])
     

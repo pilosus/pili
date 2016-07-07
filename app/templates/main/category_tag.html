@@ -1,0 +1,29 @@
+{% extends "main/base.html" %}
+{% import "main/_macros.html" as macros %}
+
+{% block title %}Posts under {{ category.title }}{{ super() }}{% endblock %}
+
+{% block page_content %}
+
+<h3>Posts under category {{ category.title }} with tag {{ tag.title }}</h3>
+<div class="post-tabs">
+    <ul class="nav nav-tabs">
+      <li{% if not show_followed %} class="active"{% endif %}>
+	<a href="{{ url_for('main.show_all', page='category') }}">All</a>
+      </li>
+      {% if current_user.is_authenticated %}
+      <li{% if show_followed %} class="active"{% endif %}>
+	<a href="{{ url_for('main.show_followed', page='category') }}">Followers</a>
+      </li>
+      {% endif %}
+    </ul>
+    {% include 'main/_posts.html' %}
+</div>
+
+{% if pagination %}
+<div class="pagination">
+    {{ macros.pagination_widget(pagination, 'main.category', alias=category.alias) }}
+</div>
+{% endif %}
+
+{% endblock %}

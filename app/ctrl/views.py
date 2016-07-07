@@ -1,10 +1,10 @@
 from flask import render_template, redirect, url_for, abort, flash, request,\
-    current_app, make_response, send_from_directory
+    current_app, make_response, send_from_directory, jsonify
 from flask.ext.login import login_required, current_user
 from flask.ext.sqlalchemy import get_debug_queries
 from . import ctrl
 from .forms import EditProfileForm, EditProfileAdminForm, PostForm, UploadForm, \
-    CategoryForm, EditCategoryForm
+    CategoryForm, EditCategoryForm, RemoveEntryForm
 from .. import db
 from ..models import Permission, Role, User, Post, \
     Tag, Tagification, Category, Upload
@@ -264,6 +264,8 @@ def edit_category(alias):
     return render_template('ctrl/edit_category.html', form=form,
                            datetimepicker=datetime.utcnow())
 
+
+
 @ctrl.route('/shutdown')
 def server_shutdown():
     if not current_app.testing:
@@ -286,7 +288,11 @@ def after_request(response):
 @ctrl.route('/categories', methods=['GET', 'POST'])
 @permission_required(Permission.STRUCTURE)
 def categories():
+    """Render a form to submit new category and a list of existing categories."""
+    remove_form = RemoveEntryForm()
     form = CategoryForm()
+
+    # create new category
     if form.validate_on_submit():
         upload = Upload.query.filter_by(filename=form.image.data).first()
         category = Category(author=current_user._get_current_object(),
@@ -299,33 +305,38 @@ def categories():
         db.session.add(category)
         flash("Category has been successfully created.", 'success')
         return redirect(url_for('ctrl.categories'))
-    # Render template with pagination
+    
+    # Render list of categories with pagination
     page = request.args.get('page', 1, type=int)
     pagination = Category.query.order_by(Category.timestamp.desc()).paginate(
         page, per_page=current_app.config['PILI_POSTS_PER_PAGE'],
         error_out=False)
     categories = pagination.items
     return render_template('ctrl/categories.html', form=form,
+                           remove_form=remove_form,
                            categories=categories,
                            datetimepicker=datetime.utcnow(),
                            pagination=pagination)
 
 
-@ctrl.route('/category/<action>/<alias>', methods=['GET', 'POST'])
+@ctrl.route('/remove-category/<id>', methods=['POST'])
 @permission_required(Permission.ADMINISTER)
-def category(action, alias):
-    category = Category.query.filter_by(alias=alias).first_or_404()
-    if action == 'edit':
-        pass
-    elif action == 'remove':
-        if category.posts.count():
-            flash("Category '{0}' is not empty and cannot be removed".\
-                  format(category.title), 'warning')
-        else:
-            flash("Category '{0}' has been removed".\
-                  format(category.title), 'success')
-            db.session.delete(category)
-    return redirect(url_for('ctrl.categories'))
+def remove_category(id):
+    category = Category.query.get_or_404(id)
+    if category.posts.count():
+        status = 'warning'
+        message = "Category '{0}' is not empty and cannot be removed".\
+                  format(category.title)
+    else:
+        status = 'success'
+        message = "Category '{0}' has been removed".\
+                  format(category.title)
+        db.session.delete(category)
+    return jsonify({
+        'status': status,
+        'message': message,
+        'redirect': url_for('ctrl.categories')
+    })
 
 @ctrl.route('/structure')
 def structure():
