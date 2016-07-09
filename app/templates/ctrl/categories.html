@@ -61,7 +61,7 @@
 
 {# {{ wtf.quick_form(remove_form) }} #}
 <form method="post" id="removal">
-    {{ remove_form.hidden_tag() }}
+    {{ remove_form.csrf_token(id="csrf-removal") }}
     {{ remove_form.id }}
 </form>
 
@@ -73,17 +73,33 @@
 
 <script>
  $('.remove').click( function() {
-     var itemID = $(this).data('id');
-     var postURL = "{{ url_for('ctrl.remove_category', id=0) }}".slice(0, -1) + itemID;
-
+     var data = {
+	 csrf: $('#csrf-removal').val(),
+	 id: $(this).data('id-removal')
+     };
+     
+     $.ajaxSetup({
+	 beforeSend: function(xhr, settings) {
+             if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+		 xhr.setRequestHeader("X-CSRFToken", data['csrf'])
+             }
+	 }
+     });
+     
      var remove = confirm('Are you sure?');
      if (remove == true) {
 	 $.ajax({
-             url: postURL,
-             type: 'POST',
+             url: "{{ url_for('ctrl.remove_category', _external=True) }}",
+             type: 'post',
              dataType: 'json',
-             data: $('form#removal').serialize(),
+             contentType: 'application/json;charset=UTF-8',
+	     accepts: {
+		 json: 'application/json',
+             },
+             //data: JSON.stringify(data, null, '\t'),
+	     data: JSON.stringify(data),
 	     success: function(response) {
+		 // message to user
 		 var flash = "<div class='alert alert-" + response['status'] + "'>" +
 	     		     "<button type='button' class='close' data-dismiss='alert'>&times;</button>" +
 	     		     response['message'] + "</div>";
@@ -91,13 +107,17 @@
 		 window.onbeforeunload = function() {
 		     localStorage.setItem('message', flash);
 		 }
-		 // reload the page
-		 location.reload();
 
-		 $('html,body').scrollTop(0);
-             },
+		 // wait a bit until response is received, then update the page
+		 setTimeout(function() { // wait 1 sec
+		     location.reload();  // reload page
+		     $('html,body').scrollTop(0); // jump on top
+		 }, 1000); 
+	     },
              error: function(jqXHR, textStatus, errorThrown) {
 		 console.log('Error code: ' + jqXHR.status);
+		 console.log('Error status: ' + textStatus);
+		 console.log('Error thrown: ' + errorThrown);
              }
 	 });
      }

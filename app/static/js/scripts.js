@@ -32,10 +32,14 @@ $(document).ready(function(){
     /**
        Popup for action confirmation
      **/
-    
-    $('.confirm').on('click', function () {
-        return confirm('Are you sure?');
-    });
+
+    function confirmAlert() {
+	$('.confirm').on('click', function () {
+            return confirm('Are you sure?');
+	});
+    }
+
+    confirmAlert();
 
     /**
        Fix typeahead styling for input text field for uploads search.
@@ -43,5 +47,5 @@ $(document).ready(function(){
     **/
     
     $('span.twitter-typeahead').has('#image').css('display', 'block');
-    
+
 });

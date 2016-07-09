@@ -3,6 +3,7 @@ from flask import render_template, redirect, url_for, abort, flash, request,\
 from flask.ext.login import login_required, current_user
 from flask.ext.sqlalchemy import get_debug_queries
 from . import ctrl
+from .. import csrf
 from .forms import EditProfileForm, EditProfileAdminForm, PostForm, UploadForm, \
     CategoryForm, EditCategoryForm, RemoveEntryForm
 from .. import db
@@ -319,6 +320,36 @@ def categories():
                            pagination=pagination)
 
 
+@csrf.exempt
+@ctrl.route('/remove-category', methods=['POST'])
+#@permission_required(Permission.ADMINISTER)
+def remove_category():
+    try:
+        id = request.json['id']
+        csrf = request.json['csrf']
+    except (KeyError, TypeError):
+        return jsonify({
+            'status': 'error',
+            'message': 'Function takes two parameters: '
+                       'id of the entry to be removed; csrf token',
+        })
+        
+    category = Category.query.get_or_404(id)
+    if category.posts.count():
+        status = 'warning'
+        message = "Category '{0}' is not empty and cannot be removed".\
+                  format(category.title)
+    else:
+        status = 'success'
+        message = "Category '{0}' has been removed".\
+                  format(category.title)
+        db.session.delete(category)
+    return jsonify({
+        'status': status,
+        'message': message,
+    })
+
+"""
 @ctrl.route('/remove-category/<id>', methods=['POST'])
 @permission_required(Permission.ADMINISTER)
 def remove_category(id):
@@ -337,6 +368,7 @@ def remove_category(id):
         'message': message,
         'redirect': url_for('ctrl.categories')
     })
+"""
 
 @ctrl.route('/structure')
 def structure():
@@ -346,6 +378,7 @@ def structure():
 @permission_required(Permission.UPLOAD)
 def uploads():
     form = UploadForm()
+    remove_form = RemoveEntryForm()
     if form.validate_on_submit():
         # Save file
         filename = secure_filename(form.image.data.filename)
@@ -363,38 +396,74 @@ def uploads():
         page, per_page=current_app.config['PILI_IMAGES_PER_PAGE'],
         error_out=False)
     images = pagination.items
-    return render_template('ctrl/uploads.html', form=form, images=images,
+    return render_template('ctrl/uploads.html', form=form,
+                           remove_form=remove_form,
+                           images=images,
                            pagination=pagination)
 
 
-@ctrl.route('/files/<action>/<filename>', methods=['GET', 'POST'])
-@permission_required(Permission.UPLOAD)
-def uploaded_file(action, filename):
-    upload = Upload.query.filter_by(filename=filename).first_or_404()
-    if action == 'view':
-        return send_from_directory(current_app.config['PILI_UPLOADS'], filename)
-    elif action == 'remove':
-        # Check permissions
-        if not (current_user.can(Permission.ADMINISTER) or \
-            current_user.id == upload.owner.id):
-            flash("You have no permission to remove '{0}'.".format(filename),
-                  'warning')
-            return redirect(url_for('ctrl.uploads'))
-        # Remove item in DB
-        db.session.delete(upload)
-        # Remove file on disk
-        os.remove(os.path.join(current_app.config['PILI_UPLOADS'], filename))
-        # Remove thumbnails if any
-        for thumb in os.listdir(current_app.config['MEDIA_THUMBNAIL_FOLDER']):
-            if thumb.startswith(find_thumbnail(filename)):
-                os.remove(os.path.join(current_app.config['MEDIA_THUMBNAIL_FOLDER'], thumb))
-        # Redirect
-        flash("File '{0}' has been removed.".format(filename), 'success')
-        return redirect(url_for('ctrl.uploads'))
-    else:
-        flash('There is no such action.', 'warning')
-        return redirect(url_for('ctrl.uploads'))
+@ctrl.route('/remove-upload/<filename>', methods=['POST'])
+#@permission_required(Permission.UPLOAD)
+def remove_upload(filename):
+    upload = Upload.query.filter_by(filename=filename).first()
+    # Upload exists
+    if upload:
+        # Do not delete if an upload is in use
+        categories = ', '.join([i.title for i in upload.categories])
+        posts = ', '.join([i.title for i in upload.posts])
+        if len(categories + posts):
+            status = "warning"
+            message = "File '{0}' is in use and cannot be removed.".format(filename)
+            if len(posts):
+                message += " Posts that use file: {0}".format(posts)
+            if len(categories):
+                message += " Categories that use file: {0}".format(categories)
 
+        else:
+            # Remove item in DB
+            db.session.delete(upload)
+            # Remove file on disk
+            os.remove(os.path.join(current_app.config['PILI_UPLOADS'], filename))
+            # Remove thumbnails if any
+            for thumb in os.listdir(current_app.config['MEDIA_THUMBNAIL_FOLDER']):
+                if thumb.startswith(find_thumbnail(filename)):
+                    os.remove(os.path.join(current_app.config['MEDIA_THUMBNAIL_FOLDER'], thumb))
+            status = "success"                
+            message = "File '{0}' has been removed.".format(filename)
+    else:
+        status = "error"        
+        message = "File '{0}' not found.".format(filename)
+    return jsonify({
+        'status': status,
+        'message': message,
+    })
+
+"""
+def remove_upload1(filename):
+    upload = Upload.query.filter_by(filename=filename).first_or_404()
+    # Check permissions
+    if not (current_user.can(Permission.ADMINISTER) or \
+        current_user.id != upload.owner.id):
+        flash("You have no permission to remove '{0}'.".format(filename),
+              'warning')
+        return redirect(url_for('ctrl.uploads'))
+    # Remove item in DB
+    db.session.delete(upload)
+    # Remove file on disk
+    os.remove(os.path.join(current_app.config['PILI_UPLOADS'], filename))
+    # Remove thumbnails if any
+    for thumb in os.listdir(current_app.config['MEDIA_THUMBNAIL_FOLDER']):
+        if thumb.startswith(find_thumbnail(filename)):
+            os.remove(os.path.join(current_app.config['MEDIA_THUMBNAIL_FOLDER'], thumb))
+    # Redirect
+    flash("File '{0}' has been removed.".format(filename), 'success')
+    return redirect(url_for('ctrl.uploads'))
+"""
+
+@ctrl.route('/view-upload/<filename>', methods=['GET', 'POST'])
+def view_upload(filename):
+    return send_from_directory(current_app.config['PILI_UPLOADS'], filename)
+    
 @ctrl.route('/logs')
 def logs():
     return render_template('ctrl/logs.html')

@@ -1,5 +1,6 @@
 from flask import render_template, request, jsonify
 from . import ctrl
+from .. import csrf
 
 @ctrl.app_errorhandler(403)
 def forbidden(e):
@@ -29,3 +30,12 @@ def internal_server_error(e):
         response.status_code = 500
         return response
     return render_template('500.html'), 500
+
+@csrf.error_handler
+def csrf_error(e):
+    if request.accept_mimetypes.accept_json and \
+            not request.accept_mimetypes.accept_html:
+        response = jsonify({'error': e})
+        response.status_code = 400
+        return response
+    return render_template('csrf_error.html', e=e), 400

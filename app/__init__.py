@@ -1,11 +1,13 @@
 from flask import Flask
 from flask.ext.bootstrap import Bootstrap
+from flask_bootstrap import WebCDN
 from flask.ext.mail import Mail
 from flask.ext.moment import Moment
 from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.login import LoginManager
 from flask.ext.pagedown import PageDown
 from flask.ext.thumbnails import Thumbnail
+from flask_wtf.csrf import CsrfProtect
 from config import config
 
 bootstrap = Bootstrap()
@@ -14,6 +16,8 @@ moment = Moment()
 db = SQLAlchemy()
 pagedown = PageDown()
 thumb = Thumbnail()
+csrf = CsrfProtect()
+
 
 login_manager = LoginManager()
 login_manager.session_protection = 'strong'
@@ -32,7 +36,13 @@ def create_app(config_name):
     login_manager.init_app(app)
     pagedown.init_app(app)
     thumb.init_app(app)
+    csrf.init_app(app)
 
+    # change jquery version with another CDN
+    app.extensions['bootstrap']['cdns']['jquery'] = WebCDN(
+    '//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/'
+    )
+    
     if not app.debug and not app.testing and not app.config['SSL_DISABLE']:
         from flask.ext.sslify import SSLify
         sslify = SSLify(app)
