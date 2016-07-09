@@ -14,12 +14,9 @@
       {% for image in images %}
       <tr>
 	<td>
-	  <a href="{{ url_for('.uploaded_file', filename=image.filename, action='view' ) }}" target="_blank">
-	    <img src="{{ image.filename | thumbnail('100x100', crop='fit', quality=75) }}"
-		 class="img-responsive img-thumbnail"
-		 title="{{ image.filename }}" alt="{{ image.filename }}">
-	  </a>
-
+	  <img src="{{ image.filename | thumbnail('100x100', crop='fit', quality=75) }}"
+	       class="img-responsive img-thumbnail"
+	       title="{{ image.filename }}" alt="{{ image.filename }}">
 	</td>
 
 	<td>
@@ -43,11 +40,10 @@
 	
 	<td>
 	  <ul class="list-inline">
+	    <li><a class="btn btn-link" href="{{ url_for('.view_upload', filename=image.filename) }}" title="View Image"><span class="glyphicon glyphicon-eye-open"></span></a></li>
 	  {% if current_user.can(Permission.ADMINISTER) or current_user.id == image.owner.id %}
-	    <li><a href="{{ url_for('.uploaded_file', filename=image.filename, action='remove' ) }}" title="Remove" class="confirm"><span class="glyphicon glyphicon-remove"></span></a></li>
-	  {% endif %}
-	    <li><a href="" title="Use in Post"><span class="glyphicon glyphicon-pencil"></span></a></li>
-	    <li><a href="" title="Use in Category"><span class="glyphicon glyphicon-folder-open"></span></a></li>
+	    <li><button class="btn btn-link remove" data-filename-removal="{{ image.filename }}" title="Remove"><span class="glyphicon glyphicon-remove"></span></button></li>
+	    {% endif %}
 	  </ul>
 	</td>
       </tr>

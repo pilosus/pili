@@ -88,7 +88,7 @@
      
      var remove = confirm('Are you sure?');
      if (remove == true) {
-	 $.ajax({
+	 $.when( $.ajax({
              url: "{{ url_for('ctrl.remove_category', _external=True) }}",
              type: 'post',
              dataType: 'json',
@@ -107,19 +107,16 @@
 		 window.onbeforeunload = function() {
 		     localStorage.setItem('message', flash);
 		 }
-
-		 // wait a bit until response is received, then update the page
-		 setTimeout(function() { // wait 1 sec
-		     location.reload();  // reload page
-		     $('html,body').scrollTop(0); // jump on top
-		 }, 1000); 
 	     },
              error: function(jqXHR, textStatus, errorThrown) {
 		 console.log('Error code: ' + jqXHR.status);
 		 console.log('Error status: ' + textStatus);
 		 console.log('Error thrown: ' + errorThrown);
              }
-	 });
+	 }).done(function(){
+	     location.reload();           // reload the page
+	     $('html,body').scrollTop(0); // jump on top
+	 }));
      }
  });
 </script>

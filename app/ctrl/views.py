@@ -320,9 +320,9 @@ def categories():
                            pagination=pagination)
 
 
-@csrf.exempt
+#@csrf.exempt
 @ctrl.route('/remove-category', methods=['POST'])
-#@permission_required(Permission.ADMINISTER)
+@permission_required(Permission.ADMINISTER)
 def remove_category():
     try:
         id = request.json['id']
@@ -348,27 +348,6 @@ def remove_category():
         'status': status,
         'message': message,
     })
-
-"""
-@ctrl.route('/remove-category/<id>', methods=['POST'])
-@permission_required(Permission.ADMINISTER)
-def remove_category(id):
-    category = Category.query.get_or_404(id)
-    if category.posts.count():
-        status = 'warning'
-        message = "Category '{0}' is not empty and cannot be removed".\
-                  format(category.title)
-    else:
-        status = 'success'
-        message = "Category '{0}' has been removed".\
-                  format(category.title)
-        db.session.delete(category)
-    return jsonify({
-        'status': status,
-        'message': message,
-        'redirect': url_for('ctrl.categories')
-    })
-"""
 
 @ctrl.route('/structure')
 def structure():
@@ -402,10 +381,20 @@ def uploads():
                            pagination=pagination)
 
 
-@ctrl.route('/remove-upload/<filename>', methods=['POST'])
-#@permission_required(Permission.UPLOAD)
-def remove_upload(filename):
-    upload = Upload.query.filter_by(filename=filename).first()
+@ctrl.route('/remove-upload', methods=['POST'])
+@permission_required(Permission.UPLOAD)
+def remove_upload():
+    try:
+        filename = request.json['filename']
+        csrf = request.json['csrf']
+    except (KeyError, TypeError):
+        return jsonify({
+            'status': 'error',
+            'message': 'Function takes two parameters: '
+                       'filename to be removed; csrf token',
+        })
+    
+    upload = Upload.query.filter_by(filename=filename).first_or_404()
     # Upload exists
     if upload:
         # Do not delete if an upload is in use
