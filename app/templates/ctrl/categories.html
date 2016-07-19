@@ -77,7 +77,7 @@
 	 csrf: $('#csrf-removal').val(),
 	 id: $(this).data('id-removal')
      };
-     
+
      $.ajaxSetup({
 	 beforeSend: function(xhr, settings) {
              if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
@@ -96,7 +96,6 @@
 	     accepts: {
 		 json: 'application/json',
              },
-             //data: JSON.stringify(data, null, '\t'),
 	     data: JSON.stringify(data),
 	     success: function(response) {
 		 // message to user

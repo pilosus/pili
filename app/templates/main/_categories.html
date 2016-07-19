@@ -1,0 +1,7 @@
+<ul class="list-unstyled categories">
+  {% for category in categories %}
+  <li class="cateogry">
+    <a href="{{ url_for('main.category', alias=category.alias) }}">{{ category.title }}</a> <span class="badge">{{ category.posts.count() }}</span></a>
+  </li>
+  {% endfor %}
+</ul>

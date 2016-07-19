@@ -24,7 +24,10 @@ def index():
         page, per_page=current_app.config['PILI_POSTS_PER_PAGE'],
         error_out=False)
     posts = pagination.items
-    return render_template('main/index.html', posts=posts,
+    tags = Tag.query.all()
+    categories = Category.query.all()
+    return render_template('main/index.html', posts=posts, tags=tags,
+                           categories=categories,
                            show_followed=show_followed, pagination=pagination)
 
 @main.route('/tag/<alias>')

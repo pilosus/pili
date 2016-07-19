@@ -21,7 +21,7 @@
 		 title="{{ category.image.filename }}" alt="{{ category.image.filename }}">
 
 	  {% else %}
-	  <span class="glyphicon glyphicon-remove" title="No Image"></span>
+	  <span class="glyphicon glyphicon-minus" title="No Image"></span>
 	  {% endif %}
 	  
 	</td>
@@ -57,7 +57,7 @@
 	    <li><a class="btn btn-link" href="{{ url_for('main.category', alias=category.alias ) }}" title="View"><span class="glyphicon glyphicon-eye-open"></span></a></li>
 	    {% if current_user.can(Permission.STRUCTURE) %}
 	    <li><a class="btn btn-link" href="{{ url_for('ctrl.edit_category', alias=category.alias ) }}" title="Edit"><span class="glyphicon glyphicon-pencil"></span></a></li>
-	    <li><button class="btn btn-link remove" type="button" title="Remove" data-id-removal={{ category.id }}><span class="glyphicon glyphicon-remove"></span></button></li>
+	    <li><button class="btn btn-link remove" type="button" title="Remove" data-id-removal="{{ category.id }}"><span class="glyphicon glyphicon-remove"></span></button></li>
 	    {% endif %}
 	  </ul>
 	</td>

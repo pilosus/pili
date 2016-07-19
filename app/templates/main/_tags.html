@@ -1,0 +1,7 @@
+<ul class="list-unstyled tags">
+  {% for tag in tags %}
+  <li class="tag">
+    <a href="{{ url_for('main.tag', alias=tag.alias) }}">{{ tag.title }}</a> <span class="badge">{{ tag.posts.count() }}</span></a>
+  </li>
+  {% endfor %}
+</ul>

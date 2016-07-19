@@ -64,9 +64,45 @@ def posts():
         page, per_page=current_app.config['PILI_POSTS_PER_PAGE'],
         error_out=False)
     posts = pagination.items
+    post_truncate = current_app.config['POST_TRUNCATE']
     return render_template('ctrl/posts.html', form=form, posts=posts,
+                           post_truncate=post_truncate,
                            datetimepicker=datetime.utcnow(),
                            pagination=pagination)
+
+@ctrl.route('/remove-post', methods=['POST'])
+# TODO: check permissions
+#@permission_required(Permission.ADMINISTER)
+def remove_post():
+    try:
+        id = request.json['id']
+        csrf = request.json['csrf']
+    except (KeyError, TypeError):
+        return jsonify({
+            'status': 'error',
+            'message': 'Function takes two parameters: '
+                       'id of the entry to be removed; csrf token',
+        })
+        
+    post = Post.query.get_or_404(id)
+    # TODO
+    # check if it has tags used only with this post
+    if category.tags.count():
+        status = 'warning'
+        message = "Post '{0}' has is not empty and cannot be removed".\
+                  format(Post.title)
+        # TODO: remove tag if it's not in use by other posts
+        # TODO: remove entry from Tagification table
+    else:
+        status = 'success'
+        message = "Post '{0}' has been removed".\
+                  format(post.title)
+        db.session.delete(post)
+    return jsonify({
+        'status': status,
+        'message': message,
+    })
+
 
 @ctrl.route('/tag/<alias>')
 def tag(alias):
@@ -221,7 +257,8 @@ def edit_post(id, alias):
     form.alias.data = post.alias
     form.timestamp.data = post.timestamp
     form.body.data = post.body
-    form.image.data = upload
+    if post.image:
+        form.image.data = category.image.filename
     
     form.featured.data = post.featured
     form.commenting.data = post.commenting
@@ -319,8 +356,6 @@ def categories():
                            datetimepicker=datetime.utcnow(),
                            pagination=pagination)
 
-
-#@csrf.exempt
 @ctrl.route('/remove-category', methods=['POST'])
 @permission_required(Permission.ADMINISTER)
 def remove_category():

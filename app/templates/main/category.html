@@ -9,7 +9,8 @@
 
 <div class="category">
   <div class="category-image">
-    <img class="img-rounded" src="{{ category.image.filename }}">
+    <img class="img-rounded" src="{{ category.image.filename | thumbnail('100x100', crop='fit', quality=75) }}"
+	 title="{{ category.image.filename }}" alt="{{ category.image.filename }}">
   </div>
   
   <div class="category-body">

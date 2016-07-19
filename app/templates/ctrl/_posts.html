@@ -1,0 +1,98 @@
+<div class="table-responsive">
+  <table class="table img-list table-condensed">
+    <thead>
+      <tr>
+	<th>Image</th>	
+	<th>Title</th>
+	<th>Alias</th>	
+	<th>Text</th>
+	<th>Author</th>
+	<th>Created</th>
+	<th>Category</th>
+	<th>Tags</th>
+	<th>Featured</th>
+	<th>Commenting</th>
+	<th>Operations</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for post in posts %}
+      <tr>
+	<td width="150px">
+	  {% if post.image %}
+	    <img src="{{ post.image.filename | thumbnail('100x100', crop='fit', quality=75) }}"
+		 class="img-responsive img-thumbnail"
+		 title="{{ post.image.filename }}" alt="{{ post.image.filename }}">
+
+	  {% else %}
+	  <span class="glyphicon glyphicon-minus" title="No Image"></span>
+	  {% endif %}
+	  
+	</td>
+	
+	<td>
+	  {{ post.title }}
+	</td>
+
+	<td>
+	  {{ post.alias }}
+	</td>
+
+	<td>
+	    {% if post.body_html %}
+   	      {{ post.body_html | safe | truncate(**post_truncate) }}
+            {% else %}
+              {{ post.body | truncate(**post_truncate) }}
+            {% endif %}
+	</td>
+
+	<td>
+	  <a href="{{ url_for('.user', username=post.author.username) }}">
+	    {{ post.author.username }}
+	  </a>
+	</td>
+	
+	<td>
+	  {{ moment(post.timestamp).fromNow() }}
+	</td>
+
+	<td>
+	    cat
+	</td>
+
+	<td>
+	    tags
+	</td>
+	
+	<td>
+	    {% if post.featured %}
+	    <span class="glyphicon glyphicon-ok" title="Featured"></span>
+	    {% else %}
+	    <span class="glyphicon glyphicon-remove" title="Not featured"></span>
+	    {% endif %}
+	</td>
+
+	<td>
+	    {% if post.commenting %}
+	    <span class="glyphicon glyphicon-ok" title="Commenting allowed"></span>
+	    {% else %}
+	    <span class="glyphicon glyphicon-remove" title="Commenting prohibited"></span>
+	    {% endif %}
+	</td>
+	
+	<td>
+	  <ul class="list-inline">
+	      <li><a class="btn btn-link" href="{{ url_for('main.post', category=post.category.alias, id=post.id, alias=post.alias) }}" title="View"><span class="glyphicon glyphicon-eye-open"></span></a></li>
+	      {% if current_user == post.author or
+	      current_user.has_role('Administrator') or 
+	      current_user.has_role('Editor')  %}
+	      <li><a class="btn btn-link" href="{{ url_for('ctrl.edit_post', id=post.id, alias=post.alias) }}" title="Edit"><span class="glyphicon glyphicon-pencil"></span></a></li>
+	    <li><button class="btn btn-link remove" type="button" title="Remove" data-id-removal="{{ post.id }}"><span class="glyphicon glyphicon-remove"></span></button></li>
+	    {% endif %}
+	  </ul>
+	</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>

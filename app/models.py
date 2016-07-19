@@ -490,8 +490,8 @@ class Tagification(db.Model):
                         primary_key=True)
     
     def __repr__(self):
-        return '<Tagification: tag %r contains post %r>' %\
-            (self.tag_id, self.post_id)
+        return '<Tagification: post %r contains tag %r>' %\
+            (self.post_id, self.tag_id)
 
 
 class Post(db.Model):
