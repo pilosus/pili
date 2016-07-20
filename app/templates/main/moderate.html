@@ -10,7 +10,7 @@
 {% set moderate = True %}
 {% set expand = True %}
 {% set reply = True %}
-{% include 'main/_comments.html' %}
+{% include 'ctrl/_comments.html' %}
 {% if pagination %}
 <div class="pagination">
     {{ macros.pagination_widget(pagination, 'main.moderate') }}

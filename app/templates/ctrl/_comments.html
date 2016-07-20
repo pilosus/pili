@@ -1,6 +1,5 @@
 <ul class="comments">
-  {% for comment in comments %}
-  {% if moderate or not comment.screened %}
+    {% for comment in comments %}
     <li id="comment{{ comment.id }}" class="comment">
         <div class="comment-thumbnail">
             <a href="{{ url_for('.user', username=comment.author.username) }}">
@@ -13,48 +12,62 @@
 	      <a href="{{ url_for('.user', username=comment.author.username) }}">
 		{{ comment.author.username }}
 	      </a>
+	      {% if expand %}
+	      commented on the
+	      <a href="{{ url_for('.post', category=comment.post.category.alias, id=comment.post.id, alias=comment.post.alias) }}#comment{{ comment.id }}">
+		{{ comment.post.title }}
+	      </a>
+	      {#[<a class="" role="button" data-toggle="collapse" href="#collapse{{ comment.id }}"
+		  aria-expanded="false" aria-controls="collapse{{ comment.id }}">show</a>]#}
+	      
 	    </div>
+	    
+	    {#<div id="collapse{{ comment.id }}" class="collapse">
+	      <div class="well">
+		{{ comment.post.body_html | safe }}
+	      </div>
+	    </div>
+	    #}
+	    {% else %}
+	    </div>
+	    {% endif %}
+	    
             <div class="comment-body">
                 {% if comment.disabled %}
                 <p><i>This comment has been disabled by a moderator.</i></p>
                 {% endif %}
-                {% if not comment.disabled %}
-		  <span class="{% if comment.screened %}text-muted{% endif %}">
-                    {% if comment.body_html %}
-                        {{ comment.body_html | safe }}
-                    {% else %}
-                        {{ comment.body }}
-                    {% endif %}
-		  </span>
-                {% endif %}
+
+		
+		<span class="{% if comment.screened %}text-muted{% endif %}">
+                  {% if comment.body_html %}
+                    {{ comment.body_html | safe }}
+                  {% else %}
+                    {{ comment.body }}
+                  {% endif %}
+		</span>
             </div>
 
-	    {% if not comment.disabled %}
+	    {% if not comment.disabled and not comment.screened %}
  	      {% if reply %}
 	      <a class="btn btn-primary btn-xs" 
-		 href="{{ url_for('main.post', category=comment.post.category.alias, id=comment.post.id, alias=comment.post.alias, parent_id=comment.id, page=page) }}">
+		 href="{{ url_for('.post', category=comment.post.category.alias, id=comment.post.id, alias=comment.post.alias, parent_id=comment.id, page=page) }}">
 		Reply
 	      </a>
 	      {% endif %}
 	    {% endif %}
 
-            {% if moderate %}
-              {% if comment.disabled %}
+            {% if comment.disabled %}
               <a class="btn btn-default btn-xs" href="{{ url_for('.moderate_enable', id=comment.id, page=page) }}">Enable</a>
-              {% else %}
+            {% else %}
               <a class="btn btn-danger btn-xs" href="{{ url_for('.moderate_disable', id=comment.id, page=page) }}">Disable</a>
-	      {% endif %}
-
-              {% if comment.screened %}
-              <a class="btn btn-default btn-xs" href="{{ url_for('.moderate_unscreen', id=comment.id, page=page) }}">Unscreen</a>
-              {% else %}
-              <a class="btn btn-danger btn-xs" href="{{ url_for('.moderate_screen', id=comment.id, page=page) }}">Screen</a>
-	      {% endif %}
-	      
 	    {% endif %}
 
+            {% if comment.screened %}
+              <a class="btn btn-default btn-xs" href="{{ url_for('.moderate_unscreen', id=comment.id, page=page) }}">Unscreen</a>
+            {% else %}
+              <a class="btn btn-danger btn-xs" href="{{ url_for('.moderate_screen', id=comment.id, page=page) }}">Screen</a>
+	    {% endif %}
         </div>
     </li>
-    {% endif %}
     {% endfor %}
 </ul>

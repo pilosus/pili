@@ -83,8 +83,10 @@ def post(category, id, alias, parent_id=None):
             return redirect(url_for('main.post', category=post.category.alias,
                                     id=post.id, alias=post.alias, page=-1))
     if form.validate_on_submit():
+        screened = current_app.config['PILI_COMMENTS_SCREENING']
         comment = Comment(body=form.body.data, \
                           post=post, \
+                          screened=screened, \
                           author=current_user._get_current_object())
         db.session.add(comment)
         # comment form prepopulated through Reply
@@ -329,6 +331,26 @@ def moderate_disable(id):
     return redirect(url_for('.moderate',
                             page=request.args.get('page', 1, type=int)))
 
+@main.route('/moderate/unscreen/<int:id>')
+@login_required
+@permission_required(Permission.MODERATE)
+def moderate_unscreen(id):
+    comment = Comment.query.get_or_404(id)
+    comment.screened = False
+    db.session.add(comment)
+    return redirect(url_for('.moderate',
+                            page=request.args.get('page', 1, type=int)))
+
+
+@main.route('/moderate/screen/<int:id>')
+@login_required
+@permission_required(Permission.MODERATE)
+def moderate_screen(id):
+    comment = Comment.query.get_or_404(id)
+    comment.screened = True
+    db.session.add(comment)
+    return redirect(url_for('.moderate',
+                            page=request.args.get('page', 1, type=int)))
 
 @main.route('/shutdown')
 def server_shutdown():
