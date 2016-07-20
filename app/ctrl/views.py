@@ -18,6 +18,7 @@ import os
 
 @ctrl.route('/', methods=['GET', 'POST'])
 def posts():
+    remove_form = RemoveEntryForm()
     form = PostForm()
     if current_user.can(Permission.WRITE) and \
        form.validate_on_submit():
@@ -65,14 +66,13 @@ def posts():
         error_out=False)
     posts = pagination.items
     post_truncate = current_app.config['POST_TRUNCATE']
-    return render_template('ctrl/posts.html', form=form, posts=posts,
+    return render_template('ctrl/posts.html', remove_form=remove_form,
+                           form=form, posts=posts,
                            post_truncate=post_truncate,
                            datetimepicker=datetime.utcnow(),
                            pagination=pagination)
 
 @ctrl.route('/remove-post', methods=['POST'])
-# TODO: check permissions
-#@permission_required(Permission.ADMINISTER)
 def remove_post():
     try:
         id = request.json['id']
@@ -85,24 +85,33 @@ def remove_post():
         })
         
     post = Post.query.get_or_404(id)
-    # TODO
-    # check if it has tags used only with this post
-    if category.tags.count():
-        status = 'warning'
-        message = "Post '{0}' has is not empty and cannot be removed".\
-                  format(Post.title)
-        # TODO: remove tag if it's not in use by other posts
-        # TODO: remove entry from Tagification table
-    else:
-        status = 'success'
-        message = "Post '{0}' has been removed".\
-                  format(post.title)
-        db.session.delete(post)
+    # check permissions
+    if current_user != post.author and \
+       not (current_user.has_role('Administrator') or \
+            current_user.has_role('Editor')):
+        abort(403)
+    
+    if post.tags.count():
+        tags = post.tags.all()
+        for t in tags:
+            # remove entries from M2M tagification table 
+            Tagification.query.filter_by(tag_id=t.id, post_id=post.id).\
+                delete(synchronize_session='fetch')
+            # if the tag is not in use in other post(s), remove it
+            in_other_posts = Tagification.query.\
+                             filter(Tagification.tag_id == t.id,
+                                    Tagification.post_id != post.id).count()
+            if not in_other_posts:
+                db.session.delete(t)
+
+    status = 'success'
+    message = "Post '{0}' has been removed".\
+              format(post.title)
+    db.session.delete(post)
     return jsonify({
         'status': status,
         'message': message,
     })
-
 
 @ctrl.route('/tag/<alias>')
 def tag(alias):

@@ -74,12 +74,75 @@
     {{ macros.pagination_widget(pagination, 'ctrl.posts') }}
 </div>
 {% endif %}
+
+<form method="post" id="removal">
+    {{ remove_form.csrf_token(id="csrf-removal") }}
+    {{ remove_form.id }}
+</form>
 {% endblock %}
 
 {% block scripts %}
 {{ super() }}
 {{ pagedown.include_pagedown() }}
 
+<script>
+ $('.remove').click( function() {
+     var data = {
+	 csrf: $('#csrf-removal').val(),
+	 id: $(this).data('id-removal')
+     };
+
+     $.ajaxSetup({
+	 beforeSend: function(xhr, settings) {
+             if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+		 xhr.setRequestHeader("X-CSRFToken", data['csrf'])
+             }
+	 }
+     });
+     
+     var remove = confirm('Are you sure?');
+     if (remove == true) {
+	 $.when( $.ajax({
+             url: "{{ url_for('ctrl.remove_post', _external=True) }}",
+             type: 'post',
+             dataType: 'json',
+             contentType: 'application/json;charset=UTF-8',
+	     accepts: {
+		 json: 'application/json',
+             },
+	     data: JSON.stringify(data),
+	     success: function(response) {
+		 // message to user
+		 var flash = "<div class='alert alert-" + response['status'] + "'>" +
+	     		     "<button type='button' class='close' data-dismiss='alert'>&times;</button>" +
+	     		     response['message'] + "</div>";
+		 // save message to localStorage
+		 window.onbeforeunload = function() {
+		     localStorage.setItem('message', flash);
+		 }
+	     },
+             error: function(jqXHR, textStatus, errorThrown) {
+		 console.log('Error code: ' + jqXHR.status);
+		 console.log('Error status: ' + textStatus);
+		 console.log('Error thrown: ' + errorThrown);
+             }
+	 }).done(function(){
+	     location.reload();           // reload the page
+	     $('html,body').scrollTop(0); // jump on top
+	 }));
+     }
+ });
+</script>
+
+<script>
+ $( document ).ready(function() {
+     var message = localStorage.getItem('message');
+     if (message !== null) {
+	 $('.page-header').before(message);
+     }
+     localStorage.removeItem('message');
+ });
+</script>
 
 <script>
 var tags = new Bloodhound({
