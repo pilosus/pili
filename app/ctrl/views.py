@@ -90,7 +90,7 @@ def remove_post():
        not (current_user.has_role('Administrator') or \
             current_user.has_role('Editor')):
         abort(403)
-    
+    # remove tags
     if post.tags.count():
         tags = post.tags.all()
         for t in tags:
@@ -104,6 +104,7 @@ def remove_post():
             if not in_other_posts:
                 db.session.delete(t)
 
+    # TODO: remove comments
     status = 'success'
     message = "Post '{0}' has been removed".\
               format(post.title)

@@ -29,7 +29,7 @@ migrate = Migrate(app, db)
 def make_shell_context():
     return dict(app=app, db=db, User=User, Role=Role,
                 Permission=Permission, Post=Post, Tag=Tag,
-                Comment=Comment, 
+                Comment=Comment, Reply=Reply,
                 Tagification=Tagification, Category=Category,
                 Structure=Structure, Upload=Upload)
 manager.add_command("shell", Shell(make_context=make_shell_context))

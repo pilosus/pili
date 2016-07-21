@@ -121,6 +121,11 @@ class Reply(db.Model):
     repliee_id = db.Column(db.Integer, db.ForeignKey('users.id'),
                            primary_key=True)
 
+    # self join strategies in sqlalchemy; adjacency list relationships
+    # http://docs.sqlalchemy.org/en/latest/orm/self_referential.html
+    def children(self):
+        return Reply.query.filter(Reply.parent_id == self.id)#.all()
+
     def __repr__(self):
         return '<Reply: comment %r replies to comment %r>' % (self.id, self.parent_id)
     
@@ -442,6 +447,8 @@ class Comment(db.Model):
                               backref=db.backref('parent', lazy='joined'),
                               lazy='dynamic',
                               cascade='all, delete-orphan')
+    def children(self):
+        return Reply.query.filter(Reply.parent_id == self.id)#.all()
 
     @staticmethod
     def on_changed_body(target, value, oldvalue, initiator):
