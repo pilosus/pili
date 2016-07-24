@@ -2,4 +2,3 @@
 Flask-SSLify==0.1.4
 psycopg2==2.5.1
 uWSGI==2.0.12
-gunicorn==18.0

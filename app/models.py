@@ -5,7 +5,7 @@ from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from markdown import markdown
 import bleach
 from flask import current_app, request, url_for
-from flask.ext.login import UserMixin, AnonymousUserMixin
+from flask_login import UserMixin, AnonymousUserMixin
 from app.exceptions import ValidationError
 from . import db, login_manager
 
@@ -103,32 +103,6 @@ class Role(db.Model):
     def __repr__(self):
         return '<Role %r>' % self.name
 
-class Reply(db.Model):
-    """Association table for one-to-many relationship between comments.
-
-    Reply is a Comment itself, but addressed to other specific Comment.
-    """
-    __tablename__ = 'replies'
-    # child comment by which user replies
-    id = db.Column(db.Integer, db.ForeignKey('comments.id'),
-                   primary_key=True)
-    # parent comment to which user replies
-    parent_id = db.Column(db.Integer, db.ForeignKey('comments.id'))
-    # user who replied to a comment
-    replier_id = db.Column(db.Integer, db.ForeignKey('users.id'),
-                           primary_key=True)
-    # user whos comment was replied
-    repliee_id = db.Column(db.Integer, db.ForeignKey('users.id'),
-                           primary_key=True)
-
-    # self join strategies in sqlalchemy; adjacency list relationships
-    # http://docs.sqlalchemy.org/en/latest/orm/self_referential.html
-    def children(self):
-        return Reply.query.filter(Reply.parent_id == self.id)#.all()
-
-    def __repr__(self):
-        return '<Reply: comment %r replies to comment %r>' % (self.id, self.parent_id)
-    
 class Follow(db.Model):
     """Self-referential many-to-many relationship for User model.
 
@@ -183,6 +157,8 @@ class User(UserMixin, db.Model):
                                 lazy='dynamic',
                                 cascade='all, delete-orphan')
     comments = db.relationship('Comment', backref='author', lazy='dynamic')
+    # TODO: fix replies by and to a user
+    """
     # replies by the user
     replies = db.relationship('Reply',
                               foreign_keys=[Reply.repliee_id],
@@ -195,6 +171,7 @@ class User(UserMixin, db.Model):
                               backref=db.backref('replier', lazy='joined'),
                               lazy='dynamic',
                               cascade='all, delete-orphan')
+    """
 
 
     @staticmethod
@@ -423,8 +400,14 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 class Comment(db.Model):
+    """Comment is message under a post. 
+    Comment that has a parent treated as a reply. Comment with replies
+    (children) represents n-ary tree.
+
+    """
     __tablename__ = 'comments'
     id = db.Column(db.Integer, primary_key=True)
+    parent_id = db.Column(db.Integer, db.ForeignKey('comments.id'))
     body = db.Column(db.Text)
     body_html = db.Column(db.Text)
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
@@ -442,14 +425,55 @@ class Comment(db.Model):
     # cascade options effectively destroys links to association table
     # 'replies' if any comment referring to it is deleted, i.e. to
     # delete the entries that point to a record that was deleted
-    replies = db.relationship('Reply',
-                              foreign_keys=[Reply.parent_id],
-                              backref=db.backref('parent', lazy='joined'),
-                              lazy='dynamic',
-                              cascade='all, delete-orphan')
-    def children(self):
-        return Reply.query.filter(Reply.parent_id == self.id)#.all()
+    #replies = db.relationship('Reply',
+    #                          foreign_keys=[Reply.parent_id],
+    #                          backref=db.backref('parent', lazy='joined'),
+    #                          lazy='dynamic',
+    #                          cascade='all, delete-orphan')
+    replies = db.relationship('Comment',
+                              backref=db.backref('parent', remote_side=[id]))
 
+    @staticmethod
+    def dfs(comment, fun):
+        """Traversal of the comment n-ary tree using Depth-First Search algorithm.
+
+        Function passed as a parameter used to process a node while
+        traversing the tree: print it, remove, etc.
+
+        >>> Comment.dfs(Comment.query.first(), print)
+
+        >>> descendants = []
+        >>> Comment.dfs(Comment.query.first(), lambda x: descendants.append(x))
+        """
+        # comment has no replies
+        if not comment.replies:
+            return
+        else:
+            for r in comment.replies:
+                # do something with a comment here
+                fun(r)
+                # recurr
+                Comment.dfs(r, fun)
+
+    @staticmethod
+    def bfs(comment, fun):
+        """Traversal of the comment n-ary tree using Breadth-First Search.
+
+        >>> Comment.bfs(Comment.query.first(), print)
+        """
+        cur_level = [comment]
+        while cur_level:
+            next_level = []
+            for c in cur_level:
+                # do not touch original comment to comply with dfs version
+                if not c == comment:
+                    # do something with a comment
+                    fun(c)
+                if c.replies:
+                    next_level.extend(c.replies)
+            # level change
+            cur_level = next_level
+                
     @staticmethod
     def on_changed_body(target, value, oldvalue, initiator):
         allowed_tags = current_app.config['PILI_ALLOWED_COMMENT_TAGS']

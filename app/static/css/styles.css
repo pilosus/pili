@@ -72,6 +72,17 @@ div.comment-author {
 div.comment-thumbnail {
     position: absolute;
 }
+div.comment-checkbox {
+    position: absolute;
+    margin-top: 40px;
+}
+.on-check {
+    display: none;
+}
+div.comment-control {
+    margin-left: 40px;
+    height: 30px;
+}
 div.comment-content {
     margin-left: 48px;
     min-height: 48px;

@@ -12,7 +12,7 @@
 
 {% if current_user.can(Permission.MODERATE) %}
 <li {% if page == 'categories' %}class="active"{% endif %}><a href="{{ url_for('ctrl.categories') }}">Categories</a></li>
-<li {% if page == 'comments' %}class="active"{% endif %}><a href="">Comments</a></li>
+<li {% if page == 'comments' %}class="active"{% endif %}><a href="{{ url_for('ctrl.comments') }}">Comments</a></li>
 {% endif %}
 
 {% if current_user.can(Permission.UPLOAD) %}	    

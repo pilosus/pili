@@ -40,15 +40,15 @@
 
             {% if moderate %}
               {% if comment.disabled %}
-              <a class="btn btn-default btn-xs" href="{{ url_for('.moderate_enable', id=comment.id, page=page) }}">Enable</a>
+              <a class="btn btn-default btn-xs" href="{{ url_for('ctrl.comments_enable', id=comment.id, page=page) }}">Enable</a>
               {% else %}
-              <a class="btn btn-danger btn-xs" href="{{ url_for('.moderate_disable', id=comment.id, page=page) }}">Disable</a>
+              <a class="btn btn-danger btn-xs" href="{{ url_for('ctrl.comments_disable', id=comment.id, page=page) }}">Disable</a>
 	      {% endif %}
 
               {% if comment.screened %}
-              <a class="btn btn-default btn-xs" href="{{ url_for('.moderate_unscreen', id=comment.id, page=page) }}">Unscreen</a>
+              <a class="btn btn-default btn-xs" href="{{ url_for('ctrl.comments_unscreen', id=comment.id, page=page) }}">Unscreen</a>
               {% else %}
-              <a class="btn btn-danger btn-xs" href="{{ url_for('.moderate_screen', id=comment.id, page=page) }}">Screen</a>
+              <a class="btn btn-danger btn-xs" href="{{ url_for('ctrl.comments_screen', id=comment.id, page=page) }}">Screen</a>
 	      {% endif %}
 	      
 	    {% endif %}

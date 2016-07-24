@@ -1,14 +1,14 @@
 from flask import render_template, redirect, url_for, abort, flash, request,\
     current_app, make_response, send_from_directory, jsonify
-from flask.ext.login import login_required, current_user
-from flask.ext.sqlalchemy import get_debug_queries
+from flask_login import login_required, current_user
+from flask_sqlalchemy import get_debug_queries
 from . import ctrl
 from .. import csrf
 from .forms import EditProfileForm, EditProfileAdminForm, PostForm, UploadForm, \
     CategoryForm, EditCategoryForm, RemoveEntryForm
 from .. import db
 from ..models import Permission, Role, User, Post, \
-    Tag, Tagification, Category, Upload
+    Comment, Tag, Tagification, Category, Upload
 from ..decorators import admin_required, permission_required
 from ..filters import sanitize_alias, sanitize_tags, sanitize_upload, \
     get_added_removed, is_allowed_file, find_thumbnail
@@ -72,6 +72,7 @@ def posts():
                            datetimepicker=datetime.utcnow(),
                            pagination=pagination)
 
+# TODO
 @ctrl.route('/remove-post', methods=['POST'])
 def remove_post():
     try:
@@ -497,7 +498,106 @@ def remove_upload1(filename):
 @ctrl.route('/view-upload/<filename>', methods=['GET', 'POST'])
 def view_upload(filename):
     return send_from_directory(current_app.config['PILI_UPLOADS'], filename)
-    
+
+
+@ctrl.route('/comments')
+@login_required
+@permission_required(Permission.MODERATE)
+def comments():
+    remove_form = RemoveEntryForm()
+    page = request.args.get('page', 1, type=int)
+    pagination = Comment.query.order_by(Comment.timestamp.desc()).paginate(
+        page, per_page=current_app.config['PILI_COMMENTS_PER_PAGE'],
+        error_out=False)
+    comments = pagination.items
+    return render_template('ctrl/comments.html', comments=comments,
+                           remove_form=remove_form,
+                           pagination=pagination, page=page)
+
+
+@ctrl.route('/comments/enable/<int:id>')
+@login_required
+@permission_required(Permission.MODERATE)
+def comments_enable(id):
+    comment = Comment.query.get_or_404(id)
+    comment.disabled = False
+    db.session.add(comment)
+    return redirect(url_for('.comments',
+                            page=request.args.get('page', 1, type=int),
+                            _anchor='comment{0}'.format(id)))
+
+
+@ctrl.route('/comments/disable/<int:id>')
+@login_required
+@permission_required(Permission.MODERATE)
+def comments_disable(id):
+    comment = Comment.query.get_or_404(id)
+    comment.disabled = True
+    db.session.add(comment)
+    return redirect(url_for('.comments',
+                            page=request.args.get('page', 1, type=int),
+                            _anchor='comment{0}'.format(id)))
+
+@ctrl.route('/comments/unscreen/<int:id>')
+@login_required
+@permission_required(Permission.MODERATE)
+def comments_unscreen(id):
+    comment = Comment.query.get_or_404(id)
+    comment.screened = False
+    db.session.add(comment)
+    return redirect(url_for('.comments',
+                            page=request.args.get('page', 1, type=int),
+                            _anchor='comment{0}'.format(id)))
+
+
+@ctrl.route('/comments/screen/<int:id>')
+@login_required
+@permission_required(Permission.MODERATE)
+def comments_screen(id):
+    comment = Comment.query.get_or_404(id)
+    comment.screened = True
+    db.session.add(comment)
+    return redirect(url_for('.comments',
+                            page=request.args.get('page', 1, type=int),
+                            _anchor='comment{0}'.format(id)))
+
+@ctrl.route('/remove-comment', methods=['POST'])
+@login_required
+@permission_required(Permission.MODERATE)
+def remove_comment():
+    try:
+        id = request.json['id']
+        csrf = request.json['csrf']
+    except (KeyError, TypeError):
+        return jsonify({
+            'status': 'error',
+            'message': 'Function takes two parameters: '
+                       'id of the entry to be removed; csrf token',
+        })
+        
+    comment = Comment.query.get_or_404(id)
+    # find all replies
+    descendants = []
+    Comment.dfs(comment, lambda x: descendants.append(x))
+    descendants.append(comment)
+
+    comments = ''
+    for c in descendants:
+        comments += str(c.id) + ', '
+        db.session.delete(c)
+    comments = comments.rstrip(str(comment.id) + ', ')
+
+    if comments:
+        message = 'Comment {0} as well as replies #{1} have been removed.'.\
+                  format(comment.id, comments)
+    else:
+        message = 'Comment {0} has been removed.'.format(comment.id)
+    status = 'success'
+    return jsonify({
+        'status': status,
+        'message': message,
+    })
+
 @ctrl.route('/logs')
 def logs():
     return render_template('ctrl/logs.html')

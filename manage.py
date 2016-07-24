@@ -16,10 +16,10 @@ if os.path.exists('.hosting.env'):
             os.environ[var[0]] = var[1]
     
 from app import create_app, db
-from app.models import User, Role, Permission, Reply, Follow, Post, Tag, \
+from app.models import User, Role, Permission, Follow, Post, Tag, \
     Comment, Tagification, Category, Structure, Upload
-from flask.ext.script import Manager, Shell
-from flask.ext.migrate import Migrate, MigrateCommand
+from flask_script import Manager, Shell
+from flask_migrate import Migrate, MigrateCommand
 
 app = create_app(os.getenv('FLASK_CONFIG') or 'default')
 manager = Manager(app)
@@ -29,7 +29,7 @@ migrate = Migrate(app, db)
 def make_shell_context():
     return dict(app=app, db=db, User=User, Role=Role,
                 Permission=Permission, Post=Post, Tag=Tag,
-                Comment=Comment, Reply=Reply,
+                Comment=Comment,
                 Tagification=Tagification, Category=Category,
                 Structure=Structure, Upload=Upload)
 manager.add_command("shell", Shell(make_context=make_shell_context))
@@ -69,14 +69,14 @@ def profile(length=25, profile_dir=None):
 @manager.command
 def initialize():
     """Create all databases, initialize migration scripts before deploying."""
-    from flask.ext.migrate import init
+    from flask_migrate import init
     db.create_all()
     init()
     
 @manager.command
 def deploy():
     """Run deployment tasks."""
-    from flask.ext.migrate import upgrade
+    from flask_migrate import upgrade
     from app.models import Role, User
 
     # migrate database to latest revision

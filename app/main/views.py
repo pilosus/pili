@@ -1,12 +1,12 @@
 from flask import render_template, redirect, url_for, abort, flash, request,\
     current_app, make_response
-from flask.ext.login import login_required, current_user
-from flask.ext.sqlalchemy import get_debug_queries
+from flask_login import login_required, current_user
+from flask_sqlalchemy import get_debug_queries
 from . import main
 from .forms import EditProfileForm, EditProfileAdminForm, CommentForm
 from .. import db
 from ..models import Permission, Role, User, Post, \
-    Tag, Tagification, Comment, Reply, Category
+    Tag, Tagification, Comment, Category
 from ..decorators import admin_required, permission_required
 from ..filters import sanitize_alias, sanitize_tags, get_added_removed
 
@@ -84,11 +84,13 @@ def post(category, id, alias, parent_id=None):
                                     id=post.id, alias=post.alias, page=-1))
     if form.validate_on_submit():
         screened = current_app.config['PILI_COMMENTS_SCREENING']
-        comment = Comment(body=form.body.data, \
-                          post=post, \
-                          screened=screened, \
+        comment = Comment(body=form.body.data,
+                          parent_id=parent_id,
+                          post=post,
+                          screened=screened,
                           author=current_user._get_current_object())
         db.session.add(comment)
+        """
         # comment form prepopulated through Reply
         if parent_id:
             ## http://stackoverflow.com/a/5083472/4241180 ##
@@ -100,6 +102,7 @@ def post(category, id, alias, parent_id=None):
                           replier=current_user._get_current_object(), \
                           repliee=repliee)
             db.session.add(reply)
+        """
             
         flash('Your comment has been published.', 'success')
         return redirect(url_for('main.post', category=post.category.id,
@@ -297,60 +300,6 @@ def show_followed(page=None, alias=None):
     resp.set_cookie('show_followed', '1', max_age=30*24*60*60)
     return resp
 
-@main.route('/moderate')
-@login_required
-@permission_required(Permission.MODERATE)
-def moderate():
-    page = request.args.get('page', 1, type=int)
-    pagination = Comment.query.order_by(Comment.timestamp.desc()).paginate(
-        page, per_page=current_app.config['PILI_COMMENTS_PER_PAGE'],
-        error_out=False)
-    comments = pagination.items
-    return render_template('main/moderate.html', comments=comments,
-                           pagination=pagination, page=page)
-
-
-@main.route('/moderate/enable/<int:id>')
-@login_required
-@permission_required(Permission.MODERATE)
-def moderate_enable(id):
-    comment = Comment.query.get_or_404(id)
-    comment.disabled = False
-    db.session.add(comment)
-    return redirect(url_for('.moderate',
-                            page=request.args.get('page', 1, type=int)))
-
-
-@main.route('/moderate/disable/<int:id>')
-@login_required
-@permission_required(Permission.MODERATE)
-def moderate_disable(id):
-    comment = Comment.query.get_or_404(id)
-    comment.disabled = True
-    db.session.add(comment)
-    return redirect(url_for('.moderate',
-                            page=request.args.get('page', 1, type=int)))
-
-@main.route('/moderate/unscreen/<int:id>')
-@login_required
-@permission_required(Permission.MODERATE)
-def moderate_unscreen(id):
-    comment = Comment.query.get_or_404(id)
-    comment.screened = False
-    db.session.add(comment)
-    return redirect(url_for('.moderate',
-                            page=request.args.get('page', 1, type=int)))
-
-
-@main.route('/moderate/screen/<int:id>')
-@login_required
-@permission_required(Permission.MODERATE)
-def moderate_screen(id):
-    comment = Comment.query.get_or_404(id)
-    comment.screened = True
-    db.session.add(comment)
-    return redirect(url_for('.moderate',
-                            page=request.args.get('page', 1, type=int)))
 
 @main.route('/shutdown')
 def server_shutdown():
