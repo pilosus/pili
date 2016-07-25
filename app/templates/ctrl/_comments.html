@@ -1,9 +1,10 @@
 <div class="comment-control">
 	<input name="checkbox_select_all" id="select_all" type="checkbox" value=""></span>
-	<button class="btn btn-default btn-sm on-check" data-action="bulk-enable"><span class="glyphicon glyphicon-ok-circle" aria-label="Enable" title="Enable"></span></button>
-        <button class="btn btn-default btn-sm on-check" data-action="bulk-disable"><span class="glyphicon glyphicon-ban-circle" aria-label="Disable" title="Disable"></span></button>
-        <button class="btn btn-default btn-sm on-check" data-action="bulk-unscreen"><span class="glyphicon glyphicon-eye-open" aria-label="Unscreen" title="Unscreen"></span></button>
-	<button class="btn btn-default btn-sm on-check" data-action="bulk-screen"><span class="glyphicon glyphicon-eye-close" aria-label="Screen" title="Screen"></span></button>
+	<button class="btn btn-default btn-sm on-check" data-action="enable"><span class="glyphicon glyphicon-ok-circle" aria-label="Enable" title="Enable selected comments"></span></button>
+        <button class="btn btn-default btn-sm on-check" data-action="disable"><span class="glyphicon glyphicon-ban-circle" aria-label="Disable" title="Disable selected comments"></span></button>
+        <button class="btn btn-default btn-sm on-check" data-action="unscreen"><span class="glyphicon glyphicon-eye-open" aria-label="Unscreen" title="Unscreen selected comments"></span></button>
+	<button class="btn btn-default btn-sm on-check" data-action="screen"><span class="glyphicon glyphicon-eye-close" aria-label="Screen" title="Screen selected comments"></span></button>
+	<button class="btn btn-default btn-sm on-check" data-action="remove"><span class="glyphicon glyphicon-remove" aria-label="Remove" title="Remove selected comments and all replies"></span></button>
 
 </div>
 
@@ -89,7 +90,7 @@
 	    {% endif %}
 
             {% if current_user.can(Permission.MODERATE) %}
-	      <button class="btn btn-danger btn-xs remove" type="button" title="Remove comment and all its descendants" data-id-removal="{{ comment.id }}"><span class="glyphicon glyphicon-remove"></span></button>
+	      <button class="btn btn-danger btn-xs remove" type="button" title="Remove comment and all its descendants" data-action="remove" data-id-removal="{{ comment.id }}"><span class="glyphicon glyphicon-remove"></span></button>
             {% endif %}
         </div>
     </li>

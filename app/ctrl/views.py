@@ -579,23 +579,112 @@ def remove_comment():
     # find all replies
     descendants = []
     Comment.dfs(comment, lambda x: descendants.append(x))
-    descendants.append(comment)
 
+    # remove all replies
     comments = ''
     for c in descendants:
         comments += str(c.id) + ', '
         db.session.delete(c)
-    comments = comments.rstrip(str(comment.id) + ', ')
 
+    comments = comments.rstrip(', ')
     if comments:
-        message = 'Comment {0} as well as replies #{1} have been removed.'.\
+        message = 'Comment {0} as well as replies: #{1} have been removed.'.\
                   format(comment.id, comments)
     else:
         message = 'Comment {0} has been removed.'.format(comment.id)
+
+    # remove comment itself
+    db.session.delete(comment)
+    
     status = 'success'
     return jsonify({
         'status': status,
         'message': message,
+    })
+
+@ctrl.route('/comments/bulk', methods=['POST'])
+@login_required
+@permission_required(Permission.MODERATE)
+def comments_bulk():
+    def comments_action(comments, action):
+        if action == 'remove':
+            return remove(comments)
+        
+        msg = {'enable': 'enabled',
+               'disable': 'disabled',
+               'screen': 'screened',
+               'unscreen': 'unscreened'}
+        message = ''
+        count = 0
+        for id in comments:
+            comment = Comment.query.get_or_404(id)
+            if action == 'enable':
+                comment.disabled = False
+            elif action == 'disable':
+                comment.disabled = True
+            elif action == 'screen':
+                comment.screened = True
+            elif action == 'unscreen':
+                comment.screened = False
+            db.session.add(comment)
+            message += str(id) + ', '
+            count += 1
+            
+        message = message.rstrip(', ')
+        if count > 1:
+            message = 'Comments {message} have been {action}.'.\
+                      format(message=message, action=msg[action])
+        else:
+            message = 'Comment {message} has been {action}.'.\
+                      format(message=message, action=msg[action])
+        return message
+
+    def remove(comments):
+        message = ''
+        count = 0
+        all_comments = set()
+        for id in comments:
+            try:
+                comment = Comment.query.get(id)
+                # add comment itself to a set
+                all_comments.add(comment)
+                # add all its descendants (replies) to a set
+                Comment.dfs(comment, lambda x: all_comments.add(x))
+                
+            except:
+                continue
+        # remove comments and all the replies to them
+        for c in all_comments:
+            message += str(c.id) + ', '
+            count += 1
+            db.session.delete(c)
+
+        message = message.rstrip(', ')
+        if count > 1:
+            message = 'Comments {message} have been removed.'.\
+                      format(message=message)
+        else:
+            message = 'Comment {message} has been removed.'.\
+                      format(message=message)
+
+        return message
+        
+    try:
+        csrf = request.json['csrf']
+        comments = list(map(lambda x: int(x), request.json['comments']))
+        action = request.json['action']
+    except (KeyError, TypeError):
+        return jsonify({
+            'status': 'error',
+            'message': 'Function takes two parameters: '
+                       'list of comments to be processed; csrf token',
+        })
+
+    message = comments_action(comments, action)
+    
+    return jsonify({
+            'status': 'success',
+            'message': message
     })
 
 @ctrl.route('/logs')

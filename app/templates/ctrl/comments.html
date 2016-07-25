@@ -65,22 +65,23 @@
 
 <script>
  // POST request
- $('.on-check').click(function() {
+ $('.on-check, .remove').click(function() {
      var button = $( this );
      var comments = [];
-     $('.comment-select:checked').each(function(i){
-         comments[i] = $(this).val();
-     });
-     console.log('Comments selected: ' + comments);
-     console.log('Action requested: ' + button.data('action'))
- })
-</script>
-
-<script>
- $('.remove').click( function() {
+     
+     if (button.hasClass('remove')) {
+	 comments[0] = button.data('id-removal');
+     }
+     else {
+	 $('.comment-select:checked').each(function(i){
+             comments[i] = $(this).val();
+	 });
+     }
+     
      var data = {
 	 csrf: $('#csrf-removal').val(),
-	 id: $(this).data('id-removal')
+	 comments: comments,
+	 action: button.data('action')
      };
 
      $.ajaxSetup({
@@ -94,7 +95,7 @@
      var remove = confirm('Are you sure?');
      if (remove == true) {
 	 $.when( $.ajax({
-             url: "{{ url_for('ctrl.remove_comment', _external=True) }}",
+             url: "{{ url_for('ctrl.comments_bulk', _external=True) }}",
              type: 'post',
              dataType: 'json',
              contentType: 'application/json;charset=UTF-8',
@@ -121,8 +122,8 @@
 	     location.reload();           // reload the page
 	     $('html,body').scrollTop(0); // jump on top
 	 }));
-     }
- });
+     };
+ })
 </script>
 
 <script>
