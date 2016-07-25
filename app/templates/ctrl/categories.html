@@ -134,7 +134,7 @@
   var uploads = new Bloodhound({
     datumTokenizer: Bloodhound.tokenizers.whitespace,
     queryTokenizer: Bloodhound.tokenizers.whitespace,
-    prefetch: "..{{ url_for('api.get_uploads_list2') }}"
+    prefetch: "{{ url_for('api.get_uploads_list2') }}"
   });
 
   $('#uploads-control .typeahead').typeahead({

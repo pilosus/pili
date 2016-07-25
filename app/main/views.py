@@ -74,9 +74,10 @@ def post(category, id, alias, parent_id=None):
     # https://stackoverflow.com/questions/17873820/flask-url-for-with-multiple-parameters
     post = Post.query.get_or_404(id)
     form = CommentForm()
+    recipient = None
     if parent_id:
         parent_comment = Comment.query.get_or_404(parent_id)
-        repliee = parent_comment.author
+        recipient = parent_comment.author
         # parent comment should be under the current post
         if parent_comment.post_id != id:
             flash('Operation is not permitted.', 'warning')
@@ -88,7 +89,8 @@ def post(category, id, alias, parent_id=None):
                           parent_id=parent_id,
                           post=post,
                           screened=screened,
-                          author=current_user._get_current_object())
+                          author=current_user._get_current_object(),
+                          recipient=recipient)
         db.session.add(comment)
         """
         # comment form prepopulated through Reply
@@ -251,8 +253,9 @@ def replies(username):
     #    return redirect(url_for('.index'))
     user = User.query.filter_by(username=username).first()
     page = request.args.get('page', 1, type=int)
-    pagination = Comment.query.join(Reply, Comment.id == Reply.id).\
-                 filter(Reply.repliee_id == user.id).\
+    # .join(Reply, Comment.id == Reply.id).filter(Reply.repliee_id == user.id).
+    pagination = Comment.query.\
+                 filter(Comment.recipient_id == user.id).\
                  order_by(Comment.timestamp.desc()).paginate(
                      page, per_page=current_app.config['PILI_COMMENTS_PER_PAGE'],
                      error_out=False)

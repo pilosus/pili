@@ -116,6 +116,114 @@ class Follow(db.Model):
     followed_id = db.Column(db.Integer, db.ForeignKey('users.id'),
                             primary_key=True)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
+class Comment(db.Model):
+    """Comment is message under a post. 
+    Comment that has a parent treated as a reply. Comment with replies
+    (children) represents n-ary tree.
+
+    """
+    __tablename__ = 'comments'
+    id = db.Column(db.Integer, primary_key=True)
+    parent_id = db.Column(db.Integer, db.ForeignKey('comments.id'))
+    body = db.Column(db.Text)
+    body_html = db.Column(db.Text)
+    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+    disabled = db.Column(db.Boolean)
+    screened = db.Column(db.Boolean)
+    author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    recipient_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    post_id = db.Column(db.Integer, db.ForeignKey('posts.id'))
+    ## http://docs.sqlalchemy.org/en/latest/orm/join_conditions.html
+    # there several fields in Reply class whose foreign_keys are
+    # 'comment.id' that's why we need an explicit use of foreign_keys
+    # dict in 'replies' field here.
+
+    # backref adds attribute 'parent' to Reply.
+
+    # cascade options effectively destroys links to association table
+    # 'replies' if any comment referring to it is deleted, i.e. to
+    # delete the entries that point to a record that was deleted
+    #replies = db.relationship('Reply',
+    #                          foreign_keys=[Reply.parent_id],
+    #                          backref=db.backref('parent', lazy='joined'),
+    #                          lazy='dynamic',
+    #                          cascade='all, delete-orphan')
+    replies = db.relationship('Comment',
+                              backref=db.backref('parent', remote_side=[id]))
+
+    @staticmethod
+    def dfs(comment, fun):
+        """Traversal of the comment n-ary tree using Depth-First Search algorithm.
+
+        Function passed as a parameter used to process a node while
+        traversing the tree: print it, remove, etc.
+
+        >>> Comment.dfs(Comment.query.first(), print)
+
+        >>> descendants = []
+        >>> Comment.dfs(Comment.query.first(), lambda x: descendants.append(x))
+        """
+        # comment has no replies
+        if not comment.replies:
+            return
+        else:
+            for r in comment.replies:
+                # do something with a comment here
+                fun(r)
+                # recurr
+                Comment.dfs(r, fun)
+
+    @staticmethod
+    def bfs(comment, fun):
+        """Traversal of the comment n-ary tree using Breadth-First Search.
+
+        >>> Comment.bfs(Comment.query.first(), print)
+        """
+        cur_level = [comment]
+        while cur_level:
+            next_level = []
+            for c in cur_level:
+                # do not touch original comment to comply with dfs version
+                if not c == comment:
+                    # do something with a comment
+                    fun(c)
+                if c.replies:
+                    next_level.extend(c.replies)
+            # level change
+            cur_level = next_level
+                
+    @staticmethod
+    def on_changed_body(target, value, oldvalue, initiator):
+        allowed_tags = current_app.config['PILI_ALLOWED_COMMENT_TAGS']
+        target.body_html = bleach.linkify(bleach.clean(
+            markdown(value, output_format='html'),
+            tags=allowed_tags, strip=True))
+
+    def to_json(self):
+        json_comment = {
+            'url': url_for('api.get_comment', id=self.id, _external=True),
+            'post': url_for('api.get_post', id=self.post_id, _external=True),
+            'body': self.body,
+            'body_html': self.body_html,
+            'timestamp': self.timestamp,
+            'author': url_for('api.get_user', id=self.author_id,
+                              _external=True),
+        }
+        return json_comment
+
+    @staticmethod
+    def from_json(json_comment):
+        body = json_comment.get('body')
+        if body is None or body == '':
+            raise ValidationError('comment does not have a body')
+        return Comment(body=body)
+
+    def __repr__(self):
+        return '<Comment %r>' % self.id
+
+
+db.event.listen(Comment.body, 'set', Comment.on_changed_body)
     
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
@@ -156,8 +264,17 @@ class User(UserMixin, db.Model):
                                 backref=db.backref('followed', lazy='joined'),
                                 lazy='dynamic',
                                 cascade='all, delete-orphan')
-    comments = db.relationship('Comment', backref='author', lazy='dynamic')
-    # TODO: fix replies by and to a user
+    comments = db.relationship('Comment',
+                               foreign_keys=[Comment.author_id],
+                               backref=db.backref('author', lazy='joined'),
+                               #backref='author',
+                               lazy='dynamic')
+    # comments recieved by a user as a reply
+    replies = db.relationship('Comment',
+                              foreign_keys=[Comment.recipient_id],
+                              backref=db.backref('recipient', lazy='joined'),
+                              #backref='recipient',
+                              lazy='dynamic')
     """
     # replies by the user
     replies = db.relationship('Reply',
@@ -399,113 +516,6 @@ login_manager.anonymous_user = AnonymousUser
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-class Comment(db.Model):
-    """Comment is message under a post. 
-    Comment that has a parent treated as a reply. Comment with replies
-    (children) represents n-ary tree.
-
-    """
-    __tablename__ = 'comments'
-    id = db.Column(db.Integer, primary_key=True)
-    parent_id = db.Column(db.Integer, db.ForeignKey('comments.id'))
-    body = db.Column(db.Text)
-    body_html = db.Column(db.Text)
-    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
-    disabled = db.Column(db.Boolean)
-    screened = db.Column(db.Boolean)
-    author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    post_id = db.Column(db.Integer, db.ForeignKey('posts.id'))
-    ## http://docs.sqlalchemy.org/en/latest/orm/join_conditions.html
-    # there several fields in Reply class whose foreign_keys are
-    # 'comment.id' that's why we need an explicit use of foreign_keys
-    # dict in 'replies' field here.
-
-    # backref adds attribute 'parent' to Reply.
-
-    # cascade options effectively destroys links to association table
-    # 'replies' if any comment referring to it is deleted, i.e. to
-    # delete the entries that point to a record that was deleted
-    #replies = db.relationship('Reply',
-    #                          foreign_keys=[Reply.parent_id],
-    #                          backref=db.backref('parent', lazy='joined'),
-    #                          lazy='dynamic',
-    #                          cascade='all, delete-orphan')
-    replies = db.relationship('Comment',
-                              backref=db.backref('parent', remote_side=[id]))
-
-    @staticmethod
-    def dfs(comment, fun):
-        """Traversal of the comment n-ary tree using Depth-First Search algorithm.
-
-        Function passed as a parameter used to process a node while
-        traversing the tree: print it, remove, etc.
-
-        >>> Comment.dfs(Comment.query.first(), print)
-
-        >>> descendants = []
-        >>> Comment.dfs(Comment.query.first(), lambda x: descendants.append(x))
-        """
-        # comment has no replies
-        if not comment.replies:
-            return
-        else:
-            for r in comment.replies:
-                # do something with a comment here
-                fun(r)
-                # recurr
-                Comment.dfs(r, fun)
-
-    @staticmethod
-    def bfs(comment, fun):
-        """Traversal of the comment n-ary tree using Breadth-First Search.
-
-        >>> Comment.bfs(Comment.query.first(), print)
-        """
-        cur_level = [comment]
-        while cur_level:
-            next_level = []
-            for c in cur_level:
-                # do not touch original comment to comply with dfs version
-                if not c == comment:
-                    # do something with a comment
-                    fun(c)
-                if c.replies:
-                    next_level.extend(c.replies)
-            # level change
-            cur_level = next_level
-                
-    @staticmethod
-    def on_changed_body(target, value, oldvalue, initiator):
-        allowed_tags = current_app.config['PILI_ALLOWED_COMMENT_TAGS']
-        target.body_html = bleach.linkify(bleach.clean(
-            markdown(value, output_format='html'),
-            tags=allowed_tags, strip=True))
-
-    def to_json(self):
-        json_comment = {
-            'url': url_for('api.get_comment', id=self.id, _external=True),
-            'post': url_for('api.get_post', id=self.post_id, _external=True),
-            'body': self.body,
-            'body_html': self.body_html,
-            'timestamp': self.timestamp,
-            'author': url_for('api.get_user', id=self.author_id,
-                              _external=True),
-        }
-        return json_comment
-
-    @staticmethod
-    def from_json(json_comment):
-        body = json_comment.get('body')
-        if body is None or body == '':
-            raise ValidationError('comment does not have a body')
-        return Comment(body=body)
-
-    def __repr__(self):
-        return '<Comment %r>' % self.id
-
-
-db.event.listen(Comment.body, 'set', Comment.on_changed_body)
-
 
 ### Association table for many-to-many relationship Tag/Post.
 #classifications = db.Table('classifications',
@@ -642,7 +652,7 @@ class Category(db.Model):
     alias = db.Column(db.String(64), unique=True)
     body = db.Column(db.Text)
     body_html = db.Column(db.Text)
-    image_id = db.Column(db.String(64), db.ForeignKey('uploads.id'))
+    image_id = db.Column(db.Integer, db.ForeignKey('uploads.id'))
     featured = db.Column(db.Boolean, default=False, index=True)
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     posts = db.relationship('Post', backref='category', lazy='dynamic',

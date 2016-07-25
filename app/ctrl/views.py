@@ -72,7 +72,6 @@ def posts():
                            datetimepicker=datetime.utcnow(),
                            pagination=pagination)
 
-# TODO
 @ctrl.route('/remove-post', methods=['POST'])
 def remove_post():
     try:
@@ -105,9 +104,12 @@ def remove_post():
             if not in_other_posts:
                 db.session.delete(t)
 
-    # TODO: remove comments
+    # remove comments
+    for c in post.comments.all():
+        db.session.delete(c)
+    
     status = 'success'
-    message = "Post '{0}' has been removed".\
+    message = "Post '{0}', associated tags and comments have been removed".\
               format(post.title)
     db.session.delete(post)
     return jsonify({
