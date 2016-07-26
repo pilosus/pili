@@ -63,6 +63,9 @@ ul.comments li.comment:nth-child(1) {
 ul.comments li.comment:hover {
     background-color: #f0f0f0;
 }
+ul.comments li.comment.unread {
+    background-color: #f0f0f0;
+}
 div.comment-date {
     float: right;
 }

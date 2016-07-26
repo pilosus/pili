@@ -1,12 +1,28 @@
+{% if recipient %}
+<div class="comment-control">
+	<input name="checkbox_select_all" id="select_all" type="checkbox" value=""></span>
+	<button class="btn btn-default btn-sm on-check" data-action="read">Mark as read</button>
+        <button class="btn btn-default btn-sm on-check" data-action="unread">Mark as not read</span></button>
+</div>
+{% endif %}
+
 <ul class="comments">
   {% for comment in comments %}
   {% if moderate or not comment.screened %}
-    <li id="comment{{ comment.id }}" class="comment">
+    <li id="comment{{ comment.id }}" class="comment {% if not comment.read %}unread{% endif%}">
         <div class="comment-thumbnail">
             <a href="{{ url_for('.user', username=comment.author.username) }}">
                 <img class="img-rounded profile-thumbnail" src="{{ comment.author.gravatar(size=40) }}">
             </a>
         </div>
+
+	{% if recipient %}
+	<div class="comment-checkbox">
+	  <input name="checkbox{{ comment.id }}" id="checkbox{{ comment.id }}" class="comment-select" type="checkbox" value="{{ comment.id }}">
+	</div>
+	{% endif %}
+
+	
         <div class="comment-content">
             <div class="comment-date">{{ moment(comment.timestamp).fromNow() }}</div>
             <div class="comment-author">
@@ -46,12 +62,19 @@
 	      {% endif %}
 
               {% if comment.screened %}
-              <a class="btn btn-default btn-xs" href="{{ url_for('ctrl.comments_unscreen', id=comment.id, page=page) }}">Unscreen</a>
-              {% else %}
-              <a class="btn btn-danger btn-xs" href="{{ url_for('ctrl.comments_screen', id=comment.id, page=page) }}">Screen</a>
-	      {% endif %}
-	      
+               <a class="btn btn-default btn-xs" href="{{ url_for('ctrl.comments_unscreen', id=comment.id, page=page) }}">Unscreen</a>
+               {% else %}
+               <a class="btn btn-danger btn-xs" href="{{ url_for('ctrl.comments_screen', id=comment.id, page=page) }}">Screen</a>
+	       {% endif %}
 	    {% endif %}
+
+	       {% if recipient %}
+ 	          {% if comment.read %}
+		   <a class="btn btn-danger btn-xs" href="{{ url_for('main.reply_mark_unread', id=comment.id, page=page) }}">Unread</a>
+	         {% else %}
+		   <a class="btn btn-default btn-xs" href="{{ url_for('main.reply_mark_read', id=comment.id, page=page) }}">Read</a>
+	         {% endif %}
+	       {% endif %}
 
         </div>
     </li>

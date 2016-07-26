@@ -678,8 +678,8 @@ def comments_bulk():
     except (KeyError, TypeError):
         return jsonify({
             'status': 'error',
-            'message': 'Function takes two parameters: '
-                       'list of comments to be processed; csrf token',
+            'message': 'Function takes three parameters: '
+                       'list of comments to be processed; csrf token; action',
         })
 
     message = comments_action(comments, action)

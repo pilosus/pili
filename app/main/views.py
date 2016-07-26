@@ -1,9 +1,10 @@
 from flask import render_template, redirect, url_for, abort, flash, request,\
-    current_app, make_response
+    current_app, make_response, jsonify
 from flask_login import login_required, current_user
 from flask_sqlalchemy import get_debug_queries
 from . import main
 from .forms import EditProfileForm, EditProfileAdminForm, CommentForm
+from ..ctrl.forms import RemoveEntryForm
 from .. import db
 from ..models import Permission, Role, User, Post, \
     Tag, Tagification, Comment, Category
@@ -65,7 +66,7 @@ def user(username):
         page, per_page=current_app.config['PILI_POSTS_PER_PAGE'],
         error_out=False)
     posts = pagination.items
-    return render_template('user.html', user=user, posts=posts,
+    return render_template('main/user.html', user=user, posts=posts,
                            pagination=pagination)
 
 @main.route('/<category>/<int:id>/<alias>', methods=['GET', 'POST'])
@@ -122,6 +123,84 @@ def post(category, id, alias, parent_id=None):
         form.body.data = parent_comment.author.username + ', '
     return render_template('main/post.html', posts=[post], form=form,
                            comments=comments, pagination=pagination)
+
+@main.route('/replies-to/bulk', methods=['POST'])
+@login_required
+def replies_bulk():
+    def replies_action(comments, action):
+        msg = {'read': 'marked as read',
+               'unread': 'marked as not read'
+        }
+        message = ''
+        fail = ''
+        count = 0
+        for id in comments:
+            comment = Comment.query.get_or_404(id)
+            if current_user._get_current_object() == comment.recipient:
+                if action == 'read':
+                    comment.read = True
+                elif action == 'unread':
+                    comment.read = False
+                # add more actions here
+                db.session.add(comment)
+                message += str(id) + ', '
+                count += 1
+            else:
+                fail += str(id) + ', '
+        message = message.rstrip(', ')
+        fail = fail.rstrip(', ')
+        status = 'success'
+        if message:
+            message = 'Comments: {message} have been {action}.'.\
+                      format(message=message, action=msg[action])
+        if fail:
+            fail = 'Comments: {fail} failed. You are not a recipient of them.'.\
+                      format(fail=fail, action=msg[action])
+            status = 'warning'
+        return "{message} {fail}".format(message=message, fail=fail), status
+
+    try:
+        csrf = request.json['csrf']
+        comments = list(map(lambda x: int(x), request.json['comments']))
+        action = request.json['action']
+    except (KeyError, TypeError):
+        return jsonify({
+            'status': 'error',
+            'message': 'Function takes three parameters: '
+                       'list of comments to be processed; csrf token; action',
+        })
+    message, status = replies_action(comments, action)
+    return jsonify({
+            'status': status,
+            'message': message
+    })
+
+@main.route('/replies-to/unread/<int:id>')
+@login_required
+def reply_mark_unread(id):
+    comment = Comment.query.get_or_404(id)
+    if current_user._get_current_object() == comment.recipient:
+        comment.read = False
+        db.session.add(comment)
+    else:
+        flash('Operation is not permitted. You are not a recipient of the comment', 'warning')
+    return redirect(url_for('.replies', username=current_user.username,
+                            page=request.args.get('page', 1, type=int),
+                            _anchor='comment{0}'.format(id)))
+
+
+@main.route('/replies-to/read/<int:id>')
+@login_required
+def reply_mark_read(id):
+    comment = Comment.query.get_or_404(id)
+    if current_user._get_current_object() == comment.recipient:
+        comment.read = True
+        db.session.add(comment)
+    else:
+        flash('Operation is not permitted. You are not a recipient of the comment', 'warning')
+    return redirect(url_for('.replies', username=current_user.username,
+                            page=request.args.get('page', 1, type=int),
+                            _anchor='comment{0}'.format(id)))
 
 @main.route('/category/<alias>', methods=['GET'])
 def category(alias):
@@ -251,6 +330,7 @@ def replies(username):
     #if current_user.is_anonymous or not current_user.username == username:
     #    flash('You have no permission to see comments to the user.')
     #    return redirect(url_for('.index'))
+    remove_form = RemoveEntryForm()
     user = User.query.filter_by(username=username).first()
     page = request.args.get('page', 1, type=int)
     # .join(Reply, Comment.id == Reply.id).filter(Reply.repliee_id == user.id).
@@ -261,6 +341,7 @@ def replies(username):
                      error_out=False)
     comments = pagination.items
     return render_template('main/replies.html', user=user, comments=comments,
+                           remove_form=remove_form,
                            pagination=pagination)
 
 
