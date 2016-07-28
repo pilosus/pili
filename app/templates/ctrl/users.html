@@ -9,19 +9,7 @@
     <h1>User Moderation</h1>
 </div>
 
-<div>
-  <form class="form form-horizontal" method="post" role="form">
-    {{ form.hidden_tag() }}
-    {{ wtf.form_errors(form, hiddens=True) }}
-    {{ wtf.form_field(form.email) }}
-    {{ wtf.form_field(form.role) }}
-    <div class="form-group">
-      {{ wtf.form_field(form.submit) }}
-    </div>
-  </form>
-
-</div>
-{# {% include 'ctrl/_users.html' %} #}
+{% include 'ctrl/_users.html' %}
 {% if pagination %}
 <div class="pagination">
     {{ macros.pagination_widget(pagination, 'ctrl.users') }}
@@ -77,20 +65,20 @@
  // POST request
  $('.on-check, .remove').click(function() {
      var button = $( this );
-     var comments = [];
+     var users = [];
      
      if (button.hasClass('remove')) {
-	 comments[0] = button.data('id-removal');
+	 users[0] = button.data('id-removal');
      }
      else {
 	 $('.comment-select:checked').each(function(i){
-             comments[i] = $(this).val();
+             users[i] = $(this).val();
 	 });
      }
      
      var data = {
 	 csrf: $('#csrf-removal').val(),
-	 comments: comments,
+	 users: users,
 	 action: button.data('action')
      };
 
@@ -105,7 +93,7 @@
      var remove = confirm('Are you sure?');
      if (remove == true) {
 	 $.when( $.ajax({
-             url: "{{ url_for('ctrl.comments_bulk', _external=True) }}",
+             url: "{{ url_for('ctrl.users_bulk', _external=True) }}",
              type: 'post',
              dataType: 'json',
              contentType: 'application/json;charset=UTF-8',

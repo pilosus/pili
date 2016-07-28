@@ -87,3 +87,5 @@ def generate_password(length=10):
                           string.ascii_uppercase +
                           string.digits) \
                    for _ in range(length))
+    
+    

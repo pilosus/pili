@@ -71,6 +71,7 @@ class Role(db.Model):
     @staticmethod
     def insert_roles():
         roles = {
+            'Suspended': (Permission.READ, False),
             'Pariah': (Permission.READ |
                        Permission.FOLLOW, False),
             'Reader': (Permission.READ |
@@ -291,16 +292,12 @@ class User(UserMixin, db.Model):
                               lazy='dynamic',
                               cascade='all, delete-orphan')
     """
-    @staticmethod
-    def invite(email, role):
-        role = Role.query.get_or_404(role)
-        user = User(email=email,
-                    password=generate_password(10),
-                    role=role,
-                    confirmed=True)
-        db.session.add(user)
-        db.session.commit()
-
+    def suspend(self):
+        suspended = Role.query.filter(Role.name == 'Suspended').first()
+        self.role = suspended
+        db.session.add(self)
+        return True
+    
     @staticmethod
     def add_admin():
         """Create app's administrator.

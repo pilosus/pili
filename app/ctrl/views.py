@@ -154,7 +154,7 @@ def edit_profile():
     form.name.data = current_user.name
     form.location.data = current_user.location
     form.about_me.data = current_user.about_me
-    return render_template('edit_profile.html', form=form)
+    return render_template('ctrl/edit_profile.html', form=form)
 
 
 @ctrl.route('/edit-profile/<int:id>', methods=['GET', 'POST'])
@@ -181,7 +181,7 @@ def edit_profile_admin(id):
     form.name.data = user.name
     form.location.data = user.location
     form.about_me.data = user.about_me
-    return render_template('edit_profile.html', form=form, user=user)
+    return render_template('ctrl/edit_profile.html', form=form, user=user)
 
 @ctrl.route('/edit-post/<int:id>/<alias>', methods=['GET', 'POST'])
 @login_required
@@ -689,28 +689,67 @@ def comments_bulk():
             'message': message
     })
 
-# TODO
 @ctrl.route('/users', methods=['GET', 'POST'])
 @login_required
 @permission_required(Permission.ADMINISTER)
 def users():
-    return 'ok'
-    """
-    form = None
     remove_form = RemoveEntryForm()
-    if form.validate_on_submit():
-        flash('Invitation has been sent.', 'success')
-        return redirect(url_for('.users'))
     page = request.args.get('page', 1, type=int)
-    pagination = User.query.order_by(User.member_since.desc()).paginate(
+    pagination = User.query.order_by(User.confirmed).order_by(User.member_since.desc()).paginate(
         page, per_page=current_app.config['PILI_USERS_PER_PAGE'],
         error_out=False)
     users = pagination.items
     return render_template('ctrl/users.html', users=users,
-                           form=form,
                            remove_form=remove_form,
                            pagination=pagination, page=page)
-    """
+
+@ctrl.route('/users/bulk', methods=['POST'])
+@login_required
+@permission_required(Permission.ADMINISTER)
+def users_bulk():
+    def suspend(users):
+        suspended = Role.query.filter(Role.name == 'Suspended').first()
+        message = ''
+        for count, id in enumerate(users):
+            user = User.query.get(id)
+            user.role = suspended
+            db.session.add(user)
+            message += str(user.id) + ', '
+        message = message.rstrip(', ')
+        if count > 1:
+            message = 'Users id#: {message} have been marked as suspended.'.\
+                      format(message=message)
+        else:
+            message = 'User id#: {message} has been marked as suspended.'.\
+                      format(message=message)
+        return 'success', message
+
+    # TODO
+    def remove(users):
+        return "success", "Remove"
+    
+    try:
+        csrf = request.json['csrf']
+        users = list(map(lambda x: int(x), request.json['users']))
+        action = request.json['action']
+    except (KeyError, TypeError):
+        return jsonify({
+            'status': 'error',
+            'message': 'Function takes three parameters: '
+                       'list of users to be processed; csrf token; action',
+        })
+
+    if action == 'suspend':
+        status, message = suspend(users)
+    elif action == 'remove':
+        status, message = remove(users)
+    else:
+        status, message = (None, None)
+    return jsonify({
+            'status': status,
+            'message': message
+    })
+
 
 @ctrl.route('/logs')
 def logs():

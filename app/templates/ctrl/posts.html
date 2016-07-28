@@ -9,7 +9,7 @@
     <h1>Create Post</h1>
 </div>
 <div>
-    {% if current_user.can(Permission.WRITE) %}
+    {% if current_user.can(Permission.WRITE and not current_user.suspended) %}
     {# {{ wtf.quick_form(form) }} #}
     <form class="form form-horizontal" method="post" role="form">
       {{ form.hidden_tag() }}

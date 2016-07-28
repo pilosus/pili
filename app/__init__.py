@@ -10,6 +10,9 @@ from flask_thumbnails import Thumbnail
 from flask_wtf.csrf import CsrfProtect
 from config import config
 
+from inspect import getmembers, isfunction
+import app.jinja_filters
+
 bootstrap = Bootstrap()
 mail = Mail()
 moment = Moment()
@@ -26,6 +29,11 @@ login_manager.login_view = 'auth.login'
 
 def create_app(config_name):
     app = Flask(__name__)
+    template_filters = {name: function 
+                        for name, function in getmembers(jinja_filters)
+                        if isfunction(function)}
+    app.jinja_env.filters.update(template_filters)
+    
     app.config.from_object(config[config_name])
     config[config_name].init_app(app)
 

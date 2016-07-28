@@ -27,7 +27,7 @@
             <ul class="nav navbar-nav">
               <li {% if page == 'home' %}class="active"{% endif %}><a href="{{ url_for('main.index') }}">Home</a></li>
 	      {% block navbar_left_items %}
-	        {% if current_user.can(Permission.WRITE) %}
+	        {% if current_user.can(Permission.WRITE) or current_user.can(Permission.MODERATE)%}
 	        <li><a href="{{ url_for('ctrl.posts') }}">Control Panel</a></li>
 		{% endif %}
 	      {% endblock %}

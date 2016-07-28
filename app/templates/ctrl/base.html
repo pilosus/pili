@@ -8,10 +8,13 @@
 {% block navbar_left_items %}
 {% if current_user.can(Permission.WRITE) %}
 <li {% if page == 'posts' %}class="active"{% endif %}><a href="{{ url_for('ctrl.posts') }}">Posts</a></li>
-{% endif %}	    
+{% endif %}
+
+{% if current_user.can(Permission.STRUCTURE) %}
+<li {% if page == 'categories' %}class="active"{% endif %}><a href="{{ url_for('ctrl.categories') }}">Categories</a></li>
+{% endif %}
 
 {% if current_user.can(Permission.MODERATE) %}
-<li {% if page == 'categories' %}class="active"{% endif %}><a href="{{ url_for('ctrl.categories') }}">Categories</a></li>
 <li {% if page == 'comments' %}class="active"{% endif %}><a href="{{ url_for('ctrl.comments') }}">Comments</a></li>
 {% endif %}
 

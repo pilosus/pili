@@ -1,97 +1,49 @@
 <div class="comment-control">
 	<input name="checkbox_select_all" id="select_all" type="checkbox" value=""></span>
-	<button class="btn btn-default btn-sm on-check" data-action="enable"><span class="glyphicon glyphicon-ok-circle" aria-label="Enable" title="Enable selected comments"></span></button>
-        <button class="btn btn-default btn-sm on-check" data-action="disable"><span class="glyphicon glyphicon-ban-circle" aria-label="Disable" title="Disable selected comments"></span></button>
-        <button class="btn btn-default btn-sm on-check" data-action="unscreen"><span class="glyphicon glyphicon-eye-open" aria-label="Unscreen" title="Unscreen selected comments"></span></button>
-	<button class="btn btn-default btn-sm on-check" data-action="screen"><span class="glyphicon glyphicon-eye-close" aria-label="Screen" title="Screen selected comments"></span></button>
-	<button class="btn btn-default btn-sm on-check" data-action="remove"><span class="glyphicon glyphicon-remove" aria-label="Remove" title="Remove selected comments and all replies"></span></button>
+	<button class="btn btn-default btn-sm on-check" data-action="suspend"><span class="glyphicon glyphicon-off" aria-label="Suspend" title="Suspend selected users"></span></button>
+        <button class="btn btn-danger btn-sm on-check" data-action="remove"><span class="glyphicon glyphicon-trash" aria-label="Remove" title="Remove selected users"></span></button>
 
 </div>
 
-<ul class="users">
+<ul class="comments">
     {% for user in users %}
-    <li id="user{{ user.id }}" class="user">
-        <div class="user-thumbnail">
-            <a href="{{ url_for('.user', username=user.author.username) }}">
-                <img class="img-rounded profile-thumbnail" src="{{ user.author.gravatar(size=40) }}">
+    <li id="user{{ user.id }}" class="comment">
+        <div class="comment-thumbnail">
+            <a href="{{ url_for('main.user', username=user.username) }}">
+                <img class="img-rounded profile-thumbnail" src="{{ user.gravatar(size=40) }}">
             </a>
         </div>
 
-	<div class="user-checkbox">
-	    <input name="checkbox{{ user.id }}" id="checkbox{{ user.id }}" class="user-select" type="checkbox" value="{{ user.id }}">
+	{% if current_user != user %}
+	<div class="comment-checkbox">
+	    <input name="checkbox{{ user.id }}" id="checkbox{{ user.id }}" class="comment-select" type="checkbox" value="{{ user.id }}">
 	</div>
+	{% endif %}
 	
-        <div class="user-content">
-            <div class="user-date">{{ moment(user.timestamp).fromNow() }}</div>
-            <div class="user-author">
-	      <a href="{{ url_for('.user', username=user.author.username) }}">
-		{{ user.author.username }}
-	      </a>
-	      {% if expand %}
-	      usered on the
-	      <a href="{{ url_for('main.post', category=user.post.category.alias, id=user.post.id, alias=user.post.alias) }}#user{{ user.id }}">
-		{{ user.post.title }}
-	      </a>
-	      {% if user.post.category %}
-	      under
-	      <a href="{{ url_for('main.category', alias=user.post.category.alias) }}">
-		<span class="label label-success">{{ user.post.category.title }}</span>
-	      </a> category
-	      {% endif %}
-	      {#[<a class="" role="button" data-toggle="collapse" href="#collapse{{ user.id }}"
-		  aria-expanded="false" aria-controls="collapse{{ user.id }}">show</a>]#}
-	      
+        <div class="comment-content">
+            <div class="comment-date">{{ moment(user.member_since).fromNow() }}</div>
+            <div class="comment-author">
+	      <a href="{{ url_for('.user', username=user.username) }}">
+		{{ user.username }}
+	      </a> {% if user.name %}({{ user.name}}){% endif %}
+	      {% if not user.confirmed %} <span class="label label-danger">not confirmed</span>{% endif %}
 	    </div>
 	    
-	    {#<div id="collapse{{ user.id }}" class="collapse">
-	      <div class="well">
-		{{ user.post.body_html | safe }}
-	      </div>
-	    </div>
-	    #}
-	    {% else %}
-	    </div>
-	    {% endif %}
-	    
-            <div class="user-body">
-                {% if user.disabled %}
-                <p><i>This user has been disabled by a moderator.</i></p>
-                {% endif %}
+            <div class="comment-body">
+	      <p>
+		Role: {{ user.role.name }}
+		[<code title="a: administer, s: structure, m: moderate, u: upload, c: comment, w: write, f: follow, r: read">{{ user.role.permissions | permissions2str }}</code>] <br>
+		Blog posts: <a href="{{ url_for('main.user', username=user.username, _anchor='posts') }}">{{ user.posts.count() }}</a> |
+		Categories created: {{ user.categories.count() }} |
+		Uploaded files: {{ user.images.count() }} |
+		Comments written: <a href="{{ url_for('main.comments', username=user.username) }}">{{ user.comments.count() }}</a> |
+		Replies received: <a href="{{ url_for('main.replies', username=user.username) }}">{{ user.replies.count() }}</a>
+	      </p>
 
-		
-		<span class="{% if user.screened %}text-muted{% endif %}">
-                  {% if user.body_html %}
-                    {{ user.body_html | safe }}
-                  {% else %}
-                    {{ user.body }}
-                  {% endif %}
-		</span>
-            </div>
-
-	    {% if not user.disabled and not user.screened %}
- 	      {% if reply %}
-	      <a class="btn btn-primary btn-xs" 
-		 href="{{ url_for('main.post', category=user.post.category.alias, id=user.post.id, alias=user.post.alias, parent_id=user.id, page=page) }}">
-		<span class="glyphicon glyphicon-share-alt" aria-label="Reply" title="Reply"></span>
-	      </a>
+              {% if user.role.name != 'Suspended' and current_user != user %}
+	      <button class="btn btn-default btn-xs remove" type="button" title="Suspend user" data-action="suspend" data-id-removal="{{ user.id }}"><span class="glyphicon glyphicon-off" aria-label="Suspend"></span></button>
+	      <button class="btn btn-danger btn-xs remove" type="button" title="Remove user with all posts and comments" data-action="remove" data-id-removal="{{ user.id }}"><span class="glyphicon glyphicon-trash" aria-label="Remove"></span></button>
 	      {% endif %}
-	    {% endif %}
-
-            {% if user.disabled %}
-              <a class="btn btn-default btn-xs" href="{{ url_for('.users_enable', id=user.id, page=page) }}"><span class="glyphicon glyphicon-ok-circle" aria-label="Enable" title="Enable"></span></a>
-            {% else %}
-              <a class="btn btn-danger btn-xs" href="{{ url_for('.users_disable', id=user.id, page=page) }}"><span class="glyphicon glyphicon-ban-circle" aria-label="Disable" title="Disable"></span></a>
-	    {% endif %}
-
-            {% if user.screened %}
-              <a class="btn btn-default btn-xs" href="{{ url_for('.users_unscreen', id=user.id, page=page) }}"><span class="glyphicon glyphicon-eye-open" aria-label="Unscreen" title="Unscreen"></span></a>
-            {% else %}
-              <a class="btn btn-danger btn-xs" href="{{ url_for('.users_screen', id=user.id, page=page) }}"><span class="glyphicon glyphicon-eye-close" aria-label="Screen" title="Screen"></span></a>
-	    {% endif %}
-
-            {% if current_user.can(Permission.MODERATE) %}
-	      <button class="btn btn-danger btn-xs remove" type="button" title="Remove user and all its descendants" data-action="remove" data-id-removal="{{ user.id }}"><span class="glyphicon glyphicon-remove"></span></button>
-            {% endif %}
         </div>
     </li>
     {% endfor %}
