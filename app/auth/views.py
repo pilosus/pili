@@ -159,7 +159,7 @@ def invite_request():
         flash('An invitation has been sent by email.', 'info')
         return redirect(url_for('main.index'))
     # TODO
-    return render_template('auth/invite.html', form=form)
+    return render_template('auth/invite_request.html', form=form)
 
 @auth.route('/invite/<int:id>/<token>', methods=['GET', 'POST'])
 def invite_accept(id, token):   
@@ -167,11 +167,16 @@ def invite_accept(id, token):
         flash('Invites are for new users only.', 'warning')
         return redirect(url_for('main.index'))
     form = InviteAcceptForm()
+    user = User.query.filter_by(id=id).first()
+    if user is None:
+        flash('You are not among the invitees.', 'danger')
+        return redirect(url_for('main.index'))
+    else:
+        if user.confirmed:
+            flash('You have previously confirmed your account. Please log in.',
+                  'info')
+            return redirect(url_for('auth.login'))
     if form.validate_on_submit():
-        user = User.query.filter_by(id=id).first()
-        if user is None:
-            flash('You are not among the invitees.', 'danger')
-            return redirect(url_for('main.index'))
         if user.accept_invite(token=token,
                               username=form.username.data,
                               new_password=form.password.data):
@@ -180,7 +185,7 @@ def invite_accept(id, token):
             flash('The confirmation link is invalid or has expired.', 'warning')
         return redirect(url_for('main.index'))
     # TODO
-    return render_template('auth/invite.html', form=form)
+    return render_template('auth/invite_accept.html', form=form, user=user)
 
 
 @auth.route('/change-email', methods=['GET', 'POST'])
