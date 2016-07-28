@@ -4,11 +4,13 @@ from flask_login import login_user, logout_user, login_required, \
     current_user
 from . import auth
 from .. import db
-from ..models import User, Post
+from ..models import User, Post, Permission, Role
 from ..email import send_email
+from ..decorators import permission_required
+from ..filters import generate_password
 from .forms import LoginForm, RegistrationForm, ChangePasswordForm,\
-    PasswordResetRequestForm, PasswordResetForm, ChangeEmailForm
-
+    PasswordResetRequestForm, PasswordResetForm, ChangeEmailForm,\
+    InviteRequestForm, InviteAcceptForm
 
 @auth.before_app_request
 def before_request():
@@ -68,6 +70,7 @@ def register():
 @login_required
 def confirm(token):
     if current_user.confirmed:
+        flash('Your account already confirmed.', 'warning')
         return redirect(url_for('main.index'))
     if current_user.confirm(token):
         flash('You have confirmed your account. Thanks!', 'success')
@@ -137,6 +140,47 @@ def password_reset(token):
         else:
             return redirect(url_for('main.index'))
     return render_template('auth/reset_password.html', form=form)
+
+# TODO
+@auth.route('/invite', methods=['GET', 'POST'])
+@permission_required(Permission.ADMINISTER)
+def invite_request():
+    form = InviteRequestForm()
+    if form.validate_on_submit():
+        role = Role.query.get_or_404(form.role.data)
+        user = User(email=form.email.data,
+                    password=generate_password(10),
+                    role=role)
+        db.session.add(user)
+        db.session.commit()
+        token = user.generate_invite_token()
+        send_email(user.email, 'Invitation to participate',
+                   'auth/email/invite', id=user.id, token=token)
+        flash('An invitation has been sent by email.', 'info')
+        return redirect(url_for('main.index'))
+    # TODO
+    return render_template('auth/invite.html', form=form)
+
+@auth.route('/invite/<int:id>/<token>', methods=['GET', 'POST'])
+def invite_accept(id, token):   
+    if not current_user.is_anonymous:
+        flash('Invites are for new users only.', 'warning')
+        return redirect(url_for('main.index'))
+    form = InviteAcceptForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(id=id).first()
+        if user is None:
+            flash('You are not among the invitees.', 'danger')
+            return redirect(url_for('main.index'))
+        if user.accept_invite(token=token,
+                              username=form.username.data,
+                              new_password=form.password.data):
+            flash('You have confirmed your account. Thanks!', 'success')
+        else:
+            flash('The confirmation link is invalid or has expired.', 'warning')
+        return redirect(url_for('main.index'))
+    # TODO
+    return render_template('auth/invite.html', form=form)
 
 
 @auth.route('/change-email', methods=['GET', 'POST'])

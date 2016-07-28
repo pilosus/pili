@@ -57,6 +57,7 @@ class PostForm(Form):
         Required(), Length(1, 128), Regexp('^(\w|-)+$', 0,
                                            'Alias must contain only lowercase '
                                            'letters and dashes')])
+    description = StringField("Description", validators=[Required(), Length(1, 160)])
     timestamp = DateTimeField("Date and time", format='%Y-%m-%d %H:%M:%S')
     body = PageDownField("Text", validators=[Required()])
     image = StringField("Image", validators=[Length(0, 64)])

@@ -76,3 +76,14 @@ def find_thumbnail(filename):
 
     """
     return '.'.join(filename.split('.')[:-1]) + '_'
+
+def generate_password(length=10):
+    """Generate rnadom password of the given length.
+    """
+    import random
+    import string
+    return ''.join(random.SystemRandom().\
+                   choice(string.ascii_lowercase +
+                          string.ascii_uppercase +
+                          string.digits) \
+                   for _ in range(length))

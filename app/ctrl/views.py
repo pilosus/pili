@@ -136,7 +136,7 @@ def user(username):
         page, per_page=current_app.config['PILI_POSTS_PER_PAGE'],
         error_out=False)
     posts = pagination.items
-    return render_template('user.html', user=user, posts=posts,
+    return render_template('main/user.html', user=user, posts=posts,
                            pagination=pagination)
 
 
@@ -688,6 +688,29 @@ def comments_bulk():
             'status': 'success',
             'message': message
     })
+
+# TODO
+@ctrl.route('/users', methods=['GET', 'POST'])
+@login_required
+@permission_required(Permission.ADMINISTER)
+def users():
+    return 'ok'
+    """
+    form = None
+    remove_form = RemoveEntryForm()
+    if form.validate_on_submit():
+        flash('Invitation has been sent.', 'success')
+        return redirect(url_for('.users'))
+    page = request.args.get('page', 1, type=int)
+    pagination = User.query.order_by(User.member_since.desc()).paginate(
+        page, per_page=current_app.config['PILI_USERS_PER_PAGE'],
+        error_out=False)
+    users = pagination.items
+    return render_template('ctrl/users.html', users=users,
+                           form=form,
+                           remove_form=remove_form,
+                           pagination=pagination, page=page)
+    """
 
 @ctrl.route('/logs')
 def logs():

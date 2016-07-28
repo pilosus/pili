@@ -7,6 +7,7 @@ import bleach
 from flask import current_app, request, url_for
 from flask_login import UserMixin, AnonymousUserMixin
 from app.exceptions import ValidationError
+from app.filters import generate_password
 from . import db, login_manager
 
 
@@ -290,7 +291,15 @@ class User(UserMixin, db.Model):
                               lazy='dynamic',
                               cascade='all, delete-orphan')
     """
-
+    @staticmethod
+    def invite(email, role):
+        role = Role.query.get_or_404(role)
+        user = User(email=email,
+                    password=generate_password(10),
+                    role=role,
+                    confirmed=True)
+        db.session.add(user)
+        db.session.commit()
 
     @staticmethod
     def add_admin():
@@ -307,8 +316,7 @@ class User(UserMixin, db.Model):
         if not admin:
             admin_user = User(email=current_app.config['PILI_ADMIN'],
                               username=current_app.config['PILI_ADMIN_NAME'],
-                              password=''.join(random.SystemRandom().\
-                                               choice(string.ascii_uppercase + string.digits) for _ in range(10)),
+                              password=generate_password(10),
                               role=admin_role,
                               confirmed=True)
             db.session.add(admin_user)
@@ -390,6 +398,7 @@ class User(UserMixin, db.Model):
         s = Serializer(current_app.config['SECRET_KEY'], expiration)
         return s.dumps({'reset': self.id})
 
+   
     def reset_password(self, token, new_password):
         s = Serializer(current_app.config['SECRET_KEY'])
         try:
@@ -402,6 +411,24 @@ class User(UserMixin, db.Model):
         db.session.add(self)
         return True
 
+    def generate_invite_token(self, expiration=3600):
+        s = Serializer(current_app.config['SECRET_KEY'], expiration)
+        return s.dumps({'accept_invite': self.id})
+    
+    def accept_invite(self, token, username, new_password):
+        s = Serializer(current_app.config['SECRET_KEY'])
+        try:
+            data = s.loads(token)
+        except:
+            return False
+        if data.get('accept_invite') != self.id:
+            return False
+        self.confirmed = True
+        self.username = username
+        self.password = new_password
+        db.session.add(self)
+        return True
+    
     def generate_email_change_token(self, new_email, expiration=3600):
         s = Serializer(current_app.config['SECRET_KEY'], expiration)
         return s.dumps({'change_email': self.id, 'new_email': new_email})
@@ -543,6 +570,7 @@ class Post(db.Model):
     author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     title = db.Column(db.String(128))
     alias = db.Column(db.String(128))
+    description = db.Column(db.String(160))
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     body = db.Column(db.Text)
     body_html = db.Column(db.Text)
