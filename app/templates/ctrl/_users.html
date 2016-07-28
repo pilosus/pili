@@ -40,8 +40,10 @@
 		Replies received: <a href="{{ url_for('main.replies', username=user.username) }}">{{ user.replies.count() }}</a>
 	      </p>
 
-              {% if user.role.name != 'Suspended' and current_user != user %}
+              {% if current_user != user %}
+	      {% if user.role.name != 'Suspended' %}
 	      <button class="btn btn-default btn-xs remove" type="button" title="Suspend user" data-action="suspend" data-id-removal="{{ user.id }}"><span class="glyphicon glyphicon-off" aria-label="Suspend"></span></button>
+	      {% endif %}
 	      <button class="btn btn-danger btn-xs remove" type="button" title="Remove user with all posts and comments" data-action="remove" data-id-removal="{{ user.id }}"><span class="glyphicon glyphicon-trash" aria-label="Remove"></span></button>
 	      {% endif %}
         </div>

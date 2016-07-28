@@ -29,7 +29,20 @@
 	      <a href="{{ url_for('.user', username=comment.author.username) }}">
 		{{ comment.author.username }}
 	      </a>
+	      {% if expand %}
+	      commented on the
+	      <a href="{{ url_for('main.post', category=comment.post.category.alias, id=comment.post.id, alias=comment.post.alias) }}#comment{{ comment.id }}">
+		{{ comment.post.title }}
+	      </a>
+	      {% if comment.post.category %}
+	      under
+	      <a href="{{ url_for('main.category', alias=comment.post.category.alias) }}">
+		<span class="label label-success">{{ comment.post.category.title }}</span>
+	      </a> category
+	      {% endif %}
+	      {% endif %}
 	    </div>
+
             <div class="comment-body">
                 {% if comment.disabled %}
                 <p><i>This comment has been disabled by a moderator.</i></p>

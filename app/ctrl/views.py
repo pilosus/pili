@@ -72,6 +72,7 @@ def posts():
                            datetimepicker=datetime.utcnow(),
                            pagination=pagination)
 
+# TODO: rewrite as API function
 @ctrl.route('/remove-post', methods=['POST'])
 def remove_post():
     try:
@@ -712,6 +713,8 @@ def users_bulk():
         message = ''
         for count, id in enumerate(users):
             user = User.query.get(id)
+            if not user:
+                continue
             user.role = suspended
             db.session.add(user)
             message += str(user.id) + ', '
@@ -726,7 +729,29 @@ def users_bulk():
 
     # TODO
     def remove(users):
-        return "success", "Remove"
+        message = ''
+        for id in users:
+            user = User.query.get(id)
+            if not user:
+                continue
+            # remove posts, as well as tags, comments under each post
+            for post in user.posts:
+                Ops.remove_post(post)
+            message += str(user.id) + ', '
+            # remove comments by user and all their descendants
+            for comment in user.comments:
+                Ops.remove_comment(comment)
+
+            # remove replies to a user and all their descendants
+            for reply in user.replies:
+                Ops.remove_comment(reply)
+            
+            # remove user itself
+            db.session.delete(user)
+        message = message.rstrip(', ')
+        message = 'Users id#: {message} and all their associated posts, comments and unused tags have been removed.'.\
+                      format(message=message)
+        return 'success', message
     
     try:
         csrf = request.json['csrf']
@@ -759,3 +784,49 @@ def logs():
 def test():
     return render_template('ctrl/test.html')
 
+class Ops:
+    @staticmethod
+    def remove_post(post):
+        """Return True if post with is deleted.
+        """
+        # check permissions
+        if current_user != post.author and \
+           not (current_user.has_role('Administrator') or \
+                current_user.has_role('Editor')):
+            abort(403)
+        # remove tags
+        if post.tags.count():
+            tags = post.tags.all()
+            for t in tags:
+                # remove entries from M2M tagification table 
+                Tagification.query.filter_by(tag_id=t.id, post_id=post.id).\
+                    delete(synchronize_session='fetch')
+                # if the tag is not in use in other post(s), remove it
+                in_other_posts = Tagification.query.\
+                                 filter(Tagification.tag_id == t.id,
+                                        Tagification.post_id != post.id).count()
+                if not in_other_posts:
+                    db.session.delete(t)
+
+        # remove comments
+        for c in post.comments.all():
+            db.session.delete(c)
+
+        # remove post itselt
+        db.session.delete(post)
+        return True
+
+    @staticmethod
+    def remove_comment(comment):
+        """Return True if comment and all its descendants were removed."""
+        # find all replies
+        descendants = []
+        Comment.dfs(comment, lambda x: descendants.append(x))
+
+        # remove all replies
+        for c in descendants:
+            db.session.delete(c)
+
+        # remove comment itself
+        db.session.delete(comment)
+        return True
