@@ -47,50 +47,50 @@ div.post-content {
 div.post-footer {
     text-align: right;
 }
-ul.comments {
+ul.ctrl-list {
     list-style-type: none;
     padding: 0px;
     margin: 16px 0px 0px 0px;
 }
-ul.comments li.comment {
+ul.ctrl-list li.ctrl-item {
     margin-left: 32px;
     padding: 8px;
     border-bottom: 1px solid #e0e0e0;
 }
-ul.comments li.comment:nth-child(1) {
+ul.ctrl-list li.ctrl-item:nth-child(1) {
     border-top: 1px solid #e0e0e0;
 }
-ul.comments li.comment:hover {
+ul.ctrl-list li.ctrl-item:hover {
     background-color: #f0f0f0;
 }
-ul.comments li.comment.unread {
+ul.ctrl-list li.ctrl-item.unread {
     background-color: #f0f0f0;
 }
-div.comment-date {
+div.ctrl-item-date {
     float: right;
 }
-div.comment-author {
+div.ctrl-item-author {
     font-weight: bold;
 }
-div.comment-thumbnail {
+div.ctrl-item-thumbnail {
     position: absolute;
 }
-div.comment-checkbox {
+div.ctrl-item-checkbox {
     position: absolute;
     margin-top: 40px;
 }
 .on-check {
     display: none;
 }
-div.comment-control {
+div.ctrl-item-control {
     margin-left: 40px;
     height: 30px;
 }
-div.comment-content {
+div.ctrl-item-content {
     margin-left: 48px;
     min-height: 48px;
 }
-div.comment-form {
+div.ctrl-item-form {
     margin: 16px 0px 16px 32px;
 }
 section.pagination {

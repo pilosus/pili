@@ -31,10 +31,10 @@
  $('#select_all').change(function() {
      var select_all = $( this );
      if ( select_all.prop('checked') ) {
-	 $('.comment-select').prop('checked', $(this).prop('checked'));
+	 $('.ctrl-item-select').prop('checked', $(this).prop('checked'));
      }
      else if ( select_all.not(':checked') ) {
-	 $('.comment-select').removeAttr('checked');
+	 $('.ctrl-item-select').removeAttr('checked');
      }
  })//.change();
 </script>
@@ -73,7 +73,7 @@
 	 comments[0] = button.data('id-removal');
      }
      else {
-	 $('.comment-select:checked').each(function(i){
+	 $('.ctrl-item-select:checked').each(function(i){
              comments[i] = $(this).val();
 	 });
      }

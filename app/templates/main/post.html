@@ -10,7 +10,7 @@
 {% if posts[0].commenting %}
 <h4 id="comments">Comments</h4>
 {% if current_user.can(Permission.COMMENT) %}
-<div class="comment-form">
+<div class="ctrl-item-form">
   {{ wtf.quick_form(form) }}
 </div>
 {% endif %}
