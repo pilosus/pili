@@ -92,6 +92,7 @@ def remove_post():
             current_user.has_role('Editor')):
         abort(403)
     # remove tags
+    # TODO rewrite as 'after_flush' listener, it's much more memory effective 
     if post.tags.count():
         tags = post.tags.all()
         for t in tags:
@@ -728,6 +729,8 @@ def users_bulk():
         return 'success', message
 
     # TODO
+    # rewrite as listeners and cascades with delete-orphans
+    # http://docs.sqlalchemy.org/en/latest/orm/cascades.html#cascade-delete
     def remove(users):
         message = ''
         for id in users:
@@ -745,12 +748,24 @@ def users_bulk():
             # remove replies to a user and all their descendants
             for reply in user.replies:
                 Ops.remove_comment(reply)
-            
+
+            # reassign ownership of uploaded files to admin
+            admin_role = Role.query.filter_by(permissions=0xff).first()
+            admin = User.query.filter(User.role == admin_role).first()
+            for image in user.images:
+                Ops.image_change_owner(image, admin)
+
+            # reassign ownership of categories to admin
+            for category in user.categories:
+                Ops.category_change_owner(category, admin)
+
+            # reassign ownership of tags to admin
+            for tag in user.tags:
+                Ops.tag_change_owner(tag, admin)
             # remove user itself
             db.session.delete(user)
         message = message.rstrip(', ')
-        message = 'Users id#: {message} and all their associated posts, comments and unused tags have been removed.'.\
-                      format(message=message)
+        message = 'Users id#: {message} have been removed'.format(message=message)
         return 'success', message
     
     try:
@@ -830,3 +845,21 @@ class Ops:
         # remove comment itself
         db.session.delete(comment)
         return True
+
+    @staticmethod
+    def image_change_owner(image, user):
+        image.owner = user
+        db.session.add(image)
+        return True
+
+    @staticmethod
+    def category_change_owner(category, user):
+        category.author = user
+        db.session.add(category)
+        return True
+
+    @staticmethod
+    def tag_change_owner(tag, admin):
+        tag.author = user
+        db.session.add(tag)
+        return True        

@@ -1,7 +1,7 @@
-{% extends "base.html" %}
+{% extends "auth/base.html" %}
 {% import "bootstrap/wtf.html" as wtf %}
 
-{% block title %}Log In - Pili{% endblock %}
+{% block title %}Log In {{ super() }}{% endblock %}
 
 {% block page_content %}
 <div class="page-header">
@@ -11,6 +11,8 @@
     {{ wtf.quick_form(form) }}
     <br>
     <p>Forgot your password? <a href="{{ url_for('auth.password_reset_request') }}">Click here to reset it</a>.</p>
+    {% if registration_open %}
     <p>New user? <a href="{{ url_for('auth.register') }}">Click here to register</a>.</p>
+    {% endif %}
 </div>
 {% endblock %}

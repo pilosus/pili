@@ -1,7 +1,7 @@
-{% extends "base.html" %}
-{% import "_macros.html" as macros %}
+{% extends "main/base.html" %}
+{% import "main/_macros.html" as macros %}
 
-{% block title %}Flasky - {{ title }} {{ user.username }}{% endblock %}
+{% block title %}{{ title }} {{ user.username }} {{ super() }}{% endblock %}
 
 {% block page_content %}
 <div class="page-header">

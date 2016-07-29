@@ -153,7 +153,8 @@ class Comment(db.Model):
     #                          lazy='dynamic',
     #                          cascade='all, delete-orphan')
     replies = db.relationship('Comment',
-                              backref=db.backref('parent', remote_side=[id]))
+                              backref=db.backref('parent', remote_side=[id]),
+                              cascade='all, delete-orphan')
 
     @staticmethod
     def dfs(comment, fun):
@@ -270,28 +271,15 @@ class User(UserMixin, db.Model):
     comments = db.relationship('Comment',
                                foreign_keys=[Comment.author_id],
                                backref=db.backref('author', lazy='joined'),
-                               #backref='author',
-                               lazy='dynamic')
+                               lazy='dynamic',
+                               cascade='all, delete-orphan')
     # comments recieved by a user as a reply
     replies = db.relationship('Comment',
                               foreign_keys=[Comment.recipient_id],
                               backref=db.backref('recipient', lazy='joined'),
-                              #backref='recipient',
-                              lazy='dynamic')
-    """
-    # replies by the user
-    replies = db.relationship('Reply',
-                              foreign_keys=[Reply.repliee_id],
-                              backref=db.backref('repliee', lazy='joined'),
                               lazy='dynamic',
                               cascade='all, delete-orphan')
-    # replies to the user
-    messages = db.relationship('Reply',
-                              foreign_keys=[Reply.replier_id],
-                              backref=db.backref('replier', lazy='joined'),
-                              lazy='dynamic',
-                              cascade='all, delete-orphan')
-    """
+
     def suspend(self):
         suspended = Role.query.filter(Role.name == 'Suspended').first()
         self.role = suspended
@@ -577,8 +565,11 @@ class Post(db.Model):
     
     # 1-to-many Post/Comment
     # https://stackoverflow.com/questions/18677309/flask-sqlalchemy-relationship-error
-    comments = db.relationship('Comment', backref='post', lazy='dynamic',
-                               foreign_keys=[Comment.post_id])
+    comments = db.relationship('Comment',
+                               backref='post',
+                               lazy='dynamic',
+                               foreign_keys=[Comment.post_id],
+                               cascade='all, delete-orphan')
     # 1-to-many relationship Category/Post
     category_id = db.Column(db.Integer, db.ForeignKey('categories.id'))
     # many-to-many relationship Tag/Post
@@ -639,8 +630,11 @@ class Post(db.Model):
     def __repr__(self):
         return '<Post %r>' % self.alias
 
-
 db.event.listen(Post.body, 'set', Post.on_changed_body)
+# TODO listener for Tag removing after_flush
+# See:
+# https://stackoverflow.com/questions/12653824/delete-children-after-parent-is-deleted-in-sqlalchemy
+# http://stackoverflow.com/a/9264556/4241180
 
 class Tag(db.Model):
     """Tag a post belongs to.
@@ -682,7 +676,8 @@ class Category(db.Model):
     featured = db.Column(db.Boolean, default=False, index=True)
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     posts = db.relationship('Post', backref='category', lazy='dynamic',
-                               foreign_keys=[Post.category_id])
+                            foreign_keys=[Post.category_id],
+                            cascade='all, delete-orphan')
 
     @staticmethod
     def on_changed_body(target, value, oldvalue, initiator):

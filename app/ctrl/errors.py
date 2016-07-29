@@ -9,7 +9,7 @@ def forbidden(e):
         response = jsonify({'error': 'forbidden'})
         response.status_code = 403
         return response
-    return render_template('403.html'), 403
+    return render_template('error/403.html'), 403
 
 
 @ctrl.app_errorhandler(404)
@@ -19,7 +19,7 @@ def page_not_found(e):
         response = jsonify({'error': 'not found'})
         response.status_code = 404
         return response
-    return render_template('404.html'), 404
+    return render_template('error/404.html'), 404
 
 
 @ctrl.app_errorhandler(500)
@@ -29,7 +29,7 @@ def internal_server_error(e):
         response = jsonify({'error': 'internal server error'})
         response.status_code = 500
         return response
-    return render_template('500.html'), 500
+    return render_template('error/500.html'), 500
 
 @csrf.error_handler
 def csrf_error(e):
@@ -38,4 +38,4 @@ def csrf_error(e):
         response = jsonify({'error': e})
         response.status_code = 400
         return response
-    return render_template('csrf_error.html', e=e), 400
+    return render_template('error/csrf.html', e=e), 400

@@ -31,6 +31,7 @@ def unconfirmed():
 
 @auth.route('/login', methods=['GET', 'POST'])
 def login():
+    registration_open = current_app.config['PILI_REGISTRATION_OPEN']
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data).first()
@@ -38,7 +39,8 @@ def login():
             login_user(user, form.remember_me.data)
             return redirect(request.args.get('next') or url_for('main.index'))
         flash('Invalid username or password.', 'warning')
-    return render_template('auth/login.html', form=form)
+    return render_template('auth/login.html', form=form,
+                           registration_open=registration_open)
 
 
 @auth.route('/logout')
@@ -51,6 +53,9 @@ def logout():
 
 @auth.route('/register', methods=['GET', 'POST'])
 def register():
+    if current_app.config['PILI_REGISTRATION_OPEN'] is False:
+        flash('Registration for new users is by invitation only. Please contact administration.', 'info')
+        return redirect(url_for('main.index'))
     form = RegistrationForm()
     if form.validate_on_submit():
         user = User(email=form.email.data,

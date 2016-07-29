@@ -26,7 +26,8 @@ class Config:
     PILI_IMAGES_PER_PAGE = int(os.environ.get('PILI_IMAGES_PER_PAGE', 10))
     PILI_COMMENTS_PER_PAGE = int(os.environ.get('PILI_COMMENTS_PER_PAGE', 10))
     PILI_USERS_PER_PAGE = int(os.environ.get('PILI_COMMENTS_PER_PAGE', 10))
-    PILI_COMMENTS_SCREENING = True # comment screened by default
+    PILI_COMMENTS_SCREENING = True    # comment screened by default
+    PILI_REGISTRATION_OPEN = True    # can new user register by themselves? 
     PILI_FOLLOWERS_PER_PAGE = int(os.environ.get('PILI_FOLLOWERS_PER_PAGE', 100))
     PILI_SLOW_DB_QUERY_TIME = 0.5
     PILI_ROLES_EDIT_OTHERS_POSTS = ['Editor', 'Administrator']
