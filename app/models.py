@@ -670,6 +670,7 @@ class Category(db.Model):
     author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     title = db.Column(db.String(64))
     alias = db.Column(db.String(64), unique=True)
+    description = db.Column(db.String(160))
     body = db.Column(db.Text)
     body_html = db.Column(db.Text)
     image_id = db.Column(db.Integer, db.ForeignKey('uploads.id'))

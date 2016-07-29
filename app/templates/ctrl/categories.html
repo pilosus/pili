@@ -15,6 +15,16 @@
     {{ wtf.form_errors(form, hiddens="only") }}
     {{ wtf.form_field(form.title) }}
     {{ wtf.form_field(form.alias) }}
+
+    <div class="form-group {% if form.errors.description%}has-error{% endif %}">
+      {{ form.description.label(class="control-label") }}
+      {{ form.description(class="form-control") }}
+      {% for error in form.errors.description %}
+      <span class="help-block has-error">{{error}}</span>
+      {% endfor %} 
+      <span id="description-count" class=""></span>
+    </div>
+    
     {{ wtf.form_field(form.body) }}
 
     <div class="form-group" id="uploads-control">
@@ -118,6 +128,20 @@
 	 }));
      }
  });
+</script>
+
+<script>
+  $('#description').on('keyup',function(){
+      var left = 160 - $(this).val().length;
+      var block = $('#description-count');
+      block.text('Characters left: ' + left);
+      if (left < 0) {
+	  block.addClass('text-danger');
+      }
+      else {
+	  block.removeClass('text-danger');
+      }
+});
 </script>
 
 <script>

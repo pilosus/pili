@@ -24,7 +24,8 @@
 
 {% if current_user.can(Permission.ADMINISTER) %}
 <li {% if page == 'users' %}class="active"{% endif %}><a href="{{ url_for('ctrl.users') }}">Users</a></li>
-<li {% if page == 'invite' %}class="active"{% endif %}><a href="{{ url_for('auth.invite_request') }}">Invites</a></li>
+<li {% if page == 'invite' %}class="active"{% endif %}><a href="{{ url_for('auth.invite_request') }}">Invite</a></li>
+<li {% if page == 'notify' %}class="active"{% endif %}><a href="">Notify</a></li>
 {% endif %}
 {% endblock %}
 

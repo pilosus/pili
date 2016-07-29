@@ -36,9 +36,9 @@
 
 	<td>
           {% if category.body_html %}
-            {{ category.body_html | safe }}
+            {{ category.body_html | safe | truncate(**body_truncate)}}
           {% else %}
-            {{ category.body }}
+            {{ category.body | truncate(**body_truncate) }}
           {% endif %}
 	</td>
 

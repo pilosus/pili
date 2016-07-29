@@ -49,7 +49,8 @@ class Config:
                                'img': ['src', 'alt']}
     PILI_ALLOWED_COMMENT_TAGS = ['a', 'abbr', 'acronym', 'b', 'code', 'em',
                                  'i', 'strong']
-    POST_TRUNCATE = {'length': 128, 'killwords': True, 'end': '...'}
+    # Truncate text in a template
+    PILI_BODY_TRUNCATE = {'length': 128, 'killwords': True, 'end': '...'}
 
     @staticmethod
     def init_app(app):

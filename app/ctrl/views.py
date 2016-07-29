@@ -65,10 +65,10 @@ def posts():
         page, per_page=current_app.config['PILI_POSTS_PER_PAGE'],
         error_out=False)
     posts = pagination.items
-    post_truncate = current_app.config['POST_TRUNCATE']
+    body_truncate = current_app.config['PILI_BODY_TRUNCATE']
     return render_template('ctrl/posts.html', remove_form=remove_form,
                            form=form, posts=posts,
-                           post_truncate=post_truncate,
+                           body_truncate=body_truncate,
                            datetimepicker=datetime.utcnow(),
                            pagination=pagination)
 
@@ -208,6 +208,7 @@ def edit_post(id, alias):
         post.title = form.title.data
         post.alias = sanitize_alias(form.alias.data)
         post.timestamp = form.timestamp.data
+        post.description = form.description.data
         post.body = form.body.data
         post.image = upload
         post.featured = form.featured.data
@@ -271,9 +272,10 @@ def edit_post(id, alias):
     form.title.data = post.title
     form.alias.data = post.alias
     form.timestamp.data = post.timestamp
+    form.description.data = post.description
     form.body.data = post.body
     if post.image:
-        form.image.data = category.image.filename
+        form.image.data = post.image.filename
     
     form.featured.data = post.featured
     form.commenting.data = post.commenting
@@ -293,9 +295,9 @@ def edit_category(alias):
     form = EditCategoryForm()
     if form.validate_on_submit():
         upload = Upload.query.filter_by(filename=form.image.data).first()
-
         category.title = form.title.data
         category.alias = form.alias.data
+        category.description = form.description.data
         category.body = form.body.data
         category.image = upload
         category.featured = form.featured.data
@@ -308,6 +310,7 @@ def edit_category(alias):
     # Render prefilled form
     form.title.data = category.title
     form.alias.data = category.alias
+    form.description.data = category.description
     form.body.data = category.body
     if category.image:
         form.image.data = category.image.filename
@@ -365,8 +368,10 @@ def categories():
         page, per_page=current_app.config['PILI_POSTS_PER_PAGE'],
         error_out=False)
     categories = pagination.items
+    body_truncate = current_app.config['PILI_BODY_TRUNCATE']
     return render_template('ctrl/categories.html', form=form,
                            remove_form=remove_form,
+                           body_truncate=body_truncate,
                            categories=categories,
                            datetimepicker=datetime.utcnow(),
                            pagination=pagination)
@@ -712,7 +717,7 @@ def users_bulk():
     def suspend(users):
         suspended = Role.query.filter(Role.name == 'Suspended').first()
         message = ''
-        for count, id in enumerate(users):
+        for id in users:
             user = User.query.get(id)
             if not user:
                 continue
@@ -720,13 +725,14 @@ def users_bulk():
             db.session.add(user)
             message += str(user.id) + ', '
         message = message.rstrip(', ')
-        if count > 1:
+        if message:
             message = 'Users id#: {message} have been marked as suspended.'.\
                       format(message=message)
+            status = 'success'
         else:
-            message = 'User id#: {message} has been marked as suspended.'.\
-                      format(message=message)
-        return 'success', message
+            message = 'Nothing to suspend.'
+            status = 'warning'
+        return status, message
 
     # TODO
     # rewrite as listeners and cascades with delete-orphans
@@ -765,8 +771,13 @@ def users_bulk():
             # remove user itself
             db.session.delete(user)
         message = message.rstrip(', ')
-        message = 'Users id#: {message} have been removed'.format(message=message)
-        return 'success', message
+        if message:
+            message = 'Users id#: {message} have been removed'.format(message=message)
+            status = 'success'
+        else:
+            message = 'Nothing to remove.'
+            status = 'warning'
+        return status, message
     
     try:
         csrf = request.json['csrf']

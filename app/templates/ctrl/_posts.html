@@ -40,9 +40,9 @@
 
 	<td>
 	    {% if post.body_html %}
-   	      {{ post.body_html | safe | truncate(**post_truncate) }}
+   	      {{ post.body_html | safe | truncate(**body_truncate) }}
             {% else %}
-              {{ post.body | truncate(**post_truncate) }}
+              {{ post.body | truncate(**body_truncate) }}
             {% endif %}
 	</td>
 
@@ -57,11 +57,13 @@
 	</td>
 
 	<td>
-	    cat
+	  <a href="{{ url_for('main.category', alias=post.category.alias) }}">{{ post.category.title }}</a>
 	</td>
 
 	<td>
-	    tags
+	  {% for t in post.tags %}
+	    {{ t.title }}{% if not loop.last %}, {% endif %}
+	  {% endfor %}
 	</td>
 	
 	<td>
