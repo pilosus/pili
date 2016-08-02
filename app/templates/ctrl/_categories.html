@@ -1,68 +1,55 @@
-<div class="table-responsive">
-  <table class="table img-list table-condensed">
-    <thead>
-      <tr>
-	<th>Image</th>	
-	<th>Title</th>
-	<th>Alias</th>	
-	<th>Description</th>
-	<th>Author</th>
-	<th>Created</th>
-	<th>Operations</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for category in categories %}
-      <tr>
-	<td width="150px">
-	  {% if category.image %}
-	    <img src="{{ category.image.filename | thumbnail('100x100', crop='fit', quality=75) }}"
-		 class="img-responsive img-thumbnail"
-		 title="{{ category.image.filename }}" alt="{{ category.image.filename }}">
+<div class="ctrl-item-control">
+	<input name="checkbox_select_all" id="select_all" type="checkbox" value=""></span>
+	<button class="btn btn-default btn-sm on-check" data-action="remove"><span class="glyphicon glyphicon-remove" aria-label="Remove" title="Remove selected categories"></span></button>
 
-	  {% else %}
-	  <span class="glyphicon glyphicon-minus" title="No Image"></span>
-	  {% endif %}
-	  
-	</td>
-	
-	<td>
-	  {{ category.title }}
-	</td>
-
-	<td>
-	  {{ category.alias }}
-	</td>
-
-	<td>
-          {% if category.body_html %}
-            {{ category.body_html | safe | truncate(**body_truncate)}}
-          {% else %}
-            {{ category.body | truncate(**body_truncate) }}
-          {% endif %}
-	</td>
-
-	<td>
-	  <a href="{{ url_for('.user', username=category.author.username) }}">
-	    {{ category.author.username }}
-	  </a>
-	</td>
-	
-	<td>
-	  {{ moment(category.timestamp).fromNow() }}
-	</td>
-	
-	<td>
-	  <ul class="list-inline">
-	    <li><a class="btn btn-link" href="{{ url_for('main.category', alias=category.alias ) }}" title="View"><span class="glyphicon glyphicon-eye-open"></span></a></li>
-	    {% if current_user.can(Permission.STRUCTURE) %}
-	    <li><a class="btn btn-link" href="{{ url_for('ctrl.edit_category', alias=category.alias ) }}" title="Edit"><span class="glyphicon glyphicon-pencil"></span></a></li>
-	    <li><button class="btn btn-link remove" type="button" title="Remove" data-id-removal="{{ category.id }}"><span class="glyphicon glyphicon-remove"></span></button></li>
-	    {% endif %}
-	  </ul>
-	</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
 </div>
+
+<ul class="ctrl-list">
+  {% for category in categories %}
+  <li id="category{{ category.id }}" class="ctrl-item">
+    <div class="ctrl-item-thumbnail">
+      {% if category.image %}
+      <img src="{{ category.image.filename | thumbnail('30x30', crop='fit', quality=75) }}"
+	   class="img-responsive img-thumbnail"
+	   title="{{ category.image.title | e }}" alt="{{ category.image.title | e }}">
+      {% else %}
+      <span class="glyphicon glyphicon-minus" aria-label="None" title="No Image"></span>
+      {% endif %}
+    </div>
+
+    <div class="ctrl-item-checkbox">
+      <input name="checkbox{{ category.id }}" id="checkbox{{ category.id }}" class="ctrl-item-select" type="checkbox" value="{{ category.id }}">
+    </div>
+    
+    <div class="ctrl-item-content">
+      <div class="ctrl-item-date">{{ moment(category.timestamp).fromNow() }}</div>
+      <strong><a href="{{ url_for('main.category', alias=category.alias) }}">
+	  {{ category.title }}
+      </a></strong>
+      by
+      <span class="glyphicon glyphicon-user"></span>
+      <a href="{{ url_for('main.user', username=category.author.username) }}">
+	{{ category.author.username }}
+      </a>
+      <div class="ctrl-item-body">
+	<p>
+	  <strong>Alias:</strong> {{ category.alias }}<br>
+	  {% if category.description %}
+	  <strong>Description:</strong> {{ category.description | truncate(**body_truncate) }}<br>
+	  {% endif %}
+	  <strong>Body:</strong>  {{ category.body | truncate(**body_truncate) }}<br>
+          <strong>Featured: </strong> {% if category.featured %}[x]
+	  {% else %}[ ]{% endif %}<br>
+	</p>
+
+	{% if current_user.can(Permission.STRUCTURE) %}
+	<a class="btn btn-xs btn-primary" href="{{ url_for('ctrl.edit_category', id=category.id, alias=category.alias) }}" title="Edit"><span class="glyphicon glyphicon-pencil"></span></a>
+	{% endif %}
+	{% if current_user.has_role('Administrator') %}
+	<button class="btn btn-xs btn-danger remove" type="button" title="Remove" data-action="remove" data-id-removal="{{ category.id }}"><span class="glyphicon glyphicon-remove"></span></button>
+	{% endif %}
+      </div>
+    </div>
+  </li>
+  {% endfor %}
+</ul>

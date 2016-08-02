@@ -1,8 +1,9 @@
-/* html5 */
+/* HTML5 */
 article, section, aside, hgroup, nav, header, footer, figure, figcaption {
   display: block;
 }
 
+/* main: User profile */
 .profile-thumbnail {
     position: absolute;
 }
@@ -10,6 +11,8 @@ article, section, aside, hgroup, nav, header, footer, figure, figcaption {
     min-height: 260px;
     margin-left: 280px;
 }
+
+/* main: Post */
 section.post-tabs {
     margin-top: 16px;
 }
@@ -47,6 +50,24 @@ div.post-content {
 div.post-footer {
     text-align: right;
 }
+
+/* main: Category */
+div.category {
+    display: flex;
+    margin-bottom: 10px;
+}
+.category-image {
+    flex: 0 0 10%;
+}
+.category-body {
+    flex: 1;
+}
+
+/* ctrl: Table */
+.table.img-list > tbody > tr > td {
+    vertical-align: middle;
+}
+/* ctrl: Comments, Posts, Uploads, Users iterables */
 ul.ctrl-list {
     list-style-type: none;
     padding: 0px;
@@ -75,6 +96,9 @@ div.ctrl-item-author {
 div.ctrl-item-thumbnail {
     position: absolute;
 }
+div.ctrl-item-body {
+    padding: 5px 0;
+}
 div.ctrl-item-checkbox {
     position: absolute;
     margin-top: 40px;
@@ -93,6 +117,8 @@ div.ctrl-item-content {
 div.ctrl-item-form {
     margin: 16px 0px 16px 32px;
 }
+
+/* Pagination macro */
 section.pagination {
     width: 100%;
     text-align: right;
@@ -100,17 +126,7 @@ section.pagination {
     margin: 0px;
 }
 
-div.category {
-    display: flex;
-    margin-bottom: 10px;
-}
-.category-image {
-    flex: 0 0 10%;
-}
-.category-body {
-    flex: 1;
-}
-
+/* Pagedown preview for Post, Category forms */
 div.flask-pagedown-preview {
     margin: 10px 0px 10px 0px;
     border: 1px solid #e0e0e0;
@@ -167,10 +183,4 @@ div.flask-pagedown-preview h3 {
   border: 1px solid rgba(0, 0, 0, 0.2);
   border-radius: 8px;
   box-shadow: 0 5px 10px rgba(0,0,0,.2);
-}
-
-
-/* Table */
-.table.img-list > tbody > tr > td {
-    vertical-align: middle;
 }

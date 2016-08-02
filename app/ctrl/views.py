@@ -29,6 +29,7 @@ def posts():
                     alias=sanitize_alias(form.alias.data),
                     timestamp=form.timestamp.data,
                     body=form.body.data,
+                    description=form.description.data,
                     author=current_user._get_current_object(),
                     image=upload,
                     featured=form.featured.data,
@@ -481,28 +482,6 @@ def remove_upload():
         'status': status,
         'message': message,
     })
-
-"""
-def remove_upload1(filename):
-    upload = Upload.query.filter_by(filename=filename).first_or_404()
-    # Check permissions
-    if not (current_user.can(Permission.ADMINISTER) or \
-        current_user.id != upload.owner.id):
-        flash("You have no permission to remove '{0}'.".format(filename),
-              'warning')
-        return redirect(url_for('ctrl.uploads'))
-    # Remove item in DB
-    db.session.delete(upload)
-    # Remove file on disk
-    os.remove(os.path.join(current_app.config['PILI_UPLOADS'], filename))
-    # Remove thumbnails if any
-    for thumb in os.listdir(current_app.config['MEDIA_THUMBNAIL_FOLDER']):
-        if thumb.startswith(find_thumbnail(filename)):
-            os.remove(os.path.join(current_app.config['MEDIA_THUMBNAIL_FOLDER'], thumb))
-    # Redirect
-    flash("File '{0}' has been removed.".format(filename), 'success')
-    return redirect(url_for('ctrl.uploads'))
-"""
 
 @ctrl.route('/view-upload/<filename>', methods=['GET', 'POST'])
 def view_upload(filename):

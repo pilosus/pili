@@ -1,100 +1,58 @@
-<div class="table-responsive">
-  <table class="table img-list table-condensed">
-    <thead>
-      <tr>
-	<th>Image</th>	
-	<th>Title</th>
-	<th>Alias</th>	
-	<th>Text</th>
-	<th>Author</th>
-	<th>Created</th>
-	<th>Category</th>
-	<th>Tags</th>
-	<th>Featured</th>
-	<th>Commenting</th>
-	<th>Operations</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for post in posts %}
-      <tr>
-	<td width="150px">
-	  {% if post.image %}
-	    <img src="{{ post.image.filename | thumbnail('100x100', crop='fit', quality=75) }}"
-		 class="img-responsive img-thumbnail"
-		 title="{{ post.image.filename }}" alt="{{ post.image.filename }}">
+<div class="ctrl-item-control">
+	<input name="checkbox_select_all" id="select_all" type="checkbox" value=""></span>
+	<button class="btn btn-default btn-sm on-check" data-action="remove"><span class="glyphicon glyphicon-remove" aria-label="Remove" title="Remove selected posts"></span></button>
 
-	  {% else %}
-	  <span class="glyphicon glyphicon-minus" title="No Image"></span>
-	  {% endif %}
-	  
-	</td>
-	
-	<td>
-	  {{ post.title }}
-	</td>
-
-	<td>
-	  {{ post.alias }}
-	</td>
-
-	<td>
-	    {% if post.body_html %}
-   	      {{ post.body_html | safe | truncate(**body_truncate) }}
-            {% else %}
-              {{ post.body | truncate(**body_truncate) }}
-            {% endif %}
-	</td>
-
-	<td>
-	  <a href="{{ url_for('.user', username=post.author.username) }}">
-	    {{ post.author.username }}
-	  </a>
-	</td>
-	
-	<td>
-	  {{ moment(post.timestamp).fromNow() }}
-	</td>
-
-	<td>
-	  <a href="{{ url_for('main.category', alias=post.category.alias) }}">{{ post.category.title }}</a>
-	</td>
-
-	<td>
-	  {% for t in post.tags %}
-	    {{ t.title }}{% if not loop.last %}, {% endif %}
-	  {% endfor %}
-	</td>
-	
-	<td>
-	    {% if post.featured %}
-	    <span class="glyphicon glyphicon-ok" title="Featured"></span>
-	    {% else %}
-	    <span class="glyphicon glyphicon-remove" title="Not featured"></span>
-	    {% endif %}
-	</td>
-
-	<td>
-	    {% if post.commenting %}
-	    <span class="glyphicon glyphicon-ok" title="Commenting allowed"></span>
-	    {% else %}
-	    <span class="glyphicon glyphicon-remove" title="Commenting prohibited"></span>
-	    {% endif %}
-	</td>
-	
-	<td>
-	  <ul class="list-inline">
-	      <li><a class="btn btn-link" href="{{ url_for('main.post', category=post.category.alias, id=post.id, alias=post.alias) }}" title="View"><span class="glyphicon glyphicon-eye-open"></span></a></li>
-	      {% if current_user == post.author or
-	      current_user.has_role('Administrator') or 
-	      current_user.has_role('Editor')  %}
-	      <li><a class="btn btn-link" href="{{ url_for('ctrl.edit_post', id=post.id, alias=post.alias) }}" title="Edit"><span class="glyphicon glyphicon-pencil"></span></a></li>
-	    <li><button class="btn btn-link remove" type="button" title="Remove" data-id-removal="{{ post.id }}"><span class="glyphicon glyphicon-remove"></span></button></li>
-	    {% endif %}
-	  </ul>
-	</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
 </div>
+
+<ul class="ctrl-list">
+  {% for post in posts %}
+  <li id="post{{ post.id }}" class="ctrl-item">
+    <div class="ctrl-item-thumbnail">
+      {% if post.image %}
+      <img src="{{ post.image.filename | thumbnail('30x30', crop='fit', quality=75) }}"
+	   class="img-responsive img-thumbnail"
+	   title="{{ post.image.title | e }}" alt="{{ post.image.title | e }}">
+      {% else %}
+      <span class="glyphicon glyphicon-minus" aria-label="None" title="No Image"></span>
+      {% endif %}
+    </div>
+
+    <div class="ctrl-item-checkbox">
+      <input name="checkbox{{ post.id }}" id="checkbox{{ post.id }}" class="ctrl-item-select" type="checkbox" value="{{ post.id }}">
+    </div>
+    
+    <div class="ctrl-item-content">
+      <div class="ctrl-item-date">{{ moment(post.timestamp).fromNow() }}</div>
+      <strong><a href="{{ url_for('main.post', category=post.category.alias, id=post.id, alias=post.alias) }}">
+	  {{ post.title }}
+      </a></strong>
+      by
+      <span class="glyphicon glyphicon-user"></span>
+      <a href="{{ url_for('main.user', username=post.author.username) }}">
+	{{ post.author.username }}
+      </a>
+      <div class="ctrl-item-body">
+	<p>
+	  <strong>Alias:</strong> {{ post.alias }}<br>
+	  {% if post.description %}
+	  <strong>Description:</strong> {{ post.description | truncate(**body_truncate) }}<br>
+	  {% endif %}
+	  <strong>Body:</strong>  {{ post.body | truncate(**body_truncate) }}<br>
+          <strong>Featured: </strong> {% if post.featured %}[x]
+	  {% else %}[ ]{% endif %}<br>
+	  <strong>Commenting: </strong> {% if post.commenting %}[x]
+	  {% else %}[ ]{% endif %}<br>
+
+	</p>
+
+	{% if current_user == post.author or
+	current_user.has_role('Administrator') or 
+	current_user.has_role('Editor')  %}
+	<a class="btn btn-xs btn-primary" href="{{ url_for('ctrl.edit_post', id=post.id, alias=post.alias) }}" title="Edit"><span class="glyphicon glyphicon-pencil"></span></a>
+	<button class="btn btn-xs btn-danger remove" type="button" title="Remove" data-action="remove" data-id-removal="{{ post.id }}"><span class="glyphicon glyphicon-remove"></span></button>
+	{% endif %}
+      </div>
+    </div>
+  </li>
+  {% endfor %}
+</ul>

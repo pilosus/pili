@@ -48,4 +48,30 @@ $(document).ready(function(){
     
     $('span.twitter-typeahead').has('#image').css('display', 'block');
 
+    /**
+       Bulk select of items
+     **/
+
+    // event handler for select all checkbox
+    $('#select_all').change(function() {
+	var select_all = $( this );
+	if ( select_all.prop('checked') ) {
+	    $('.ctrl-item-select').prop('checked', $(this).prop('checked'));
+	}
+	else if ( select_all.not(':checked') ) {
+	    $('.ctrl-item-select').removeAttr('checked');
+	}
+    })
+
+    // at least one checkbox is checked
+    $('input.ctrl-item-select, input#select_all').change(function() {
+	if ( $('input.ctrl-item-select:checked').length > 0 ) {
+	    $( '.on-check' ).show();
+	}
+	else {
+	    $( '.on-check' ).hide();
+	}
+    })
+
+    
 });

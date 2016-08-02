@@ -1,53 +1,45 @@
-<div class="table-responsive">
-  <table class="table img-list table-condensed">
-    <thead>
-      <tr>
-	<th>Image</th>
-	<th>Filename</th>	
-	<th>Title</th>
-	<th>Owner</th>
-	<th>Upload time</th>
-	<th>Operations</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for image in images %}
-      <tr>
-	<td>
-	  <img src="{{ image.filename | thumbnail('100x100', crop='fit', quality=75) }}"
-	       class="img-responsive img-thumbnail"
-	       title="{{ image.filename }}" alt="{{ image.filename }}">
-	</td>
+<div class="ctrl-item-control">
+	<input name="checkbox_select_all" id="select_all" type="checkbox" value=""></span>
+	<button class="btn btn-default btn-sm on-check" data-action="remove"><span class="glyphicon glyphicon-remove" aria-label="Remove" title="Remove selected items"></span></button>
 
-	<td>
-	  {{ image.filename }}
-	</td>
-
-	
-	<td>
-	  {{ image.title }}
-	</td>
-	
-	<td>
-	  <a href="{{ url_for('.user', username=image.owner.username) }}">
-	    {{ image.owner.username }}
-	  </a>
-	</td>
-	
-	<td>
-	  {{ moment(image.timestamp).fromNow() }}
-	</td>
-	
-	<td>
-	  <ul class="list-inline">
-	    <li><a class="btn btn-link" href="{{ url_for('.view_upload', filename=image.filename) }}" title="View Image"><span class="glyphicon glyphicon-eye-open"></span></a></li>
-	  {% if current_user.can(Permission.ADMINISTER) or current_user.id == image.owner.id %}
-	    <li><button class="btn btn-link remove" data-filename-removal="{{ image.filename }}" title="Remove"><span class="glyphicon glyphicon-remove"></span></button></li>
-	    {% endif %}
-	  </ul>
-	</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
 </div>
+
+<ul class="ctrl-list">
+  {% for image in images %}
+  <li id="image{{ image.id }}" class="ctrl-item">
+    <div class="ctrl-item-thumbnail">
+      <img src="{{ image.filename | thumbnail('30x30', crop='fit', quality=75) }}"
+	   class="img-responsive img-thumbnail"
+	   title="{{ image.title | e }}" alt="{{ image.title | e }}">
+    </div>
+
+    <div class="ctrl-item-checkbox">
+      <input name="checkbox{{ image.id }}" id="checkbox{{ image.id }}" class="ctrl-item-select" type="checkbox" value="{{ image.id }}">
+    </div>
+    
+    <div class="ctrl-item-content">
+      <div class="ctrl-item-date">{{ moment(image.timestamp).fromNow() }}</div>
+      <strong>{{ image.filename }}</strong>
+      by
+      <span class="glyphicon glyphicon-user"></span>
+      <a href="{{ url_for('main.user', username=image.owner.username) }}">
+	{{ image.owner.username }}
+      </a>
+      <div class="ctrl-item-body">
+	<p>
+	  <strong>id:</strong> {{ image.id }}<br>
+	  <strong>Filename:</strong> {{ image.filename }}<br>
+	  {% if image.title %}
+	  <strong>Title:</strong> {{ image.title | e }}<br>
+	  {% endif %}
+	</p>
+
+	<a class="btn btn-xs btn-default" href="{{ url_for('.view_upload', filename=image.filename) }}" title="View Image"><span class="glyphicon glyphicon-eye-open"></span></a>
+	{% if current_user.can(Permission.UPLOAD) %}
+	<button class="btn btn-xs btn-danger remove" type="button" title="Remove" data-action="remove" data-id-removal="{{ image.id }}"><span class="glyphicon glyphicon-remove"></span></button>
+	{% endif %}
+      </div>
+    </div>
+  </li>
+  {% endfor %}
+</ul>
