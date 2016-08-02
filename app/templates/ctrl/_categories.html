@@ -26,10 +26,11 @@
 	  <strong>Alias:</strong> {{ category.alias }}<br>
 	  {% if category.description %}
 	  <strong>Description:</strong> {{ category.description | truncate(**body_truncate) }}<br>
-	  {% endif %}
+	  {% endif %}	  
 	  <strong>Body:</strong>  {{ category.body | truncate(**body_truncate) }}<br>
           <strong>Featured: </strong> {% if category.featured %}[x]
 	  {% else %}[ ]{% endif %}<br>
+	  <strong>Posts:</strong>  {{ category.posts.count() }}<br>
 	</p>
 
 	{% if current_user.can(Permission.STRUCTURE) %}
