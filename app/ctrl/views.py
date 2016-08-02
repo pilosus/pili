@@ -433,8 +433,7 @@ def uploads():
     images = pagination.items
     return render_template('ctrl/uploads.html', form=form,
                            remove_form=remove_form,
-                           images=images,
-                           pagination=pagination)
+                           images=images, pagination=pagination)
 
 
 @ctrl.route('/remove-upload', methods=['POST'])
@@ -445,7 +444,7 @@ def remove_upload():
         csrf = request.json['csrf']
     except (KeyError, TypeError):
         return jsonify({
-            'status': 'error',
+            'status': 'danger',
             'message': 'Function takes two parameters: '
                        'filename to be removed; csrf token',
         })
@@ -454,15 +453,15 @@ def remove_upload():
     # Upload exists
     if upload:
         # Do not delete if an upload is in use
-        categories = ', '.join([i.title for i in upload.categories])
-        posts = ', '.join([i.title for i in upload.posts])
+        categories = ', '.join([str(i.id) for i in upload.categories])
+        posts = ', '.join([str(i.id) for i in upload.posts])
         if len(categories + posts):
             status = "warning"
             message = "File '{0}' is in use and cannot be removed.".format(filename)
             if len(posts):
-                message += " Posts that use file: {0}".format(posts)
+                message += " Posts using the file #: {0}.".format(posts)
             if len(categories):
-                message += " Categories that use file: {0}".format(categories)
+                message += " Categories using the file #: {0}.".format(categories)
 
         else:
             # Remove item in DB
@@ -476,7 +475,7 @@ def remove_upload():
             status = "success"                
             message = "File '{0}' has been removed.".format(filename)
     else:
-        status = "error"        
+        status = "danger"        
         message = "File '{0}' not found.".format(filename)
     return jsonify({
         'status': status,

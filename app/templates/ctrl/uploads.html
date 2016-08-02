@@ -60,6 +60,21 @@
 {{ pagedown.include_pagedown() }}
 
 <script>
+  $('.copy-path').focus( function() {
+    var area = $( this );
+    area.select();
+
+    // workaround for Chrome
+    area.mouseup(function() {
+        // prevent further mouseup intervention
+        area.unbind("mouseup");
+        return false;
+    });
+    var copy = document.execCommand('copy');
+  })
+</script>
+
+<script>
   $('.remove').click( function() {
       var data = {
 	 csrf: $('#csrf-removal').val(),

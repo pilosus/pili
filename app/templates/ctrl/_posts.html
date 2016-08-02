@@ -1,9 +1,3 @@
-<div class="ctrl-item-control">
-	<input name="checkbox_select_all" id="select_all" type="checkbox" value=""></span>
-	<button class="btn btn-default btn-sm on-check" data-action="remove"><span class="glyphicon glyphicon-remove" aria-label="Remove" title="Remove selected posts"></span></button>
-
-</div>
-
 <ul class="ctrl-list">
   {% for post in posts %}
   <li id="post{{ post.id }}" class="ctrl-item">
@@ -17,10 +11,6 @@
       {% endif %}
     </div>
 
-    <div class="ctrl-item-checkbox">
-      <input name="checkbox{{ post.id }}" id="checkbox{{ post.id }}" class="ctrl-item-select" type="checkbox" value="{{ post.id }}">
-    </div>
-    
     <div class="ctrl-item-content">
       <div class="ctrl-item-date">{{ moment(post.timestamp).fromNow() }}</div>
       <strong><a href="{{ url_for('main.post', category=post.category.alias, id=post.id, alias=post.alias) }}">
@@ -42,6 +32,9 @@
 	  {% else %}[ ]{% endif %}<br>
 	  <strong>Commenting: </strong> {% if post.commenting %}[x]
 	  {% else %}[ ]{% endif %}<br>
+	  {% if post.comments.count() %}
+	  <strong>Comments: </strong> {{ post.comments.count() }}
+	  {% endif %}
 
 	</p>
 
