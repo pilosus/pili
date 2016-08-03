@@ -15,7 +15,16 @@ class Config:
     MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS') or True
     MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
+
+    PILI_APP_LOCALE_DEFAULT = os.environ.get('PILI_APP_LOCALE_DEFAULT')
+    
+    PILI_FB_API_ID = os.environ.get('PILI_FB_API_ID')
     PILI_APP_NAME = 'Pili'
+    PILI_APP_SITE_NAME = os.environ.get('PILI_APP_SITE_NAME')
+    PILI_APP_TITLE = 'Pili CMS'
+    PILI_APP_AUTHOR = 'Pili Inc.'
+    PILI_APP_DESCRIPTION = "Yet another CMS based on Python Flask. It's lightweight, fast and customizable."
+    
     PILI_MAIL_SUBJECT_PREFIX = '[{0}] '.format(PILI_APP_NAME)
     PILI_MAIL_SENDER = '{0} Mailer <{1}>'.format(PILI_APP_NAME, MAIL_USERNAME)
     PILI_ADMIN = os.environ.get('PILI_ADMIN') or 'samigullinv@gmail.com' # app admin email

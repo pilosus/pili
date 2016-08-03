@@ -3,42 +3,71 @@
 
 {% block title %}Posts under {{ category.title }}{{ super() }}{% endblock %}
 
+{% set desc = "Posts under {0} category".format(category.title) %}
+{% set author = config['PILI_APP_AUTHOR'] %}
+{% block meta_opengraph %}
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="{{ category.title }}">
+  <meta property="og:description" content="{{ desc }}">
+  <meta property="og:author" content="{{ author }}">
+  {% if posts[0].image %}
+  {% set img_path = url_for('static', filename='uploads/', _external=True) + category.image.filename %}
+  <meta property="og:image" content="{{ img_path }}">
+  {% endif %}
+{% endblock %}
+{% block meta_html %}
+  <meta name="author" content="{{ author }}">
+  <meta name="description" content="{{ desc }}">
+{% endblock %}
+
 {% block page_content %}
 
 <h3>Posts under category {{ category.title }}</h3>
 
-<div class="category">
-    <div class="category-image">
-	<img class="img-rounded" src="{{ category.image.filename | thumbnail('100x100', crop='fit', quality=75) }}"
-	     title="{{ category.image.filename }}" alt="{{ category.image.filename }}">
-    </div>
-    <div class="category-body">
-	{% if category.body_html %}
-	{{ category.body_html | safe }}
-	{% else %}
-	{{ category.body }}
-	{% endif %}
-    </div>
-</div>
 
-<div class="post-tabs">
-    <ul class="nav nav-tabs">
-      <li{% if not show_followed %} class="active"{% endif %}>
-	<a href="{{ url_for('main.show_all', page='category', alias=category.alias) }}">All</a>
-      </li>
-      {% if current_user.is_authenticated %}
-      <li{% if show_followed %} class="active"{% endif %}>
-	<a href="{{ url_for('main.show_followed', page='category', alias=category.alias) }}">Followers</a>
-      </li>
+<section class="content">
+  <div class="row">
+    <div class="col-md-9">
+      <section class="post-tabs">
+	<ul class="nav nav-tabs">
+	  <li{% if not show_followed %} class="active"{% endif %}>
+	    <a href="{{ url_for('main.show_all', page='category', alias=category.alias) }}">All</a>
+	  </li>
+	  {% if current_user.is_authenticated %}
+	  <li{% if show_followed %} class="active"{% endif %}>
+	    <a href="{{ url_for('main.show_followed', page='category', alias=category.alias) }}">Followers</a>
+	  </li>
+	  {% endif %}
+	</ul>
+	{% include 'main/_posts.html' %}
+      </section>
+      {% if pagination %}
+      <div class="pagination">
+	{{ macros.pagination_widget(pagination, 'main.category', alias=category.alias) }}
+      </div>
       {% endif %}
-    </ul>
-    {% include 'main/_posts.html' %}
-</div>
+    </div><!-- col-md-9 -->
 
-{% if pagination %}
-<div class="pagination">
-    {{ macros.pagination_widget(pagination, 'main.category', alias=category.alias) }}
-</div>
-{% endif %}
+    <div class="col-md-3">
+      <section class="category">
+
+	  <div class="category-image">
+	    <img class="img-responsive" src="{{ category.image.filename | thumbnail('100x100', crop='fit', quality=75) }}"
+		 title="{{ category.image.filename }}" alt="{{ category.image.filename }}">
+	  </div>
+	  <div class="category-body">
+	    {% if category.body_html %}
+	    {{ category.body_html | safe }}
+	    {% else %}
+	    {{ category.body }}
+	    {% endif %}
+	  </div>
+	
+      </section>
+      
+    </div><!-- col-md-3 -->
+  </div>
+</section>
+
 
 {% endblock %}

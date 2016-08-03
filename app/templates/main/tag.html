@@ -3,6 +3,20 @@
 
 {% block title %}Posts under {{ tag.title }}{{ super() }}{% endblock %}
 
+{% set desc = "Posts under {0} tag".format(tag.title) %}
+{% set author = config['PILI_APP_AUTHOR'] %}
+{% block meta_opengraph %}
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="{{ tag.title }}">
+  <meta property="og:description" content="{{ desc }}">
+  <meta property="og:author" content="{{ author }}">
+{% endblock %}
+{% block meta_html %}
+  <meta name="author" content="{{ author }}">
+  <meta name="description" content="{{ desc }}">
+{% endblock %}
+
+
 {% block page_content %}
 
 <h3>Posts under tag {{ tag.title }}</h3>

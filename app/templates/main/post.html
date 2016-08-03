@@ -4,6 +4,24 @@
 
 {% block title %}{{ posts[0].title }}{{ super() }}{% endblock %}
 
+{% set author = posts[0].author.name if posts[0].author.name else posts[0].author.username %}
+
+{% block meta_opengraph %}
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="{{ posts[0].title }}">
+  <meta property="og:description" content="{{ posts[0].description }}">
+  <meta property="og:author" content="{{ author }}">
+  {% if posts[0].image %}
+  {% set img_path = url_for('static', filename='uploads/', _external=True) + posts[0].image.filename %}
+  <meta property="og:image" content="{{ img_path }}">
+  {% endif %}
+{% endblock %}
+{% block meta_html %}
+  <meta name="author" content="{{ author }}">
+  <meta name="description" content="{{ posts[0].description }}">
+{% endblock %}
+
+
 {% block page_content %}
 {% include 'main/_posts.html' %}
 

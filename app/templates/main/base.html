@@ -4,11 +4,28 @@
 
 {% block head %}
 {{ super() }}
-<link rel="shortcut icon" href="{{ url_for('static', filename='img/favicon.ico') }}" type="image/x-icon">
-<link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}" type="image/x-icon">
-<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/styles.css') }}">
-<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap-tagsinput.css') }}">
-<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap-tagsinput-typeahead.css') }}">
+  {% block api_constants %}
+  <meta property="fb:app_id" content="{{ config['PILI_FB_API_ID'] }}">
+  <meta property="og:site_name" content="{{ config['PILI_APP_SITE_NAME'] }}">
+  <meta property="og:locale" content="{{ config['PILI_APP_LOCALE_DEFAULT'] }}">
+  <meta property="og:url" content="{{ request.url }}">
+  {% endblock %}
+  {% block meta_opengraph %}
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="{{ config['PILI_APP_TITLE'] }}">
+  <meta property="og:description" content="{{ config['PILI_APP_DESCRIPTION'] }}">
+  <meta property="og:author" content="{{ config['PILI_APP_AUTHOR'] }}">
+  <meta property="og:image" content="{{ url_for('static', filename='uploads/pili.png', _external=True) }}">
+  {% endblock %}
+  {% block meta_html %}
+  <meta name="author" content="{{ config['PILI_APP_AUTHOR'] }}">
+  <meta name="description" content="{{ config['PILI_APP_DESCRIPTION'] }}">
+  {% endblock %}
+  <link rel="shortcut icon" href="{{ url_for('static', filename='img/favicon.ico') }}" type="image/x-icon">
+  <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}" type="image/x-icon">
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/styles.css') }}">
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap-tagsinput.css') }}">
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap-tagsinput-typeahead.css') }}">
 {% endblock %}
 
 {% block navbar %}

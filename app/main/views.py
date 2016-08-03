@@ -58,7 +58,7 @@ def tag(alias):
     return render_template('main/tag.html', tag=tag,
                            pagination=pagination, posts=posts)
 
-@main.route('/user/<username>')
+@main.route('/user/<username>/profile')
 def user(username):
     user = User.query.filter_by(username=username).first_or_404()
     page = request.args.get('page', 1, type=int)
@@ -242,7 +242,7 @@ def category_tag(cat_alias, tag_alias):
                            pagination=pagination)
 
 
-@main.route('/follow/<username>')
+@main.route('/user/<username>/follow')
 @login_required
 @permission_required(Permission.FOLLOW)
 def follow(username):
@@ -258,7 +258,7 @@ def follow(username):
     return redirect(url_for('main.user', username=username))
 
 
-@main.route('/unfollow/<username>')
+@main.route('/user/<username>/unfollow')
 @login_required
 @permission_required(Permission.FOLLOW)
 def unfollow(username):
@@ -274,7 +274,7 @@ def unfollow(username):
     return redirect(url_for('.user', username=username))
 
 
-@main.route('/followers/<username>')
+@main.route('/user/<username>/followers')
 def followers(username):
     user = User.query.filter_by(username=username).first()
     if user is None:
@@ -291,7 +291,7 @@ def followers(username):
                            follows=follows)
 
 
-@main.route('/followed-by/<username>')
+@main.route('/user/<username>/following')
 def followed_by(username):
     user = User.query.filter_by(username=username).first()
     if user is None:
@@ -307,7 +307,7 @@ def followed_by(username):
                            endpoint='.followed_by', pagination=pagination,
                            follows=follows)
 
-@main.route('/comments-by/<username>')
+@main.route('/user/<username>/comments-by')
 def comments(username):
     # .fisrt_or_404() could be used also
     user = User.query.filter_by(username=username).first()
@@ -322,7 +322,7 @@ def comments(username):
     return render_template('main/comments.html', user=user, comments=comments,
                            pagination=pagination)
 
-@main.route('/replies-to/<username>')
+@main.route('/user/<username>/replies-to')
 def replies(username):
     """List of comments written as a reply to the user.
     """
