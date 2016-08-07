@@ -87,6 +87,7 @@ ul.ctrl-list li.ctrl-item:hover {
 ul.ctrl-list li.ctrl-item.unread {
     background-color: #f0f0f0;
 }
+.unconfirmed { background-color: #f0f0f0; }
 div.ctrl-item-date {
     float: right;
 }

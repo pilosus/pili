@@ -5,10 +5,10 @@ from flask_sqlalchemy import get_debug_queries
 from . import ctrl
 from .. import csrf
 from .forms import EditProfileForm, EditProfileAdminForm, PostForm, UploadForm, \
-    CategoryForm, EditCategoryForm, RemoveEntryForm
+    CategoryForm, EditCategoryForm, SendMessageForm, RemoveEntryForm
 from .. import db
 from ..models import Permission, Role, User, Post, \
-    Comment, Tag, Tagification, Category, Upload
+    Comment, Tag, Tagification, Category, Upload, Message, MessageAck
 from ..decorators import admin_required, permission_required
 from ..filters import sanitize_alias, sanitize_tags, sanitize_upload, \
     get_added_removed, is_allowed_file, find_thumbnail
@@ -779,6 +779,50 @@ def users_bulk():
             'message': message
     })
 
+@ctrl.route('/notify', methods=['GET', 'POST'])
+def notify():
+    # pre-populate email field
+    form = SendMessageForm(email=True)
+    remove_form = RemoveEntryForm()
+    if form.validate_on_submit():
+        group_id = form.group.data
+        as_email = form.email.data
+        # all users
+        if group_id == 0:
+            recipients = User.query.all()
+        else:
+            recipients = User.query.filter(User.role_id == group_id).all()
+        # create a message
+        message = Message(title=form.title.data,
+                          body=form.body.data,
+                          author_id=current_user._get_current_object().id)
+        db.session.add(message)
+        db.session.flush()
+        # create entries for each recipient
+        for r in recipients:
+            ack = MessageAck(message_id=message.id, recipient_id=r.id)
+            db.session.add(ack)
+            # if message should be sent as an email too
+            ### TODO
+            if as_email:
+                # pass
+                print('send email to user: ', r.id)
+        flash("Recipients: {0}, as email: {1}".format(recipients, as_email), 'success')
+        return redirect(url_for('.notify'))
+    # Render template with pagination
+    #page = request.args.get('page', 1, type=int)
+    #pagination = Upload.query.order_by(Upload.timestamp.desc()).paginate(
+    #    page, per_page=current_app.config['PILI_IMAGES_PER_PAGE'],
+    #    error_out=False)
+    #images = pagination.items
+    return render_template('ctrl/notify.html', form=form,
+                           remove_form=remove_form,
+                           #images=images, pagination=pagination
+    )
+
+
+    
+    return 'ok'
 
 @ctrl.route('/logs')
 def logs():

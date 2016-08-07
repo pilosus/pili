@@ -109,6 +109,21 @@ class UploadForm(Form):
     submit = SubmitField('Submit')
 
     # https://wtforms.readthedocs.org/en/latest/validators.html#custom-validators
+
+class SendMessageForm(Form):
+    title = StringField("Title", validators=[Required(), Length(1, 128)])
+    body = PageDownField("Text", validators=[Required()])
+    group = SelectField('To', coerce=int, default=0)
+    email = BooleanField('Send as email')
+    submit = SubmitField('Submit')
+    
+    def __init__(self, *args, **kwargs):
+        super(SendMessageForm, self).__init__(*args, **kwargs)
+        self.group.choices = [(group.id, "{name} group ({count})".\
+                               format(name=group.name, count=User.query.\
+                                      filter(User.role_id == group.id).count()))
+                             for group in Role.query.order_by(Role.name).all()]
+        self.group.choices.append((0, "All users ({0})".format(User.query.count())))
     
 class RemoveEntryForm(Form):
     """Remove a post, a category, an upload or other type of entry."""

@@ -1,30 +1,42 @@
 <ul class="ctrl-list">
     {% for user in users %}
     <li id="user{{ user.id }}" class="ctrl-item">
-        <div class="ctrl-item-thumbnail">
-            <a href="{{ url_for('main.user', username=user.username) }}">
-                <img class="img-rounded profile-thumbnail" src="{{ user.gravatar(size=40) }}">
-            </a>
+      <div class="ctrl-item-thumbnail">
+	{% if user.confirmed %}
+        <a href="{{ url_for('main.user', username=user.username) }}">
+          <img class="img-rounded profile-thumbnail" src="{{ user.gravatar(size=40) }}">
+        </a>
+	{% else %}
+	<span class="glyphicon glyphicon-minus"></span>
+	{% endif %}
         </div>
 
         <div class="ctrl-item-content">
             <div class="ctrl-item-date">{{ moment(user.member_since).fromNow() }}</div>
             <div class="ctrl-item-author">
-	      <a href="{{ url_for('.user', username=user.username) }}">
-		{{ user.username }}
-	      </a> {% if user.name %}({{ user.name}}){% endif %}
-	      {% if not user.confirmed %} <span class="label label-danger">not confirmed</span>{% endif %}
+	       {% if user.confirmed %}
+	       <a href="{{ url_for('.user', username=user.username) }}">
+		 {{ user.username }}
+	       </a> {% if user.name %}({{ user.name}}){% endif %}
+	       {% else %}
+	       None <span class="label label-danger">not confirmed</span>
+	       {% endif %}
 	    </div>
 	    
             <div class="ctrl-item-body">
 	      <p>
 		Role: {{ user.role.name }}
 		[<code title="a: administer, s: structure, m: moderate, u: upload, c: comment, w: write, f: follow, r: read">{{ user.role.permissions | permissions2str }}</code>] <br>
+		{% if current_user.is_administrator() and not user.confirmed %}
+		Email: {{ user.email }}
+		{% endif %}
+		{% if user.confirmed %}
 		Posts written: <a href="{{ url_for('main.user', username=user.username, _anchor='posts') }}">{{ user.posts.count() }}</a> |
 		Categories created: {{ user.categories.count() }} |
 		Files uploaded: {{ user.images.count() }} |
 		Comments written: <a href="{{ url_for('main.comments', username=user.username) }}">{{ user.comments.count() }}</a> |
 		Replies received: <a href="{{ url_for('main.replies', username=user.username) }}">{{ user.replies.count() }}</a>
+		{% endif %}
 	      </p>
 
 	      {% if current_user.is_administrator() %}

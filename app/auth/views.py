@@ -155,6 +155,7 @@ def invite_request():
         role = Role.query.get_or_404(form.role.data)
         user = User(email=form.email.data,
                     password=generate_password(10),
+                    invited=True,
                     role=role)
         db.session.add(user)
         db.session.commit()
@@ -164,7 +165,17 @@ def invite_request():
         flash('An invitation has been sent by email.', 'info')
         return redirect(url_for('main.index'))
     # TODO
-    return render_template('auth/invite_request.html', form=form)
+    page = request.args.get('page', 1, type=int)
+    # find invited users, sort them so that unconfirmed comes first,
+    # sort then all users by date
+    pagination = User.query.filter(User.invited == True).\
+                 order_by(User.confirmed.asc()).\
+                 order_by(User.member_since.desc()).paginate(
+                     page, per_page=current_app.config['PILI_USERS_PER_PAGE'],
+                     error_out=False)
+    users = pagination.items
+    return render_template('auth/invite_request.html', form=form,
+                           users=users, pagination=pagination)
 
 @auth.route('/invite/<int:id>/<token>', methods=['GET', 'POST'])
 def invite_accept(id, token):   

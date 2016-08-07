@@ -228,7 +228,61 @@ class Comment(db.Model):
 
 
 db.event.listen(Comment.body, 'set', Comment.on_changed_body)
+
+class Message(db.Model):
+    __tablename__ = 'messages'
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(128))
+    body = db.Column(db.Text)
+    body_html = db.Column(db.Text)
+    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+    author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+
+    ### TODO
+    # 1-to-many Message/User
+    """
+    recipients = db.relationship('MessageAck',
+                               backref='recipient',
+                               lazy='dynamic',
+                               foreign_keys=[MessageAck.id],
+                               cascade='all, delete-orphan')
+    """
     
+    def to_json(self):
+        json_message = {
+            'url': url_for('api.get_message', id=self.id, _external=True),
+            'id': self.id,
+            'title': self.title,
+            'body': self.body,
+            'body_html': self.body_html,
+            'timestamp': self.timestamp,
+            'author': url_for('api.get_user', id=self.author_id,
+                              _external=True),
+        }
+        return json_message
+
+    @staticmethod
+    def on_changed_body(target, value, oldvalue, initiator):
+        allowed_tags = current_app.config['PILI_ALLOWED_TAGS']
+        allowed_attrs = current_app.config['PILI_ALLOWED_ATTRIBUTES']
+        target.body_html = bleach.linkify(bleach.clean(
+            markdown(value, output_format='html'),
+            tags=allowed_tags, attributes=allowed_attrs, strip=True))
+
+    def __repr__(self):
+        return '<Message %r by %r>' % (self.id, self.author.username)
+
+db.event.listen(Message.body, 'set', Message.on_changed_body)    
+
+class MessageAck(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    message_id = db.Column(db.Integer, db.ForeignKey('messages.id'))
+    recipient_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    read = db.Column(db.Boolean, default=False)
+    
+    def __repr__(self):
+        return '<MessageAck %r is %r>' % (self.id, 'read' if self.read == True else 'unread')
+
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
@@ -242,6 +296,7 @@ class User(UserMixin, db.Model):
     about_me = db.Column(db.Text())
     member_since = db.Column(db.DateTime(), default=datetime.utcnow)
     last_seen = db.Column(db.DateTime(), default=datetime.utcnow)
+    invited = db.Column(db.Boolean)
     avatar_hash = db.Column(db.String(32))
     posts = db.relationship('Post', backref='author', lazy='dynamic')
     categories = db.relationship('Category', backref='author', lazy='dynamic')
@@ -279,6 +334,18 @@ class User(UserMixin, db.Model):
                               backref=db.backref('recipient', lazy='joined'),
                               lazy='dynamic',
                               cascade='all, delete-orphan')
+    # messages sent by a user
+    notifications = db.relationship('Message',
+                               foreign_keys=[Message.author_id],
+                               backref=db.backref('author', lazy='joined'),
+                               lazy='dynamic',
+                               cascade='all, delete-orphan')
+    # messages received by a user
+    messages = db.relationship('MessageAck',
+                               foreign_keys=[MessageAck.recipient_id],
+                               backref=db.backref('recipient', lazy='joined'),
+                               lazy='dynamic',
+                               cascade='all, delete-orphan')
 
     def suspend(self):
         suspended = Role.query.filter(Role.name == 'Suspended').first()
@@ -719,7 +786,7 @@ class Upload(db.Model):
     categories = db.relationship('Category', backref='image', lazy='dynamic')
 
     def to_json(self):
-        json_tag = {
+        json_upload = {
             'url': url_for('api.get_upload', filename=self.filename, _external=True),
             'id': self.id,
             'filename': self.filename,            
@@ -731,7 +798,7 @@ class Upload(db.Model):
                                   _external=True)
 
         }
-        return json_tag
+        return json_upload
 
     
     def __repr__(self):

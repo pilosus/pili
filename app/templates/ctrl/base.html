@@ -1,6 +1,6 @@
 {% extends "main/base.html" %}
 
-{% block title %}Control Panel{{ super() }}{% endblock %}
+{% block title %}Control Panel {{ super() }}{% endblock %}
 {% block head %}{{ super() }}{% endblock %}
 
 {% block navbar %}{{ super() }}{% endblock %}
@@ -25,7 +25,7 @@
 {% if current_user.can(Permission.ADMINISTER) %}
 <li {% if page == 'users' %}class="active"{% endif %}><a href="{{ url_for('ctrl.users') }}">Users</a></li>
 <li {% if page == 'invite' %}class="active"{% endif %}><a href="{{ url_for('auth.invite_request') }}">Invite</a></li>
-<li {% if page == 'notify' %}class="active"{% endif %}><a href="">Notify</a></li>
+<li {% if page == 'notify' %}class="active"{% endif %}><a href="{{ url_for('ctrl.notify') }}">Notify</a></li>
 {% endif %}
 {% endblock %}
 

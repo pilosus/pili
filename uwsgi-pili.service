@@ -1,0 +1,14 @@
+# systemd service file
+[Unit]
+Description=uWSGI instance to serve Pili App
+After=network.target
+
+[Service]
+User=git
+Group=nginx
+WorkingDirectory=/var/www/pili
+Environment="PATH=/var/www/pili/venv/bin"
+ExecStart=/var/www/pili/venv/bin/uwsgi --ini uwsgi-pili.ini
+
+[Install]
+WantedBy=multi-user.target

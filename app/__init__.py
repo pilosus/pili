@@ -61,7 +61,7 @@ def create_app(config_name):
 
     from .ctrl import ctrl as ctrl_blueprint
     app.register_blueprint(ctrl_blueprint, url_prefix='/ctrl')
-    
+
     from .auth import auth as auth_blueprint
     app.register_blueprint(auth_blueprint, url_prefix='/auth')
 

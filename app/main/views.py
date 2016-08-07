@@ -7,7 +7,7 @@ from .forms import EditProfileForm, EditProfileAdminForm, CommentForm
 from ..ctrl.forms import RemoveEntryForm
 from .. import db
 from ..models import Permission, Role, User, Post, \
-    Tag, Tagification, Comment, Category
+    Tag, Tagification, Comment, Category, Message, MessageAck
 from ..decorators import admin_required, permission_required
 from ..filters import sanitize_alias, sanitize_tags, get_added_removed
 
@@ -344,8 +344,50 @@ def replies(username):
                            remove_form=remove_form,
                            pagination=pagination)
 
+@main.route('/user/<username>/messages')
+@login_required
+def messages(username):
+    """List of messages sent to to the user.
+    """
+    ### Restrict viewing messages to a user to the user itself
+    if not current_user.username == username:
+        flash('You have no permission to see messages to the user.')
+        return redirect(url_for('.index'))
+    remove_form = RemoveEntryForm()
+    user = User.query.filter_by(username=username).first()
+    page = request.args.get('page', 1, type=int)
+    # .join(Reply, Comment.id == Reply.id).filter(Reply.repliee_id == user.id).
+    pagination = MessageAck.query.\
+                 join(Message, Message.id == MessageAck.message_id).\
+                 filter(MessageAck.recipient_id == user.id).\
+                 order_by(Message.timestamp.desc()).paginate(
+                     page, per_page=current_app.config['PILI_COMMENTS_PER_PAGE'],
+                     error_out=False)
+    messages = pagination.items
+    return render_template('main/messages.html', user=user,
+                           messages=messages,
+                           remove_form=remove_form,
+                           pagination=pagination)
 
 # TODO
+@main.route('/user/<username>/message/<int:id>', methods=['GET', 'POST'])
+@login_required
+def message(username, id):
+    """The message sent to to the user.
+    """
+    if not current_user.username == username:
+        flash('You have no permission to see messages to the user.')
+        return redirect(url_for('.index'))
+    user = User.query.filter_by(username=username).first_or_404()
+    msg = MessageAck.query.\
+          join(Message, Message.id == MessageAck.message_id).\
+          filter(MessageAck.recipient_id == user.id).first_or_404()
+    if request.method == 'POST':
+        return 'post'
+    return 'get'
+
+
+
 @main.route('/comment/reply/<int:id>')
 @login_required
 @permission_required(Permission.COMMENT)
