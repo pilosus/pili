@@ -8,3 +8,4 @@ TODO
 tmp
 venv
 __pycache__
+tmp-*
