@@ -1,0 +1,2 @@
+/var/run/pili/
+/var/log/pili/

@@ -1,18 +1,18 @@
+# cd /etc/systemd/system
+# ln -s /var/www/pili/celery.service pili-celery.service
+# sudo systemctl daemon-reload
+# sudo systemctl start systemlink_name
 [Unit]
-Description=Celery Service for Pili App
+Description=Pili Celery Daemon Service
 After=network.target
-
-
-Environment="PATH=/var/www/pili/venv/bin"
-ExecStart=/var/www/pili/venv/bin/uwsgi --ini uwsgi-dfp.ini
-
 
 [Service]
 Type=forking
 User=git
 Group=nginx
-EnvironmentFile=-/var/www/pili/celery.env
-WorkingDirectory=/var/www/pili
+EnvironmentFile=/var/www/pili/celery.conf
+EnvironmentFile=/var/www/pili/.hosting.env
+WorkingDirectory=/var/www/pili/
 ExecStart=/bin/sh -c '${CELERY_BIN} multi start $CELERYD_NODES \
 	-A $CELERY_APP --logfile=${CELERYD_LOG_FILE} \
 	--pidfile=${CELERYD_PID_FILE} $CELERYD_OPTS'
@@ -21,6 +21,6 @@ ExecStop=/bin/sh -c '${CELERY_BIN} multi stopwait $CELERYD_NODES \
 ExecReload=/bin/sh -c '${CELERY_BIN} multi restart $CELERYD_NODES \
 	-A $CELERY_APP --pidfile=${CELERYD_PID_FILE} --logfile=${CELERYD_LOG_FILE} \
 	--loglevel="${CELERYD_LOG_LEVEL}" $CELERYD_OPTS'
-
+									
 [Install]
 WantedBy=multi-user.target

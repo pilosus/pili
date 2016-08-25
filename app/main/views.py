@@ -344,6 +344,7 @@ def replies(username):
                            remove_form=remove_form,
                            pagination=pagination)
 
+# TODO
 @main.route('/user/<username>/messages')
 @login_required
 def messages(username):
@@ -385,8 +386,6 @@ def message(username, id):
     if request.method == 'POST':
         return 'post'
     return 'get'
-
-
 
 @main.route('/comment/reply/<int:id>')
 @login_required

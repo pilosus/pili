@@ -3,7 +3,7 @@ from wtforms import StringField, PasswordField, BooleanField, SubmitField, Selec
 from wtforms.validators import Required, Length, Email, Regexp, EqualTo
 from wtforms import ValidationError
 from ..models import User, Role
-
+from app.jinja_filters import permissions2str
 
 class LoginForm(Form):
     email = StringField('Email', validators=[Required(), Length(1, 64),
@@ -68,7 +68,8 @@ class InviteRequestForm(Form):
 
     def __init__(self, *args, **kwargs):
         super(InviteRequestForm, self).__init__(*args, **kwargs)
-        self.role.choices = [(role.id, role.name)
+        self.role.choices = [(role.id, "{0} [{1}]".\
+                              format(role.name, permissions2str(role.permissions)))
                              for role in Role.query.order_by(Role.name).all()
                              if role.name != 'Administrator']
 

@@ -1,0 +1,17 @@
+Dear {{ recipient.username }},
+
+User {{ message.author.username }} has left you a message:
+
+{{ message.body }}
+
+
+To see this message on the website you can paste the following link in your browser's address bar:
+
+{{ url_for('main.message', username=recipient.username, id=message.id, _external=True) }}
+
+
+Sincerely,
+
+The Pili Team
+
+Note: replies to this email address are not monitored.

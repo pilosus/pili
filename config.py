@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import os
+#import app.email
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 class Config:
@@ -10,12 +11,20 @@ class Config:
     SQLALCHEMY_COMMIT_ON_TEARDOWN = True
     SQLALCHEMY_RECORD_QUERIES = True
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+    # MAIL
     MAIL_SERVER = os.environ.get('MAIL_SERVER')
     MAIL_PORT = os.environ.get('MAIL_PORT') or 587
     MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS') or True
     MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
 
+    # CELERY
+    CELERY_IMPORT = ('app.email')
+    CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL') 
+    CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND')
+
+    # APP
     PILI_APP_LOCALE_DEFAULT = os.environ.get('PILI_APP_LOCALE_DEFAULT')
     
     PILI_FB_API_ID = os.environ.get('PILI_FB_API_ID')
@@ -44,11 +53,13 @@ class Config:
     PILI_STATIC_DIR = os.path.join(basedir, 'app/static')
     PILI_UPLOADS = os.path.join(PILI_STATIC_DIR, 'uploads')
     PILI_ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'gif', 'png']
+
     ##  Flask-thumbnails settings
     MEDIA_FOLDER = PILI_UPLOADS
     MEDIA_URL = '/static/uploads/'
     MEDIA_THUMBNAIL_FOLDER = os.path.join(PILI_UPLOADS, 'thumbnails') # chmod 775
     MEDIA_THUMBNAIL_URL = '/static/uploads/thumbnails/'
+
     ## Allowed html tags and attributes
     PILI_ALLOWED_TAGS = ['a', 'abbr', 'acronym', 'b', 'blockquote', 'code',
                          'em', 'i', 'img', 'li', 'ol', 'pre', 'strong', 'ul',

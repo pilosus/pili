@@ -27,3 +27,9 @@ SQLAlchemy==1.0.12
 Unidecode==0.4.19
 Werkzeug==0.11.8
 WTForms==1.0.5
+amqp==1.4.9
+anyjson==0.3.3
+billiard==3.3.0.23
+celery==3.1.23
+kombu==3.0.35
+pytz==2016.6.1

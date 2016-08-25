@@ -1,2 +1,0 @@
-/var/run/celery/
-/var/log/celery/

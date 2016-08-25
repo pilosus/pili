@@ -237,16 +237,6 @@ class Message(db.Model):
     body_html = db.Column(db.Text)
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-
-    ### TODO
-    # 1-to-many Message/User
-    """
-    recipients = db.relationship('MessageAck',
-                               backref='recipient',
-                               lazy='dynamic',
-                               foreign_keys=[MessageAck.id],
-                               cascade='all, delete-orphan')
-    """
     
     def to_json(self):
         json_message = {

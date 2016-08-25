@@ -8,8 +8,8 @@ from flask_login import LoginManager
 from flask_pagedown import PageDown
 from flask_thumbnails import Thumbnail
 from flask_wtf.csrf import CsrfProtect
-from config import config
-
+from config import config, Config
+from celery import Celery
 from inspect import getmembers, isfunction
 import app.jinja_filters
 
@@ -20,7 +20,8 @@ db = SQLAlchemy()
 pagedown = PageDown()
 thumb = Thumbnail()
 csrf = CsrfProtect()
-
+celery = Celery(__name__, backend=Config.CELERY_RESULT_BACKEND, \
+                broker=Config.CELERY_BROKER_URL)
 
 login_manager = LoginManager()
 login_manager.session_protection = 'strong'
@@ -46,6 +47,7 @@ def create_app(config_name):
     pagedown.init_app(app)
     thumb.init_app(app)
     csrf.init_app(app)
+    celery.conf.update(app.config)
 
     # change jquery version with another CDN
     app.extensions['bootstrap']['cdns']['jquery'] = WebCDN(

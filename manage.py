@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 import os
+
 COV = None
 if os.environ.get('FLASK_COVERAGE'):
     import coverage
     COV = coverage.coverage(branch=True, include='app/*')
     COV.start()
 
-## hosting deployment. set environment variables
+# set environment variables
 if os.path.exists('.hosting.env'):
     print('Importing environment from .hosting.env...')
     for line in open('.hosting.env'):
