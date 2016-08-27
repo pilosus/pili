@@ -51,20 +51,22 @@
             </ul>
 
             <ul class="nav navbar-nav navbar-right">
-                {% if current_user.is_authenticated %}
-                <li class="dropdown">
+              {% if current_user.is_authenticated %}
+	      {% set new_replies = current_user.replies.count() - current_user.replies.filter_by(read=True).count() %}
+	      {% set new_notifications = current_user.messages.filter_by(read=False).count() %}
+                <li class="dropdown {% if page == 'user' %}active{% endif %}">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">
                         <img src="{{ current_user.gravatar(size=18) }}">
                         {{ current_user.username }} <b class="caret"></b>
                     </a>
                     <ul class="dropdown-menu">
 		      {% if current_user.is_authenticated %}
-                      <li ><a href="{{ url_for('main.user', username=current_user.username) }}">Profile</a></li>
-		      <li><a href="{{ url_for('main.replies', username=current_user.username) }}">Replies <span class="badge">{{ current_user.replies.count() - current_user.replies.filter_by(read=True).count() }}</span></a></li>
-		      <li><a href="{{ url_for('main.messages', username=current_user.username) }}">Notifications <span class="badge"></span></a></li>
+                      <li {% if subpage == 'profile' %}class="active"{% endif %}><a href="{{ url_for('main.user', username=current_user.username) }}">Profile</a></li>
+		      <li {% if subpage == 'replies' %}class="active"{% endif %}><a href="{{ url_for('main.replies', username=current_user.username) }}">Comment Replies <span class="badge">{{ new_replies }}</span></a></li>
+		      <li {% if subpage == 'messages' %}class="active"{% endif %}><a href="{{ url_for('main.messages', username=current_user.username) }}">Notifications <span class="badge">{{ new_notifications }}</span></a></li>
                       {% endif %}
-                      <li><a href="{{ url_for('auth.change_password') }}">Change Password</a></li>
-                      <li><a href="{{ url_for('auth.change_email_request') }}">Change Email</a></li>
+                      <li {% if subpage == 'change_password' %}class="active"{% endif %}><a href="{{ url_for('auth.change_password') }}">Change Password</a></li>
+                      <li {% if subpage == 'change_email' %}class="active"{% endif %}><a href="{{ url_for('auth.change_email_request') }}">Change Email</a></li>
                       <li><a href="{{ url_for('auth.logout') }}">Log Out</a></li>
                     </ul>
                 </li>

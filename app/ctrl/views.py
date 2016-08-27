@@ -4,7 +4,7 @@ from flask_login import login_required, current_user
 from flask_sqlalchemy import get_debug_queries
 from . import ctrl
 from .. import csrf
-from ..email import send_email, send_celery_email
+from ..email import send_email
 from .forms import EditProfileForm, EditProfileAdminForm, PostForm, UploadForm, \
     CategoryForm, EditCategoryForm, SendMessageForm, RemoveEntryForm
 from .. import db
@@ -810,9 +810,9 @@ def notify():
             # if message should be sent as an email too
             ### TODO
             if as_email:
-                send_celery_email(to=r.email, subject=message.title,
-                                  template='ctrl/email/notification',
-                                  recipient=r, message=message)
+                send_email(to=r.email, subject=message.title,
+                           template='ctrl/email/notification',
+                           recipient=r, message=message)
         flash_msg = flash_msg.rstrip(', ')
         flash("Notifications to users: {0} queued.".format(flash_msg), 'success')
         return redirect(url_for('.notify'))

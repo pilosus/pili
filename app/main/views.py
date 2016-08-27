@@ -357,12 +357,11 @@ def messages(username):
     remove_form = RemoveEntryForm()
     user = User.query.filter_by(username=username).first()
     page = request.args.get('page', 1, type=int)
-    # .join(Reply, Comment.id == Reply.id).filter(Reply.repliee_id == user.id).
     pagination = MessageAck.query.\
                  join(Message, Message.id == MessageAck.message_id).\
                  filter(MessageAck.recipient_id == user.id).\
                  order_by(Message.timestamp.desc()).paginate(
-                     page, per_page=current_app.config['PILI_COMMENTS_PER_PAGE'],
+                     page, per_page=current_app.config['PILI_POSTS_PER_PAGE'],
                      error_out=False)
     messages = pagination.items
     return render_template('main/messages.html', user=user,

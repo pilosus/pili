@@ -1,0 +1,41 @@
+# -*- mode: conf-unix -*-
+
+[Unit]
+Description=Pili Celery Daemon Service
+After=network.target
+
+[Service]
+Type=forking
+
+# set permissions for ExecStart, ExecStop, ExecReload
+User=git
+Group=nginx
+
+# run ExecStartPre with root permissions
+# see https://blog.hqcodeshop.fi/archives/93-Handling-varrun-with-systemd.html
+PermissionsStartOnly=true
+# create directories for logs and pids, set ownership
+ExecStartPre=-/usr/bin/mkdir -p /var/log/pili
+# for recent versions of systemd use RuntimeDirectory=, RuntimeDirectoryMode=
+# see man systemd.exec for more information
+ExecStartPre=-/usr/bin/mkdir -p /var/run/pili
+ExecStartPre=/usr/bin/chown -R git:nginx /var/run/pili/
+ExecStartPre=/usr/bin/chown -R git:nginx /var/log/pili/
+
+# load environment variables used in this script
+EnvironmentFile=/var/www/pili/conf/pili-celery.conf
+# load environment variables used by celery tasks
+EnvironmentFile=-/var/www/pili/.hosting.env
+
+WorkingDirectory=/var/www/pili/
+ExecStart=/bin/sh -c '${CELERY_BIN} multi start $CELERYD_NODES \
+	-A $CELERY_APP --logfile=${CELERYD_LOG_FILE} \
+	--pidfile=${CELERYD_PID_FILE} $CELERYD_OPTS'
+ExecStop=/bin/sh -c '${CELERY_BIN} multi stopwait $CELERYD_NODES \
+	--pidfile=${CELERYD_PID_FILE}'
+ExecReload=/bin/sh -c '${CELERY_BIN} multi restart $CELERYD_NODES \
+	-A $CELERY_APP --pidfile=${CELERYD_PID_FILE} --logfile=${CELERYD_LOG_FILE} \
+	--loglevel="${CELERYD_LOG_LEVEL}" $CELERYD_OPTS'
+									
+[Install]
+WantedBy=multi-user.target

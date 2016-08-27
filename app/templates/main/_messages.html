@@ -25,30 +25,31 @@
         <div class="ctrl-item-content">
             <div class="ctrl-item-date">{{ moment(ack.message.timestamp).fromNow() }}</div>
             <div class="ctrl-item-author">
-	      <a href="{{ url_for('.user', username=ack.message.author.username) }}">
-		{{ ack.message.author.username }}
-	      </a>
 	      <a href="{{ url_for('main.message', username=ack.recipient.username, id=ack.id) }}">
 		{{ ack.message.title }}
+	      </a>
+	      by
+	      <a href="{{ url_for('.user', username=ack.message.author.username) }}">
+		{{ ack.message.author.username }}
 	      </a>
 	    </div>
 
             <div class="ctrl-item-body">
-	      <span class="{% if comment.screened %}text-muted{% endif %}">
-                {% if comment.body_html %}
-                  {{ comment.body_html | safe }}
+                {% if ack.message.body_html %}
+                  {{ ack.message.body_html | safe }}
                 {% else %}
-                  {{ comment.body }}
+                  {{ ack.message.body }}
                 {% endif %}
-	      </span>
             </div>
 
 	    {% if recipient %}
  	    {% if ack.read == True %}
-	    <button class="btn btn-danger btn-xs unread" type="button" title="Mark message as unread" data-action="unread" data-id-removal="{{ ack.id }}">Unread</button>
-	    {% else %}
-	    <button class="btn btn-default btn-xs read" type="button" title="Mark message as read" data-action="read" data-id-removal="{{ ack.id }}">Read</button>
+	    <button class="btn btn-primary btn-xs unread" type="button" title="Mark message as read" data-action="unread" data-id-removal="{{ ack.id }}"><span class="glyphicon glyphicon-eye-close" aria-label="Unread"></span></button>
+	      {% else %}
+	    <button class="btn btn-default btn-xs read" type="button" title="Mark message as read" data-action="read" data-id-removal="{{ ack.id }}"><span class="glyphicon glyphicon-eye-open" aria-label="Read"></span></button>
 	    {% endif %}
+	    <button class="btn btn-danger btn-xs remove" type="button" title="Remove message" data-action="remove" data-id-removal="{{ ack.id }}"><span class="glyphicon glyphicon-trash" aria-label="Remove"></span></button>
+
 	    {% endif %}
         </div>
     </li>
