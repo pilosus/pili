@@ -1,8 +1,10 @@
 {% if recipient %}
 <div class="comment-control">
 	<input name="checkbox_select_all" id="select_all" type="checkbox" value=""></span>
-	<button class="btn btn-default btn-sm on-check" data-action="read">Mark as read</button>
-        <button class="btn btn-default btn-sm on-check" data-action="unread">Mark as not read</span></button>
+	<button class="btn btn-default btn-sm on-check" data-action="read"><span class="glyphicon glyphicon-eye-open" aria-label="Mark as read" title="Mark selected messages as read"></span></button>
+        <button class="btn btn-default btn-sm on-check" data-action="unread"><span class="glyphicon glyphicon-eye-close" aria-label="Mark as not read" title="Mark selected messages as not read"></span></button>
+	<button class="btn btn-danger btn-sm on-check" data-action="remove"><span class="glyphicon glyphicon-trash" aria-label="Remove selected" title="Remove selected messages"></span></button>
+
 </div>
 {% endif %}
 
@@ -44,11 +46,11 @@
 
 	    {% if recipient %}
  	    {% if ack.read == True %}
-	    <button class="btn btn-primary btn-xs unread" type="button" title="Mark message as read" data-action="unread" data-id-removal="{{ ack.id }}"><span class="glyphicon glyphicon-eye-close" aria-label="Unread"></span></button>
+	    <button class="btn btn-primary btn-xs on-click" type="button" title="Mark message as read" data-action="unread" data-item-id="{{ ack.id }}"><span class="glyphicon glyphicon-eye-close" aria-label="Unread"></span></button>
 	      {% else %}
-	    <button class="btn btn-default btn-xs read" type="button" title="Mark message as read" data-action="read" data-id-removal="{{ ack.id }}"><span class="glyphicon glyphicon-eye-open" aria-label="Read"></span></button>
+	    <button class="btn btn-default btn-xs on-click" type="button" title="Mark message as read" data-action="read" data-item-id="{{ ack.id }}"><span class="glyphicon glyphicon-eye-open" aria-label="Read"></span></button>
 	    {% endif %}
-	    <button class="btn btn-danger btn-xs remove" type="button" title="Remove message" data-action="remove" data-id-removal="{{ ack.id }}"><span class="glyphicon glyphicon-trash" aria-label="Remove"></span></button>
+	    <button class="btn btn-danger btn-xs on-click" type="button" title="Remove message" data-action="remove" data-item-id="{{ ack.id }}"><span class="glyphicon glyphicon-trash" aria-label="Remove"></span></button>
 
 	    {% endif %}
         </div>

@@ -4,7 +4,7 @@ from flask_login import login_required, current_user
 from flask_sqlalchemy import get_debug_queries
 from . import main
 from .forms import EditProfileForm, EditProfileAdminForm, CommentForm
-from ..ctrl.forms import RemoveEntryForm
+from ..ctrl.forms import CsrfTokenForm
 from .. import db
 from ..models import Permission, Role, User, Post, \
     Tag, Tagification, Comment, Category, Message, MessageAck
@@ -330,7 +330,7 @@ def replies(username):
     #if current_user.is_anonymous or not current_user.username == username:
     #    flash('You have no permission to see comments to the user.')
     #    return redirect(url_for('.index'))
-    remove_form = RemoveEntryForm()
+    csrf_form = CsrfTokenForm()
     user = User.query.filter_by(username=username).first()
     page = request.args.get('page', 1, type=int)
     # .join(Reply, Comment.id == Reply.id).filter(Reply.repliee_id == user.id).
@@ -341,7 +341,7 @@ def replies(username):
                      error_out=False)
     comments = pagination.items
     return render_template('main/replies.html', user=user, comments=comments,
-                           remove_form=remove_form,
+                           csrf_form=csrf_form,
                            pagination=pagination)
 
 # TODO
@@ -354,7 +354,7 @@ def messages(username):
     if not current_user.username == username:
         flash('You have no permission to see messages to the user.')
         return redirect(url_for('.index'))
-    remove_form = RemoveEntryForm()
+    csrf_form = CsrfTokenForm()
     user = User.query.filter_by(username=username).first()
     page = request.args.get('page', 1, type=int)
     pagination = MessageAck.query.\
@@ -366,8 +366,64 @@ def messages(username):
     messages = pagination.items
     return render_template('main/messages.html', user=user,
                            messages=messages,
-                           remove_form=remove_form,
+                           csrf_form=csrf_form,
                            pagination=pagination)
+
+@main.route('/notifications/bulk', methods=['POST'])
+@login_required
+def notifications_bulk():
+    def notifications_action(notifications, action):
+        msg = {'read': 'marked as read',
+               'unread': 'marked as not read',
+               'remove': 'removed'
+        }
+        message = ''
+        fail = ''
+        count = 0
+        for id in notifications:
+            msg_ack = MessageAck.query.get_or_404(id)
+            if current_user._get_current_object() == msg_ack.recipient:
+                if action == 'read':
+                    msg_ack.read = True
+                    db.session.add(msg_ack)
+                elif action == 'unread':
+                    msg_ack.read = False
+                    db.session.add(msg_ack)
+                elif action == 'remove':
+                    db.session.delete(msg_ack)
+                message += str(id) + ', '
+                count += 1
+            else:
+                fail += str(id) + ', '
+        message = message.rstrip(', ')
+        fail = fail.rstrip(', ')
+        status = 'success'
+        if message:
+            message = 'Notifications: {message} have been {action}.'.\
+                      format(message=message, action=msg[action])
+        if fail:
+            fail = 'Notifications: {fail} failed. You are not a recipient of them.'.\
+                      format(fail=fail, action=msg[action])
+            status = 'warning'
+        return "{message} {fail}".format(message=message, fail=fail), status
+
+    try:
+        csrf = request.json['csrf']
+        notifications = list(map(lambda x: int(x), request.json['notifications']))
+        action = request.json['action']
+    except (KeyError, TypeError):
+        return jsonify({
+            'status': 'danger',
+            'message': 'Function takes three parameters: '
+                       'list of notifications to be processed; csrf token; action',
+        })
+    message, status = notifications_action(notifications, action)
+    return jsonify({
+            'status': status,
+            'message': message
+    })
+
+
 
 # TODO
 @main.route('/user/<username>/message/<int:id>', methods=['GET', 'POST'])

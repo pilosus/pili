@@ -24,9 +24,9 @@
 </div>
 {% endif %}
 
-<form method="post" id="removal">
-    {{ remove_form.csrf_token(id="csrf-removal") }}
-    {{ remove_form.id }}
+<form method="post">
+    {{ csrf_form.csrf_token(id="csrf-removal") }}
+    {{ csrf_form.id }}
 </form>
 {% endblock %}
 
@@ -37,22 +37,10 @@
  $('#select_all').change(function() {
      var select_all = $( this );
      if ( select_all.prop('checked') ) {
-	 $('.comment-select').prop('checked', $(this).prop('checked'));
+	 $('.ctrl-item-select').prop('checked', $(this).prop('checked'));
      }
      else if ( select_all.not(':checked') ) {
-	 $('.comment-select').removeAttr('checked');
-     }
- })//.change();
-</script>
-
-<script>
- // even handlers for check/uncheck of any checkbox is certain class
- $('input').change(function() {
-     if ( $( this ).prop('checked') ) {
-	 //alert('Comment ' + $( this ).attr('id') + ' checked!');
-     }
-     else if ( $( this ).not(':checked') ) {
-	 //alert('Comment ' + $( this ).attr('id') + ' unchecked!');
+	 $('.ctrl-item-select').removeAttr('checked');
      }
  })//.change();
 </script>
@@ -60,11 +48,11 @@
 <script>
  // at least one checkbox is checked
  $('input').change(function() {
-     if ( $(':checked').length > 0 ) {
-	 $( '.on-check' ).show();
+     if ($(':checked').length > 0) {
+	 $('.on-check').show();
      }
      else {
-	 $( '.on-check' ).hide();
+	 $('.on-check').hide();
      }
  })
 </script>
@@ -79,7 +67,7 @@
 	 comments[0] = button.data('id-removal');
      }
      else {
-	 $('.comment-select:checked').each(function(i){
+	 $('.ctrl-item-select:checked').each(function(i){
              comments[i] = $(this).val();
 	 });
      }

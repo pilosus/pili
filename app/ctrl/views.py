@@ -6,7 +6,7 @@ from . import ctrl
 from .. import csrf
 from ..email import send_email
 from .forms import EditProfileForm, EditProfileAdminForm, PostForm, UploadForm, \
-    CategoryForm, EditCategoryForm, SendMessageForm, RemoveEntryForm
+    CategoryForm, EditCategoryForm, SendMessageForm, CsrfTokenForm
 from .. import db
 from ..models import Permission, Role, User, Post, \
     Comment, Tag, Tagification, Category, Upload, Message, MessageAck
@@ -20,7 +20,7 @@ import os
 @ctrl.route('/', methods=['GET', 'POST'])
 @login_required
 def posts():
-    remove_form = RemoveEntryForm()
+    csrf_form = CsrfTokenForm()
     form = PostForm()
     if current_user.can(Permission.WRITE) and \
        form.validate_on_submit():
@@ -69,7 +69,7 @@ def posts():
         error_out=False)
     posts = pagination.items
     body_truncate = current_app.config['PILI_BODY_TRUNCATE']
-    return render_template('ctrl/posts.html', remove_form=remove_form,
+    return render_template('ctrl/posts.html', csrf_form=csrf_form,
                            form=form, posts=posts,
                            body_truncate=body_truncate,
                            datetimepicker=datetime.utcnow(),
@@ -348,7 +348,7 @@ def after_request(response):
 @permission_required(Permission.STRUCTURE)
 def categories():
     """Render a form to submit new category and a list of existing categories."""
-    remove_form = RemoveEntryForm()
+    csrf_form = CsrfTokenForm()
     form = CategoryForm()
 
     # create new category
@@ -373,7 +373,7 @@ def categories():
     categories = pagination.items
     body_truncate = current_app.config['PILI_BODY_TRUNCATE']
     return render_template('ctrl/categories.html', form=form,
-                           remove_form=remove_form,
+                           csrf_form=csrf_form,
                            body_truncate=body_truncate,
                            categories=categories,
                            datetimepicker=datetime.utcnow(),
@@ -415,7 +415,7 @@ def structure():
 @permission_required(Permission.UPLOAD)
 def uploads():
     form = UploadForm()
-    remove_form = RemoveEntryForm()
+    csrf_form = CsrfTokenForm()
     if form.validate_on_submit():
         # Save file
         filename = secure_filename(form.image.data.filename)
@@ -434,7 +434,7 @@ def uploads():
         error_out=False)
     images = pagination.items
     return render_template('ctrl/uploads.html', form=form,
-                           remove_form=remove_form,
+                           csrf_form=csrf_form,
                            images=images, pagination=pagination)
 
 
@@ -493,14 +493,14 @@ def view_upload(filename):
 @login_required
 @permission_required(Permission.MODERATE)
 def comments():
-    remove_form = RemoveEntryForm()
+    csrf_form = CsrfTokenForm()
     page = request.args.get('page', 1, type=int)
     pagination = Comment.query.order_by(Comment.timestamp.desc()).paginate(
         page, per_page=current_app.config['PILI_COMMENTS_PER_PAGE'],
         error_out=False)
     comments = pagination.items
     return render_template('ctrl/comments.html', comments=comments,
-                           remove_form=remove_form,
+                           csrf_form=csrf_form,
                            pagination=pagination, page=page)
 
 
@@ -680,14 +680,14 @@ def comments_bulk():
 @login_required
 @permission_required(Permission.ADMINISTER)
 def users():
-    remove_form = RemoveEntryForm()
+    csrf_form = CsrfTokenForm()
     page = request.args.get('page', 1, type=int)
     pagination = User.query.order_by(User.confirmed).order_by(User.member_since.desc()).paginate(
         page, per_page=current_app.config['PILI_USERS_PER_PAGE'],
         error_out=False)
     users = pagination.items
     return render_template('ctrl/users.html', users=users,
-                           remove_form=remove_form,
+                           csrf_form=csrf_form,
                            pagination=pagination, page=page)
 
 @ctrl.route('/users/bulk', methods=['POST'])
@@ -785,7 +785,7 @@ def users_bulk():
 def notify():
     # pre-populate email field
     form = SendMessageForm(email=True)
-    remove_form = RemoveEntryForm()
+    csrf_form = CsrfTokenForm()
     if form.validate_on_submit():
         group_id = form.group.data
         as_email = form.email.data
@@ -823,7 +823,7 @@ def notify():
     #    error_out=False)
     #images = pagination.items
     return render_template('ctrl/notify.html', form=form,
-                           remove_form=remove_form,
+                           csrf_form=csrf_form,
                            #images=images, pagination=pagination
     )
 

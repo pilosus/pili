@@ -125,7 +125,7 @@ class SendMessageForm(Form):
                              for group in Role.query.order_by(Role.name).all()]
         self.group.choices.append((0, "All users ({0})".format(User.query.count())))
     
-class RemoveEntryForm(Form):
-    """Remove a post, a category, an upload or other type of entry."""
+class CsrfTokenForm(Form):
+    """A form used on pages with AJAX POST requests to get access to an CSRF token."""
     id = HiddenField('Entry id', validators=[Required()])
     

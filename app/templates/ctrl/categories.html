@@ -72,10 +72,9 @@
 </div>
 {% endif %}
 
-{# {{ wtf.quick_form(remove_form) }} #}
 <form method="post" id="removal">
-    {{ remove_form.csrf_token(id="csrf-removal") }}
-    {{ remove_form.id }}
+    {{ csrf_form.csrf_token(id="csrf-removal") }}
+    {{ csrf_form.id }}
 </form>
 
 {% endblock %}
