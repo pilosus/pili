@@ -63,7 +63,7 @@
 		      {% if current_user.is_authenticated %}
                       <li {% if subpage == 'profile' %}class="active"{% endif %}><a href="{{ url_for('main.user', username=current_user.username) }}">Profile</a></li>
 		      <li {% if subpage == 'replies' %}class="active"{% endif %}><a href="{{ url_for('main.replies', username=current_user.username) }}">Comment Replies <span class="badge">{{ new_replies }}</span></a></li>
-		      <li {% if subpage == 'messages' %}class="active"{% endif %}><a href="{{ url_for('main.messages', username=current_user.username) }}">Notifications <span class="badge">{{ new_notifications }}</span></a></li>
+		      <li {% if subpage == 'messages' %}class="active"{% endif %}><a href="{{ url_for('main.notifications', username=current_user.username) }}">Notifications <span class="badge">{{ new_notifications }}</span></a></li>
                       {% endif %}
                       <li {% if subpage == 'change_password' %}class="active"{% endif %}><a href="{{ url_for('auth.change_password') }}">Change Password</a></li>
                       <li {% if subpage == 'change_email' %}class="active"{% endif %}><a href="{{ url_for('auth.change_email_request') }}">Change Email</a></li>

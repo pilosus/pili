@@ -6,7 +6,7 @@ from . import ctrl
 from .. import csrf
 from ..email import send_email
 from .forms import EditProfileForm, EditProfileAdminForm, PostForm, UploadForm, \
-    CategoryForm, EditCategoryForm, SendMessageForm, CsrfTokenForm
+    CategoryForm, EditCategoryForm, NotificationForm, CsrfTokenForm
 from .. import db
 from ..models import Permission, Role, User, Post, \
     Comment, Tag, Tagification, Category, Upload, Message, MessageAck
@@ -322,6 +322,28 @@ def edit_category(alias):
 
     return render_template('ctrl/edit_category.html', form=form,
                            datetimepicker=datetime.utcnow())
+
+
+# TODO
+@ctrl.route('/edit-notification/<int:id>', methods=['GET', 'POST'])
+@login_required
+@permission_required(Permission.ADMINISTER)
+def edit_notification(id):
+    notification = Message.query.get_or_404(id)
+    form = NotificationForm()
+    if form.validate_on_submit():
+        notification.title = form.title.data
+        notification.body = form.body.data
+        notification.author_id = current_user._get_current_object().id
+        db.session.add(notification)
+        flash("Notification '{0}' has been successfully updated.".\
+              format(notification.title), 'success')
+        return redirect(url_for('main.notification', id=notification.id))
+    # Render prefilled form
+    form.title.data = notification.title
+    form.body.data = notification.body
+
+    return render_template('ctrl/edit_notification.html', form=form)
 
 
 
@@ -784,7 +806,7 @@ def users_bulk():
 @ctrl.route('/notify', methods=['GET', 'POST'])
 def notify():
     # pre-populate email field
-    form = SendMessageForm(email=True)
+    form = NotificationForm(email=True)
     csrf_form = CsrfTokenForm()
     if form.validate_on_submit():
         group_id = form.group.data

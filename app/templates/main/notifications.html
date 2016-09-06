@@ -14,10 +14,10 @@
   {% set recipient = True %}
 {% endif %}
 
-{% include 'main/_messages.html' %}
+{% include 'main/_notifications.html' %}
 {% if pagination %}
 <div class="pagination">
-    {{ macros.pagination_widget(pagination, 'main.messages', username=user.username) }}
+    {{ macros.pagination_widget(pagination, 'main.notifications', username=user.username) }}
 </div>
 {% endif %}
 

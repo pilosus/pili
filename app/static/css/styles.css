@@ -84,7 +84,7 @@ ul.ctrl-list li.ctrl-item:nth-child(1) {
 ul.ctrl-list li.ctrl-item:hover {
     background-color: #f0f0f0;
 }
-ul.ctrl-list li.ctrl-item.unread {
+ul.ctrl-list li.ctrl-item.unread, .unread {
     background-color: #f0f0f0;
 }
 .unconfirmed { background-color: #f0f0f0; }

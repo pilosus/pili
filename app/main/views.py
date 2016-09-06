@@ -345,14 +345,14 @@ def replies(username):
                            pagination=pagination)
 
 # TODO
-@main.route('/user/<username>/messages')
+@main.route('/user/<username>/notifications')
 @login_required
-def messages(username):
+def notifications(username):
     """List of messages sent to to the user.
     """
     ### Restrict viewing messages to a user to the user itself
     if not current_user.username == username:
-        flash('You have no permission to see messages to the user.')
+        flash('You have no permission to see notifications to the user.')
         return redirect(url_for('.index'))
     csrf_form = CsrfTokenForm()
     user = User.query.filter_by(username=username).first()
@@ -364,7 +364,7 @@ def messages(username):
                      page, per_page=current_app.config['PILI_POSTS_PER_PAGE'],
                      error_out=False)
     messages = pagination.items
-    return render_template('main/messages.html', user=user,
+    return render_template('main/notifications.html', user=user,
                            messages=messages,
                            csrf_form=csrf_form,
                            pagination=pagination)
@@ -424,23 +424,20 @@ def notifications_bulk():
     })
 
 
-
-# TODO
-@main.route('/user/<username>/message/<int:id>', methods=['GET', 'POST'])
+@main.route('/user/<username>/notification/<int:id>', methods=['GET', 'POST'])
 @login_required
-def message(username, id):
-    """The message sent to to the user.
-    """
-    if not current_user.username == username:
-        flash('You have no permission to see messages to the user.')
+def notification(username, id):
+    csrf_form = CsrfTokenForm()
+    if not current_user.username == username or \
+       not current_user.can(Permission.ADMINISTER):
+        flash('You have no permission to see notifications to the user.')
         return redirect(url_for('.index'))
     user = User.query.filter_by(username=username).first_or_404()
-    msg = MessageAck.query.\
-          join(Message, Message.id == MessageAck.message_id).\
-          filter(MessageAck.recipient_id == user.id).first_or_404()
-    if request.method == 'POST':
-        return 'post'
-    return 'get'
+    ack = MessageAck.query.get_or_404(id)
+    # TODO
+    return render_template('main/notification.html', ack=ack,
+                           csrf_form=csrf_form)
+
 
 @main.route('/comment/reply/<int:id>')
 @login_required

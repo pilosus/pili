@@ -27,7 +27,7 @@
         <div class="ctrl-item-content">
             <div class="ctrl-item-date">{{ moment(ack.message.timestamp).fromNow() }}</div>
             <div class="ctrl-item-author">
-	      <a href="{{ url_for('main.message', username=ack.recipient.username, id=ack.id) }}">
+	      <a href="{{ url_for('main.notification', username=ack.recipient.username, id=ack.id) }}">
 		{{ ack.message.title }}
 	      </a>
 	      by

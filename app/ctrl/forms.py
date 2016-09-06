@@ -110,7 +110,7 @@ class UploadForm(Form):
 
     # https://wtforms.readthedocs.org/en/latest/validators.html#custom-validators
 
-class SendMessageForm(Form):
+class NotificationForm(Form):
     title = StringField("Title", validators=[Required(), Length(1, 128)])
     body = PageDownField("Text", validators=[Required()])
     group = SelectField('To', coerce=int, default=0)
@@ -118,7 +118,7 @@ class SendMessageForm(Form):
     submit = SubmitField('Submit')
     
     def __init__(self, *args, **kwargs):
-        super(SendMessageForm, self).__init__(*args, **kwargs)
+        super(NotificationForm, self).__init__(*args, **kwargs)
         self.group.choices = [(group.id, "{name} group ({count})".\
                                format(name=group.name, count=User.query.\
                                       filter(User.role_id == group.id).count()))
