@@ -1,4 +1,4 @@
 -r prod.txt
 Flask-SSLify==0.1.4
-psycopg2==2.5.1
-uWSGI==2.0.12
+psycopg2==2.6.2
+uWSGI==2.0.13
