@@ -6,9 +6,9 @@
    {{ message.body }}
 {% endif %}
 
-<p>To see this message on the website <a href="{{ url_for('main.message', username=recipient.username, id=message.id, _external=True) }}">click here</a>.</p>
+<p>To see this message on the website <a href="{{ url_for('main.notification', username=recipient.username, id=message.id, _external=True) }}">click here</a>.</p>
 <p>Alternatively, you can paste the following link in your browser's address bar:</p>
-<p>{{ url_for('main.message', username=recipient.username, id=message.id, _external=True) }}</p>
+<p>{{ url_for('main.notification', username=recipient.username, id=message.id, _external=True) }}</p>
 <p>Sincerely,</p>
 <p>The Pili Team</p>
 <p><small>Note: replies to this email address are not monitored.</small></p>

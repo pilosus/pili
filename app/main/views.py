@@ -344,7 +344,6 @@ def replies(username):
                            csrf_form=csrf_form,
                            pagination=pagination)
 
-# TODO
 @main.route('/user/<username>/notifications')
 @login_required
 def notifications(username):
@@ -434,10 +433,23 @@ def notification(username, id):
         return redirect(url_for('.index'))
     user = User.query.filter_by(username=username).first_or_404()
     ack = MessageAck.query.get_or_404(id)
-    # TODO
-    return render_template('main/notification.html', ack=ack,
-                           csrf_form=csrf_form)
+    return render_template('main/notification.html', messages=[ack],
+                           user=user, csrf_form=csrf_form)
 
+
+
+@main.route('/user/<username>/notifications/remove/<int:id>')
+@login_required
+def remove_notification(username, id):
+    if not current_user.username == username or \
+       not current_user.can(Permission.ADMINISTER):
+        flash('You have no permission to remove a notifications addressed to the user.')
+        return redirect(url_for('.index'))
+    user = User.query.filter_by(username=username).first_or_404()
+    ack = MessageAck.query.get_or_404(id)
+    db.session.delete(ack)
+    flash("Notification {0} has been removed.".format(id), 'success')
+    return redirect(url_for('main.notifications', username=username))
 
 @main.route('/comment/reply/<int:id>')
 @login_required

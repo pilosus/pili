@@ -838,6 +838,9 @@ def notify():
         flash_msg = flash_msg.rstrip(', ')
         flash("Notifications to users: {0} queued.".format(flash_msg), 'success')
         return redirect(url_for('.notify'))
+    # TODO
+    # render list of messages sent
+    
     # Render template with pagination
     #page = request.args.get('page', 1, type=int)
     #pagination = Upload.query.order_by(Upload.timestamp.desc()).paginate(

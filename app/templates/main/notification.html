@@ -2,6 +2,144 @@
 {% set subpage = 'messages' %}
 
 {% extends "main/base.html" %}
+{% import "main/_macros.html" as macros %}
+
+{% block title %}{{ messages[0].message.title }} {{ super() }}{% endblock %}
+
+{% block page_content %}
+{% if current_user.is_authenticated and user == current_user %}
+  {% set recipient = True %}
+{% endif %}
+
+{% set single = True %}
+{% include 'main/_notifications.html' %}
+
+<form method="post" id="removal">
+    {{ csrf_form.csrf_token(id="csrf-token") }}
+    {{ csrf_form.id }}
+</form>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+ // event handler for select all checkbox
+ $('#select_all').change(function() {
+     var select_all = $( this );
+     if ( select_all.prop('checked') ) {
+	 $('.comment-select').prop('checked', $(this).prop('checked'));
+     }
+     else if ( select_all.not(':checked') ) {
+	 $('.comment-select').removeAttr('checked');
+     }
+ })//.change();
+</script>
+
+<script>
+ // even handlers for check/uncheck of any checkbox is certain class
+ $('input').change(function() {
+     if ( $( this ).prop('checked') ) {
+	 //alert('Comment ' + $( this ).attr('id') + ' checked!');
+     }
+     else if ( $( this ).not(':checked') ) {
+	 //alert('Comment ' + $( this ).attr('id') + ' unchecked!');
+     }
+ })//.change();
+</script>
+
+<script>
+ // at least one checkbox is checked
+ $('input').change(function() {
+     if ( $(':checked').length > 0 ) {
+	 $( '.on-check' ).show();
+     }
+     else {
+	 $( '.on-check' ).hide();
+     }
+ })
+</script>
+
+<script>
+ // POST request
+ $('.on-check, .on-click').click(function() {
+     var button = $( this );
+     var notifications = [];
+     
+     if (button.hasClass('on-click')) {
+	 notifications[0] = button.data('item-id');
+     }
+     else {
+	 $('.ctrl-item-select:checked').each(function(i){
+             notifications[i] = $(this).val();
+	 });
+     }
+     
+     var data = {
+	 csrf: $('#csrf-token').val(),
+	 notifications: notifications,
+	 action: button.data('action')
+     };
+
+     $.ajaxSetup({
+	 beforeSend: function(xhr, settings) {
+             if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+		 xhr.setRequestHeader("X-CSRFToken", data['csrf'])
+             }
+	 }
+     });
+     
+     var remove = confirm('Are you sure?');
+     if (remove == true) {
+	 $.when( $.ajax({
+             url: "{{ url_for('main.notifications_bulk', _external=True) }}",
+             type: 'post',
+             dataType: 'json',
+             contentType: 'application/json;charset=UTF-8',
+	     accepts: {
+		 json: 'application/json',
+             },
+	     data: JSON.stringify(data),
+	     success: function(response) {
+		 // message to user
+		 var flash = "<div class='alert alert-" + response['status'] + "'>" +
+	     		     "<button type='button' class='close' data-dismiss='alert'>&times;</button>" +
+	     		     response['message'] + "</div>";
+		 // save message to localStorage
+		 window.onbeforeunload = function() {
+		     localStorage.setItem('message', flash);
+		 }
+	     },
+             error: function(jqXHR, textStatus, errorThrown) {
+		 console.log('Error code: ' + jqXHR.status);
+		 console.log('Error status: ' + textStatus);
+		 console.log('Error thrown: ' + errorThrown);
+             }
+	 }).done(function(){
+	     location.reload();           // reload the page
+	     $('html,body').scrollTop(0); // jump on top
+	 }));
+     };
+ })
+</script>
+
+<script>
+ $( document ).ready(function() {
+     var message = localStorage.getItem('message');
+     if (message !== null) {
+	 $('.page-header').before(message);
+     }
+     localStorage.removeItem('message');
+ });
+</script>
+
+{% endblock %}
+
+
+{#
+{% set page = 'user' %}
+{% set subpage = 'messages' %}
+
+{% extends "main/base.html" %}
 {% import "bootstrap/wtf.html" as wtf %}
 {% import "main/_macros.html" as macros %}
 
@@ -175,3 +313,4 @@
 </script>
 
 {% endblock %}
+#}

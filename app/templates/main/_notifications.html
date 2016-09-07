@@ -1,4 +1,4 @@
-{% if recipient %}
+{% if recipient and not single %}
 <div class="comment-control">
 	<input name="checkbox_select_all" id="select_all" type="checkbox" value=""></span>
 	<button class="btn btn-default btn-sm on-check" data-action="read"><span class="glyphicon glyphicon-eye-open" aria-label="Mark as read" title="Mark selected messages as read"></span></button>
@@ -17,7 +17,7 @@
             </a>
         </div>
 
-	{% if recipient %}
+	{% if recipient and not single %}
 	<div class="ctrl-item-checkbox">
 	  <input name="checkbox{{ ack.id }}" id="checkbox{{ ack.id }}" class="ctrl-item-select" type="checkbox" value="{{ ack.id }}">
 	</div>
@@ -47,11 +47,15 @@
 	    {% if recipient %}
  	    {% if ack.read == True %}
 	    <button class="btn btn-primary btn-xs on-click" type="button" title="Mark message as read" data-action="unread" data-item-id="{{ ack.id }}"><span class="glyphicon glyphicon-eye-close" aria-label="Unread"></span></button>
-	      {% else %}
+	    {% else %}
 	    <button class="btn btn-default btn-xs on-click" type="button" title="Mark message as read" data-action="read" data-item-id="{{ ack.id }}"><span class="glyphicon glyphicon-eye-open" aria-label="Read"></span></button>
 	    {% endif %}
-	    <button class="btn btn-danger btn-xs on-click" type="button" title="Remove message" data-action="remove" data-item-id="{{ ack.id }}"><span class="glyphicon glyphicon-trash" aria-label="Remove"></span></button>
 
+	      {% if single %}
+	      <a href="{{ url_for('main.remove_notification', username=user.username, id=ack.id) }}" class="btn btn-danger btn-xs" role="button" title="Remove message"><span class="glyphicon glyphicon-trash" aria-label="Remove"></span></a>
+	      {% else %}
+	      <button class="btn btn-danger btn-xs on-click" type="button" title="Remove message" data-action="remove" data-item-id="{{ ack.id }}"><span class="glyphicon glyphicon-trash" aria-label="Remove"></span></button>
+	      {% endif %}
 	    {% endif %}
         </div>
     </li>
