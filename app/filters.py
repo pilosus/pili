@@ -89,3 +89,11 @@ def generate_password(length=10):
                    for _ in range(length))
     
     
+
+def to_bool(s: str) -> bool:
+    """Return bool converted from string.
+
+    bool() from the standard library convert all non-empty strings to True.
+    """
+    return s.lower() in ['true', 't', 'y', 'yes'] if s is not None else False
+    

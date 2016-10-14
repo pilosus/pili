@@ -2,6 +2,7 @@
 
 import os
 #import app.email
+from app.filters import to_bool
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 class Config:
@@ -20,7 +21,8 @@ class Config:
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
 
     # CELERY
-    CELERY_IMPORT = ('app.email')
+    CELERY_INSTEAD_THREADING = to_bool(os.environ.get('CELERY_INSTEAD_THREADING'))
+    #CELERY_IMPORT = ('app.email')
     CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL') 
     CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND')
 

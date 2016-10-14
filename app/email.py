@@ -3,11 +3,24 @@ from flask import current_app, render_template
 from flask_mail import Message
 from . import mail, celery
 
+def send_email(to, subject, template, **kwargs):
+    """Send email using either Celery, or Thread.
+
+    Selection depends on CELERY_INSTEAD_THREADING config variable.
+    """
+    app = current_app._get_current_object()
+    if app.config['CELERY_INSTEAD_THREADING']:
+        send_email_celery(to, subject, template, countdown=None, **kwargs)
+    else:
+        send_email_thread(to, subject, template, **kwargs)
+
 def send_async_email(app, msg):
     with app.app_context():
         mail.send(msg)
 
 def send_email_thread(to, subject, template, **kwargs):
+    """Send async email using threading.
+    """
     app = current_app._get_current_object()
     msg = Message(app.config['PILI_MAIL_SUBJECT_PREFIX'] + ' ' + subject,
                   sender=app.config['PILI_MAIL_SENDER'], recipients=[to])
@@ -22,8 +35,9 @@ def send_email_thread(to, subject, template, **kwargs):
 def send_celery_async_email(msg):
     mail.send(msg)
 
-def send_email(to, subject, template, countdown=None, **kwargs):
-    """Send email async email using Celery.
+# NOTE rename to send_email in production if Thread support is not needed
+def send_email_celery(to, subject, template, countdown=None, **kwargs):
+    """Send async email using Celery.
     """
     app = current_app._get_current_object()
     msg = Message(app.config['PILI_MAIL_SUBJECT_PREFIX'] + ' ' + subject,
@@ -31,3 +45,4 @@ def send_email(to, subject, template, countdown=None, **kwargs):
     msg.body = render_template(template + '.txt', **kwargs)
     msg.html = render_template(template + '.html', **kwargs)
     send_celery_async_email.apply_async(args=[msg], countdown=countdown)
+

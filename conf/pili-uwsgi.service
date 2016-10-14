@@ -5,12 +5,18 @@ Description=uWSGI instance to serve Pili App
 After=network.target
 
 [Service]
+# set permissions
 User=git
 Group=nginx
 
 WorkingDirectory=/var/www/pili
 Environment="PATH=/var/www/pili/venv/bin"
+
+# load environment variables
 EnvironmentFile=/var/www/pili/conf/pili-uwsgi.conf
+EnvironmentFile=-/var/www/pili/.hosting.env
+
+# start uWSGI with ini file
 ExecStart=/var/www/pili/venv/bin/uwsgi --ini conf/pili-uwsgi.ini
 
 [Install]
