@@ -1,0 +1,34 @@
+<ul class="ctrl-list">
+  {% for message in messages %}
+    <li id="message{{ message.id }}" class="ctrl-item">
+        <div class="ctrl-item-thumbnail">
+            <a href="{{ url_for('.user', username=message.author.username) }}">
+                <img class="img-rounded profile-thumbnail" src="{{ message.author.gravatar(size=40) }}">
+            </a>
+        </div>
+
+        <div class="ctrl-item-content">
+            <div class="ctrl-item-date">{{ moment(message.timestamp).fromNow() }}</div>
+            <div class="ctrl-item-author">
+	      <a href="{{ url_for('ctrl.notification', id=message.id) }}">
+		{{ message.title }}
+	      </a>
+	      by
+	      <a href="{{ url_for('.user', username=message.author.username) }}">
+		{{ message.author.username }}
+	      </a>
+	    </div>
+
+            <div class="ctrl-item-body">
+                {% if message.body_html %}
+                  {{ message.body_html | safe }}
+                {% else %}
+                  {{ message.body }}
+                {% endif %}
+            </div>
+
+	    <a href="{{ url_for('ctrl.remove_notification', id=message.id) }}" class="btn btn-danger btn-xs" role="button" title="Remove message"><span class="glyphicon glyphicon-trash" aria-label="Remove"></span></a>
+        </div>
+    </li>
+    {% endfor %}
+</ul>

@@ -1,6 +1,7 @@
 {% set page = 'notify' %}
 {% extends "ctrl/base.html" %}
 {% import "bootstrap/wtf.html" as wtf %}
+{% import "ctrl/_macros.html" as macros %}
 
 {% block title %}Send a Message to users {{ super() }}{% endblock %}
 
@@ -8,9 +9,25 @@
 <div class="page-header">
     <h1>Send Message</h1>
 </div>
-<div class="col-md-4">
+
+<div>
   {{ wtf.quick_form(form) }}
 </div>
+
+<div class="page-header">
+    <h1>List of Messages</h1>
+</div>
+
+<div>
+  {% include 'ctrl/_messages.html' %}
+</div>
+  
+{% if pagination %}
+<div class="pagination">
+    {{ macros.pagination_widget(pagination, 'ctrl.notify') }}
+</div>
+{% endif %}
+
 {% endblock %}
 
 {% block scripts %}

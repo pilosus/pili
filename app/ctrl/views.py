@@ -342,10 +342,28 @@ def edit_notification(id):
     # Render prefilled form
     form.title.data = notification.title
     form.body.data = notification.body
-
     return render_template('ctrl/edit_notification.html', form=form)
 
+# TODO
+@ctrl.route('/remove-notification/<int:id>', methods=['GET', 'POST'])
+@login_required
+@permission_required(Permission.ADMINISTER)
+def remove_notification(id):
+    message = Message.query.get_or_404(id)
+    for ack in message.acks:
+        db.session.delete(ack)
+    db.session.delete(message)
+    flash("Message '{0}' and its associated notifications have been successfully removed.".\
+          format(message.title), 'success')
+    return redirect(url_for('ctrl.notify'))
 
+# TODO
+@ctrl.route('/notification/<int:id>', methods=['GET', 'POST'])
+@login_required
+@permission_required(Permission.ADMINISTER)
+def notification(id):
+    message = Message.query.get_or_404(id)
+    return render_template('ctrl/notification.html', messages=[message])
 
 @ctrl.route('/shutdown')
 def server_shutdown():
@@ -842,19 +860,17 @@ def notify():
     # render list of messages sent
     
     # Render template with pagination
-    #page = request.args.get('page', 1, type=int)
-    #pagination = Upload.query.order_by(Upload.timestamp.desc()).paginate(
-    #    page, per_page=current_app.config['PILI_IMAGES_PER_PAGE'],
-    #    error_out=False)
-    #images = pagination.items
+    page = request.args.get('page', 1, type=int)
+    pagination = Message.query.order_by(Message.timestamp.desc()).paginate(
+        page, per_page=current_app.config['PILI_POSTS_PER_PAGE'],
+        error_out=False)
+    messages = pagination.items
     return render_template('ctrl/notify.html', form=form,
                            csrf_form=csrf_form,
-                           #images=images, pagination=pagination
+                           messages=messages, pagination=pagination
     )
 
 
-    
-    return 'ok'
 
 @ctrl.route('/logs')
 def logs():
