@@ -1,5 +1,14 @@
 # -*- mode: rst -*-
 
+========
+Pili App
+========
+
+Pili is a Python Flask application with a strong inclination
+for social network features. It can also be customized into a
+multi-user blog platform or a website.
+
+
 =========
 Using App
 =========
