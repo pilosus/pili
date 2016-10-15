@@ -1,11 +1,8 @@
 *~
-.hosting.env
-.env
-flasky.conf
-flasky-uwsgi.ini
-post-receive
-TODO
-tmp
+*.pyc
+.idea
+*.env
+tmp*
 venv
 __pycache__
-tmp-*
+
