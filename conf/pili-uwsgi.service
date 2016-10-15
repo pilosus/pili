@@ -1,5 +1,9 @@
 # -*- mode: conf-unix -*-
 
+###################################################
+### uWSGI systemd service example for Pili App ###
+###################################################
+
 [Unit]
 Description=uWSGI instance to serve Pili App
 After=network.target

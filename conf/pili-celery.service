@@ -1,5 +1,9 @@
 # -*- mode: conf-unix -*-
 
+###################################################
+### Celery systemd service example for Pili App ###
+###################################################
+
 [Unit]
 Description=Pili Celery Daemon Service
 After=network.target
