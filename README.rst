@@ -7,6 +7,10 @@ for social network and blogging features.
 
 .. contents:: Table of Contents
 
+==========
+About Pili
+==========
+	      
 -----
 Stack
 -----
@@ -37,11 +41,8 @@ Features
 
 #. Roles
 
-   * Each user assigned one of the 7 predefined roles (Suspended, Pariah,
-      Reader, Writer, Editor, Moderator, Administrator)
-      
-   * Each role has a set of permissions (Read, Follow, Write, Upload,
-     Comment, Moderate, Structure, Administer)
+   * Each user assigned one of the 7 predefined roles
+   * Each role has a set of permissions
       
 #. Posts
 
