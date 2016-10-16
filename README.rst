@@ -1,5 +1,3 @@
-# -*- mode: rst -*-
-
 ########
 Pili App
 ########
@@ -32,40 +30,40 @@ Features
 
 #. Users
 
-   #. Registration
-   #. Authentication
-   #. Resetting/changing password
-   #. Creating/changing profile
+   * Registration
+   * Authentication
+   * Resetting/changing password
+   * Creating/changing profile
 
 #. Roles
 
-   #. Each user assigned one of the 7 predefined roles (Suspended, Pariah,
+   * Each user assigned one of the 7 predefined roles (Suspended, Pariah,
       Reader, Writer, Editor, Moderator, Administrator)
       
-   #. Each role has a set of permissions (Read, Follow, Write, Upload,
-      Comment, Moderate, Structure, Administer)
+   * Each role has a set of permissions (Read, Follow, Write, Upload,
+     Comment, Moderate, Structure, Administer)
       
 #. Posts
 
-   #. Tagging
-   #. Categorization (sectioning, which is useful for websites)
-   #. File upload
+   * Tagging
+   * Categorization (sectioning, which is useful for websites)
+   * File upload
 
 #. Comments
 
-   #. Write/delete comments
-   #. Screen/unscreen comments (not seen by the non-moderator users, all new comments can be set screened by default)
-   #. Disable/enable comments (non-moderators that disable comment exists, but its content disabled by the moderator)
-   #. Replies to the comments (users see replies to their comments)
+   * Write/delete comments
+   * Screen/unscreen comments (not seen by the non-moderator users, all new comments can be set screened by default)
+   * Disable/enable comments (non-moderators that disable comment exists, but its content disabled by the moderator)
+   * Replies to the comments (users see replies to their comments)
       
 #. Following
 
-   #. Follow/Unfollow other users to customize a feed
+   * Follow/Unfollow other users to customize a feed
 
 #. Notifications
 
-   #. Get notifications from platform administrators
-   #. See replies to your comments
+   * Get notifications from platform administrators
+   * See replies to your comments
 
 #. REST API
    
@@ -96,12 +94,12 @@ part of the application.
 Deployment
 ==========
 
-Application's deployment follows the same steps as any other large
-Flask application.
-
 -----------------
 Environment setup
 -----------------
+
+Application's deployment follows the same steps as any other large
+Flask application.
 
 Setting up environment basically means:
 
@@ -136,7 +134,7 @@ Then virtual environment can be activated/deactivated::
 
 Dependencies can be installed then using ``pip``::
 
-  ``(venv) $ pip install -r requirements/unix[prod|dev|...].txt``
+  (venv) $ pip install -r requirements/unix[prod|dev|...].txt
 
 -----------------
 App's config file
@@ -217,6 +215,10 @@ Every time the database models (``app/models.py``) change do the following::
 Deployment in production
 ========================
 
+------------------------------------
+Reverse-proxy and Application server
+------------------------------------
+
 Flask's built-in server is not suitable for production. There are
 quite a few `deployment options`_ for production environment, both
 self-hosted and PaaS.
@@ -284,26 +286,36 @@ When tailored to your needs, provided systemd service files can be
 used this way:
 
 #. Go to systemd's directory for custom unit files::
+     
      $ cd /etc/systemd/system
      
 #. Create a symlink to a unit file::
+     
      $ ln -s /var/www/pili/your.service your.service
      
 #. Reload systemd daemon::
+     
      $ sudo systemctl daemon-reload
      
 #. Start your service with::
+     
      $ sudo systemctl start your.service
      
 #. Make sure it's running::
+     
      $ sudo systemctl status your.service
      
 #. If service has failed, take a look at systemd's logs::
+     
      $ sudo journalctl -xe
 
 =====
 Usage
 =====
+
+--------------
+Script options
+--------------
 
 In addition to providing an apllication entry point ``manage.py``
 provides several other options to be used with ``(venv) $ python manage.py option`` command:
@@ -354,8 +366,12 @@ Get a parent comment of the reply with id 29 (parent attribute exists due to bac
 Get all replies written by the user 'Pilosus' in descending order (sort by the time of publication)::
 
     >>> user = User.query.filter(User.username == 'Pilosus').first()
-    >>> Comment.query.join(Reply, Comment.author_id == User.id).filter(Comment.parent_id.isnot(None), User.id == user.id).order_by(Comment.timestamp.desc()).all()
+    >>> Comment.query.join(Reply, Comment.author_id == User.id).\
+    ... filter(Comment.parent_id.isnot(None), User.id == user.id).\
+    ... order_by(Comment.timestamp.desc()).all()
+    >>>
     >>> # the same but more concise
+    >>>
     >>> Comment.query.filter(Comment.parent_id.isnot(None), Comment.author == user).\
     ... order_by(Comment.timestamp.desc()).\
     ... all()
@@ -377,6 +393,7 @@ Get a thread of all replies to the certain comment::
 
     >>> # Use Depth-First Search algorithm for graphs,
     >>> #              implemented as a static method
+    >>>
     >>> Comment.dfs(Comment.query.get(2), print)
     >>> <Comment 4>
     >>> <Comment 6>
