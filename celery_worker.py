@@ -20,9 +20,5 @@ settings are effectively absent.
 import os
 from app import celery, create_app
 
-# set environment variables used for app's config
-from setenv import load_vars
-load_vars()
-
 app = create_app(os.getenv('FLASK_CONFIG') or 'default')
 app.app_context().push()

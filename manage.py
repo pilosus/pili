@@ -5,7 +5,6 @@ Entry point of the application
 """
 
 import os
-from setenv import load_vars
 
 COV = None
 if os.environ.get('FLASK_COVERAGE'):
@@ -84,9 +83,12 @@ def initialize():
 @manager.command
 def deploy():
     """Run deployment tasks."""
-    from flask_migrate import upgrade
+    from flask_migrate import migrate, upgrade
     from app.models import Role, User
 
+    # generate an initial migration
+    migrate()
+    
     # migrate database to latest revision
     upgrade()
 
