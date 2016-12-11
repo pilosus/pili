@@ -2,6 +2,8 @@
 .idea
 *.env*
 tmp*
+TODO.rst
+app/static/uploads/*
 
 ### Python template
 # Byte-compiled / optimized / DLL files

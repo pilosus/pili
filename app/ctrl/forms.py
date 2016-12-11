@@ -2,10 +2,10 @@ from flask_wtf import Form
 from wtforms import StringField, TextAreaField, BooleanField, SelectField,\
     SubmitField, DateTimeField, HiddenField
 from flask_wtf.file import FileField, FileRequired, FileAllowed
-from wtforms.validators import Required, Length, Email, Regexp
+from wtforms.validators import DataRequired, Required, Length, Email, Regexp
 from wtforms import ValidationError
 from flask_pagedown.fields import PageDownField
-from ..models import Role, User, Post, Category
+from ..models import Role, User, Post, Category, Upload
 from ..filters import is_allowed_file, file_exists
 
 class NameForm(Form):
@@ -86,6 +86,14 @@ class EditCategoryForm(Form):
     timestamp = DateTimeField("Date and time", format='%Y-%m-%d %H:%M:%S')
     featured = BooleanField('Featured')
     submit = SubmitField('Submit')
+
+    # TODO: fix image field in the form. Exceptions do not show up
+    #def validate_image(self, field):
+    #    if not field.data:
+    #        raise ValidationError('Image is required.')
+    #    if not Upload.query.filter_by(filename=field.data).first():
+    #        raise ValidationError('Image {filename} not found among uploads.'\
+    #                              .format(filename=field.data))
 
     #def validate_alias(self, field):
     #    if Category.query.filter_by(alias=field.data).first():

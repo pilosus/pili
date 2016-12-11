@@ -10,7 +10,7 @@
   <meta property="og:title" content="{{ category.title }}">
   <meta property="og:description" content="{{ desc }}">
   <meta property="og:author" content="{{ author }}">
-  {% if posts[0].image %}
+  {% if category.image.filename %}
   {% set img_path = url_for('static', filename='uploads/', _external=True) + category.image.filename %}
   <meta property="og:image" content="{{ img_path }}">
   {% endif %}
@@ -52,8 +52,12 @@
       <section class="category">
 
 	  <div class="category-image">
-	    <img class="img-responsive" src="{{ category.image.filename | thumbnail('100x100', crop='fit', quality=75) }}"
-		 title="{{ category.image.filename }}" alt="{{ category.image.filename }}">
+          {% if category.image %}
+	        <img class="img-responsive" src="{{ category.image.filename | thumbnail('100x100', crop='fit', quality=75) }}"
+		    title="{{ category.image.filename }}" alt="{{ category.image.filename }}">
+          {% else %}
+          <span class="glyphicon glyphicon-minus" aria-label="None" title="No Image"></span>
+          {% endif %}
 	  </div>
 	  <div class="category-body">
 	    {% if category.body_html %}
