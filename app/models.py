@@ -18,7 +18,7 @@ class Permission:
         - read articles
 
     FOLLOW:
-        - follow users
+        - follow users, like posts and comments
 
     WRITE: 
         - write articles
@@ -105,6 +105,7 @@ class Role(db.Model):
     def __repr__(self):
         return '<Role %r>' % self.name
 
+
 class Follow(db.Model):
     """Self-referential many-to-many relationship for User model.
 
@@ -118,6 +119,25 @@ class Follow(db.Model):
     followed_id = db.Column(db.Integer, db.ForeignKey('users.id'),
                             primary_key=True)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+class Like(db.Model):
+    """
+    Like is a status for a post or a comment, set by a user.
+    """
+    __tablename__ = 'likes'
+    id = db.Column(db.Integer, primary_key=True)
+    post_id = db.Column(db.Integer, db.ForeignKey('posts.id'))
+    comment_id = db.Column(db.Integer, db.ForeignKey('comments.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow())
+
+    def __repr__(self):
+        msg_prefix = "<User {user} likes".format(user=self.user_id)
+        if self.post_id:
+            return "{msg_prefix} post {post}>".format(msg_prefix=msg_prefix, post=self.post_id)
+        elif self.comment_id:
+            return "{msg_prefix} comment {comment}>".format(msg_prefix=msg_prefix, comment=self.comment_id)
 
 class Comment(db.Model):
     """Comment is message under a post. 
@@ -155,6 +175,12 @@ class Comment(db.Model):
     replies = db.relationship('Comment',
                               backref=db.backref('parent', remote_side=[id]),
                               cascade='all, delete-orphan')
+    # 1-to-many Comment/Like
+    likes = db.relationship('Like',
+                            backref='comment',
+                            lazy='dynamic',
+                            foreign_keys=[Like.comment_id],
+                            cascade='all, delete-orphan')
 
     @staticmethod
     def dfs(comment, fun):
@@ -229,6 +255,7 @@ class Comment(db.Model):
 
 db.event.listen(Comment.body, 'set', Comment.on_changed_body)
 
+
 class Message(db.Model):
     __tablename__ = 'messages'
     id = db.Column(db.Integer, primary_key=True)
@@ -265,6 +292,7 @@ class Message(db.Model):
 
 db.event.listen(Message.body, 'set', Message.on_changed_body)    
 
+
 class MessageAck(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     message_id = db.Column(db.Integer, db.ForeignKey('messages.id'))
@@ -273,6 +301,7 @@ class MessageAck(db.Model):
     
     def __repr__(self):
         return '<MessageAck %r is %r>' % (self.id, 'read' if self.read == True else 'unread')
+
 
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
@@ -337,6 +366,16 @@ class User(UserMixin, db.Model):
                                backref=db.backref('recipient', lazy='joined'),
                                lazy='dynamic',
                                cascade='all, delete-orphan')
+    # likes by a user
+    # lazy='dynamic' returns AppenderQuery allowing to use filter, filter_by, order_by
+    # so that user_object.likes.filter(Like.comment_id.isnot(None)) can be used
+    # to get comment likes only
+    likes = db.relationship('Like',
+                            foreign_keys=[Like.user_id],
+                            backref=db.backref('user', lazy='joined'),
+                            lazy='dynamic',
+                            cascade='all, delete-orphan')
+
 
     def suspend(self):
         suspended = Role.query.filter(Role.name == 'Suspended').first()
@@ -397,7 +436,6 @@ class User(UserMixin, db.Model):
                 db.session.add(user)
                 db.session.commit()
 
-                
     def __init__(self, **kwargs):
         super(User, self).__init__(**kwargs)
         if self.role is None:
@@ -441,7 +479,6 @@ class User(UserMixin, db.Model):
         s = Serializer(current_app.config['SECRET_KEY'], expiration)
         return s.dumps({'reset': self.id})
 
-   
     def reset_password(self, token, new_password):
         s = Serializer(current_app.config['SECRET_KEY'])
         try:
@@ -571,6 +608,7 @@ class User(UserMixin, db.Model):
     def __repr__(self):
         return '<User %r>' % self.username
 
+
 class AnonymousUser(AnonymousUserMixin):
     def can(self, permissions):
         return False
@@ -583,6 +621,7 @@ class AnonymousUser(AnonymousUserMixin):
     
 login_manager.anonymous_user = AnonymousUser
 
+
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
@@ -592,6 +631,7 @@ def load_user(user_id):
 #classifications = db.Table('classifications',
 #                           db.Column('tag_id', db.Integer, db.ForeignKey('tags.id')),
 #                           db.Column('post_id', db.Integer, db.ForeignKey('posts.id')))
+
 
 class Tagification(db.Model):
     """Association table for many-to-many relationship Tag/Post.
@@ -628,6 +668,12 @@ class Post(db.Model):
                                lazy='dynamic',
                                foreign_keys=[Comment.post_id],
                                cascade='all, delete-orphan')
+    # 1-to-many Post/Like
+    likes = db.relationship('Like',
+                            backref='post',
+                            lazy='dynamic',
+                            foreign_keys=[Like.post_id],
+                            cascade='all, delete-orphan')
     # 1-to-many relationship Category/Post
     category_id = db.Column(db.Integer, db.ForeignKey('categories.id'))
     # many-to-many relationship Tag/Post
@@ -694,6 +740,7 @@ db.event.listen(Post.body, 'set', Post.on_changed_body)
 # https://stackoverflow.com/questions/12653824/delete-children-after-parent-is-deleted-in-sqlalchemy
 # http://stackoverflow.com/a/9264556/4241180
 
+
 class Tag(db.Model):
     """Tag a post belongs to.
     """
@@ -715,7 +762,6 @@ class Tag(db.Model):
         }
         return json_tag
 
-    
     def __repr__(self):
         return '<Tag %r>' % self.alias
 
@@ -751,8 +797,9 @@ class Category(db.Model):
 
 db.event.listen(Category.body, 'set', Category.on_changed_body)
 
+
 class Structure(db.Model):
-    """Hiearchy of menu items.
+    """Hierarchy of menu items.
     
     Each item is represented by a category.
     """
@@ -791,7 +838,5 @@ class Upload(db.Model):
         }
         return json_upload
 
-    
     def __repr__(self):
         return '<Upload %r>' % self.filename
-    

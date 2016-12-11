@@ -58,6 +58,27 @@
                 {% endif %}
             </div>
 
+		{% set comment_likes = comment.likes.count() %}
+
+        {% if current_user.is_authenticated %}
+            {% set comment_liked_by_current_user = comment.likes.filter_by(user_id=current_user.id).count() %}
+        {% else %}
+           {% set comment_liked_by_current_user = False %}
+        {% endif %}
+        <a href="{% if not comment_liked_by_current_user %}
+          {{ url_for('main.like_comment', id=comment.id) }}
+          {% else %}
+          {{ url_for('main.unlike_comment', id=comment.id) }}
+          {% endif %}"
+          class="btn btn-info btn-xs">
+              {% if not comment_liked_by_current_user %}
+                  <span class="glyphicon glyphicon-heart-empty" aria-hidden="true" title="Not liked by you yet. Click to like"></span>
+                  {% else %}
+                  <span class="glyphicon glyphicon-heart" aria-hidden="true" title="Liked by you. Click to unlike"></span>
+              {% endif %}
+              {{ comment_likes }} Like{{ comment_likes|pluralize("", "s") }}
+          </a>
+
 	    {% if not comment.disabled %}
  	      {% if reply %}
 	      <a class="btn btn-primary btn-xs" 

@@ -35,7 +35,7 @@
       </div>
       <div class="post-title">
 	<a href="{{ url_for('main.post', category=post.category.alias, id=post.id, alias=post.alias) }}">
-	  <h4>{{ post.title }}</h4> 
+	  <h4>{{ post.title }}</h4>
 	</a>
       </div>
       <div class="post-author">
@@ -47,26 +47,45 @@
         {{ post.body }}
         {% endif %}
       </div>
-     
+
       <div class="post-footer">
         {% if current_user == post.author %}
-        <a href="{{ url_for('ctrl.edit_post', id=post.id, alias=post.alias) }}">
-          <span class="label label-default">Edit</span>
-        </a>
+        <a href="{{ url_for('ctrl.edit_post', id=post.id, alias=post.alias) }}"
+        class="btn btn-default btn-xs">Edit</a>
 
-        {% elif current_user.has_role('Administrator') or 
+        {% elif current_user.has_role('Administrator') or
 	current_user.has_role('Editor')  %}
-        <a href="{{ url_for('ctrl.edit_post', id=post.id, alias=post.alias) }}">
-          <span class="label label-danger">Edit [Admin]</span>
-        </a>
+        <a href="{{ url_for('ctrl.edit_post', id=post.id, alias=post.alias) }}"
+        class="btn btn-danger btn-xs">Edit [Admin]</a>
         {% endif %}
 
+        {% set post_likes = post.likes.count() %}
+
+        {% if current_user.is_authenticated %}
+            {% set post_liked_by_current_user = post.likes.filter_by(user_id=current_user.id).count() %}
+        {% else %}
+           {% set post_liked_by_current_user = False %}
+        {% endif %}
+
+          <a href="{% if not post_liked_by_current_user %}
+          {{ url_for('main.like_post', id=post.id) }}
+          {% else %}
+          {{ url_for('main.unlike_post', id=post.id) }}
+          {% endif %}"
+          class="btn btn-info btn-xs">
+              {% if not post_liked_by_current_user %}
+                  <span class="glyphicon glyphicon-heart-empty" aria-hidden="true" title="Not liked by you yet. Click to like"></span>
+                  {% else %}
+                  <span class="glyphicon glyphicon-heart" aria-hidden="true" title="Liked by you. Click to unlike"></span>
+              {% endif %}
+              {{ post_likes }} Like{{ post_likes|pluralize("", "s") }}
+          </a>
+
 	{% if post.commenting %}
-        <a href="{{ url_for('main.post', category=post.category.alias, id=post.id, alias=post.alias) }}#comments">
-          <span class="label label-primary">{{ post.comments.count() }} Comments</span>
-        </a>
+        <a href="{{ url_for('main.post', category=post.category.alias, id=post.id, alias=post.alias) }}#comments"
+        class="btn btn-primary btn-xs">{{ post.comments.count() }} Comments</a>
 	{% endif %}
-	
+
       </div>
     </div>
   </li>

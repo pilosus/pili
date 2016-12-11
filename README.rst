@@ -56,10 +56,14 @@ Features
    * Screen/unscreen comments (not seen by the non-moderator users, all new comments can be set screened by default)
    * Disable/enable comments (non-moderators that disable comment exists, but its content disabled by the moderator)
    * Replies to the comments (users see replies to their comments)
-      
+
 #. Following
 
    * Follow/Unfollow other users to customize a feed
+
+#. Likes
+
+    * Authenticated users with ``FOLLOW`` permission can like/unlike posts or comments
 
 #. Notifications
 
@@ -169,7 +173,7 @@ own configuration (production) or with the shell's ``export`` command
 Database deployment
 -------------------
 
-Application uses **Flask-Migrate** for database migrations with
+Application uses `Flask-Migrate`_ for database migrations with
 Alembic. Database deployment is made up of the following steps:
 
 #. Create all databases used by the application, create migration
@@ -208,7 +212,7 @@ When application models changed
 
 Every time the database models (``app/models.py``) change do the following::
 
-  (venv) $ python manage.py db migrate
+  (venv) $ python manage.py db migrate [--message MESSAGE]
   (venv) $ emacs $( ls -1th migrations/versions/*.py | head -1 ) # check and edit migration
   (venv) $ python manage.py db upgrade
   
@@ -401,6 +405,11 @@ Get a thread of all replies to the certain comment::
     >>> <Comment 5>
 
     
+Get all post likes by the user with ``id`` 1, exclude comment likes::
+
+    >>> Like.query.filter(Like.user_id==1, Like.comment_id == None).all()
+    >>> Like.query.filter((Like.user_id==1) & (Like.comment_id == None)).all()
+
 Get information about 'users' table::
   
     >>> User.__table__.columns
@@ -415,3 +424,4 @@ Get information about 'users' table::
 .. _Bootstrap Tagsinput: https://bootstrap-tagsinput.github.io/bootstrap-tagsinput/examples/
 .. _deployment options: http://flask.pocoo.org/docs/0.11/deploying/
 .. _Deployment with Git: https://www.digitalocean.com/community/tutorials/how-to-use-git-hooks-to-automate-development-and-deployment-tasks
+.. _Flask-Migrate: https://flask-migrate.readthedocs.io/en/latest/

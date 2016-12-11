@@ -7,7 +7,7 @@ from .forms import EditProfileForm, EditProfileAdminForm, CommentForm
 from ..ctrl.forms import CsrfTokenForm
 from .. import db
 from ..models import Permission, Role, User, Post, \
-    Tag, Tagification, Comment, Category, Message, MessageAck
+    Tag, Tagification, Comment, Category, Message, MessageAck, Like
 from ..decorators import admin_required, permission_required
 from ..filters import sanitize_alias, sanitize_tags, get_added_removed
 
@@ -123,6 +123,73 @@ def post(category, id, alias, parent_id=None):
         form.body.data = parent_comment.author.username + ', '
     return render_template('main/post.html', posts=[post], form=form,
                            comments=comments, pagination=pagination)
+
+# TODO: rewrite as API function
+@main.route('/like', methods=['POST'])
+@login_required
+@permission_required(Permission.FOLLOW)
+def like_item():
+    try:
+        post_id = request.json.get('post_id', None)
+        comment_id = request.json.get('comment_id', None)
+        user_id = request.json.get('user_id', None)
+        action = request.json.get('action', None)
+        csrf = request.json.get('csrf', None)
+    except (KeyError, TypeError):
+        return jsonify({
+            'status': 'error',
+            'message': 'Function takes four parameters: '
+                       'post or commend id; user id; action type; csrf token',
+        })
+
+
+@main.route('/likes/post/<int:id>/like')
+@login_required
+@permission_required(Permission.FOLLOW)
+def like_post(id):
+    post = Post.query.get_or_404(id)
+    like = Like(post=post, user=current_user)
+    db.session.add(like)
+    return redirect(url_for('main.post', category=post.category.alias,
+                            id=post.id, alias=post.alias))
+
+
+@main.route('/likes/post/<int:id>/unlike')
+@login_required
+@permission_required(Permission.FOLLOW)
+def unlike_post(id):
+    post = Post.query.get_or_404(id)
+    like = Like.query.filter((Like.user == current_user) &
+                             (Like.post == post)).first_or_404()
+    db.session.delete(like)
+    return redirect(url_for('main.post', category=post.category.alias,
+                            id=post.id, alias=post.alias))
+
+@main.route('/likes/comment/<int:id>/like')
+@login_required
+@permission_required(Permission.FOLLOW)
+def like_comment(id):
+    comment = Comment.query.get_or_404(id)
+    like = Like(comment=comment, user=current_user)
+    db.session.add(like)
+    return redirect(url_for('main.post', category=comment.post.category.alias,
+                            id=comment.post.id, alias=comment.post.alias,
+                            page=request.args.get('page', 1, type=int),
+                            _anchor='comment{0}'.format(id)))
+
+
+@main.route('/likes/comment/<int:id>/unlike')
+@login_required
+@permission_required(Permission.FOLLOW)
+def unlike_comment(id):
+    comment = Comment.query.get_or_404(id)
+    like = Like.query.filter((Like.user == current_user) &
+                             (Like.comment == comment)).first_or_404()
+    db.session.delete(like)
+    return redirect(url_for('main.post', category=comment.post.category.alias,
+                            id=comment.post.id, alias=comment.post.alias,
+                            page=request.args.get('page', 1, type=int),
+                            _anchor='comment{0}'.format(id)))
 
 @main.route('/replies-to/bulk', methods=['POST'])
 @login_required

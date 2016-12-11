@@ -24,7 +24,7 @@ if os.path.exists('.hosting.env'):
 from app import create_app, db
 from app.models import User, Role, Permission, Follow, Post, Tag, \
     Comment, Tagification, Category, Structure, Upload, Follow, \
-    Message, MessageAck
+    Message, MessageAck, Like
 from flask_script import Manager, Shell
 from flask_migrate import Migrate, MigrateCommand
 
@@ -38,7 +38,7 @@ def make_shell_context():
                 Comment=Comment, Follow=Follow,
                 Tagification=Tagification, Category=Category,
                 Structure=Structure, Upload=Upload, Message=Message,
-                MessageAck=MessageAck)
+                MessageAck=MessageAck, Like=Like)
 manager.add_command("shell", Shell(make_context=make_shell_context))
 manager.add_command('db', MigrateCommand)
 
