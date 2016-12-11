@@ -9,7 +9,7 @@
 <ul class="ctrl-list">
   {% for comment in comments %}
   {% if moderate or not comment.screened %}
-    <li id="comment{{ comment.id }}" class="ctrl-item {% if not comment.read %}unread{% endif%}">
+    <li id="comment{{ comment.id }}" class="ctrl-item {% if not comment.read and comment.recipient == current_user %}unread{% endif%}">
         <div class="ctrl-item-thumbnail">
             <a href="{{ url_for('.user', username=comment.author.username) }}">
                 <img class="img-rounded profile-thumbnail" src="{{ comment.author.gravatar(size=40) }}">
