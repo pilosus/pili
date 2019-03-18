@@ -1,7 +1,7 @@
 alembic==1.0.8
 amqp==2.4.2
 anyjson==0.3.3
-billiard==3.6.0.0
+billiard==3.6.0
 bleach==3.1.0
 blinker==1.4
 celery==4.2.1
@@ -22,7 +22,7 @@ Flask-WTF==0.12
 html5lib==0.9999999
 itsdangerous==0.24
 Jinja2==2.8
-kombu==3.0.35
+kombu==4.4.0
 Mako==1.0.4
 Markdown==2.6.6
 MarkupSafe==0.23
