@@ -21,7 +21,7 @@ Flask-thumbnails==1.0.6
 Flask-WTF==0.14.2
 html5lib==1.0.1
 itsdangerous==1.1.0
-Jinja2==2.8
+Jinja2==2.10
 kombu==4.4.0
 Mako==1.0.4
 Markdown==2.6.6
