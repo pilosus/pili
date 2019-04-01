@@ -29,7 +29,7 @@ MarkupSafe==1.1.1
 Pillow==5.4.1
 python-editor==1.0.4
 pytz==2018.9
-six==1.10.0
+six==1.12.0
 SQLAlchemy==1.0.15
 Unidecode==0.4.19
 visitor==0.1.3
