@@ -18,7 +18,7 @@ Flask-PageDown==0.2.2
 Flask-Script==2.0.6
 Flask-SQLAlchemy==2.3.2
 Flask-thumbnails==1.0.6
-Flask-WTF==0.12
+Flask-WTF==0.14.2
 html5lib==0.9999999
 itsdangerous==0.24
 Jinja2==2.8
