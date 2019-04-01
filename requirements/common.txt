@@ -5,6 +5,7 @@ billiard==3.6.0
 bleach==3.1.0
 blinker==1.4
 celery==4.3.0
+redis==3.2.1
 click==7.0
 dominate==2.3.5
 Flask==1.0.2

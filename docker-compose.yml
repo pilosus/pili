@@ -10,13 +10,38 @@ services:
       POSTGRES_USER: pili
       POSTGRES_DB: pili
 
-  
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - 15672:15672
+      - 5672:5672
+
+  redis:
+    image: redis:5
+
+  celery:
+    image: pili:${PILI_VERSION:-latest}
+    command: celery worker -A celery_worker.celery --loglevel=info
+    links:
+      - rabbitmq
+      - redis
+
+    environment:
+      - DATABASE_URL=postgresql://pili:pili@db/pili
+      - SSL_DISABLE=1
+      - FLASK_CONFIG=unix
+      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672/
+      - CELERY_RESULT_BACKEND=redis://redis:6379/10
+      - SECRET_KEY=oos6upuJahG3Eerezo2Apha4CooPiex7
+
   pili:
     image: pili:${PILI_VERSION:-latest}
     build: .
     command: ./docker-entrypoint.sh
     links:
       - db
+      - celery
+      - redis
     ports:
       - 5000:5000
 
@@ -37,5 +62,9 @@ services:
       - ./manage.py:/app/manage.py
 
     environment:
-      - DEV_DATABASE_URL=postgresql://pili:pili@db/pili
-      - FLASK_CONFIG=development
+      - DATABASE_URL=postgresql://pili:pili@db/pili
+      - SSL_DISABLE=1
+      - FLASK_CONFIG=unix
+      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672/
+      - CELERY_RESULT_BACKEND=redis://redis:6379/10
+      - SECRET_KEY=oos6upuJahG3Eerezo2Apha4CooPiex7
