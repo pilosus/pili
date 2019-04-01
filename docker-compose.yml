@@ -1,0 +1,41 @@
+version: '3'
+services:
+
+  # Application Configuration
+  db:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: pili
+      POSTGRES_USER: pili
+      POSTGRES_DB: pili
+
+  
+  pili:
+    image: pili:${PILI_VERSION:-latest}
+    build: .
+    command: ./docker-entrypoint.sh
+    links:
+      - db
+    ports:
+      - 5000:5000
+
+    stdin_open: true
+    tty: true
+
+    logging:
+      driver: json-file
+      options:
+        max-size: 10k
+
+    volumes:
+      - ./app:/app/app
+      - ./etc:/app/etc
+      - ./tests:/app/tests
+      - ./setup.cfg:/app/setup.cfg
+      - ./setup.py:/app/setup.py
+      - ./manage.py:/app/manage.py
+
+    environment:
+      - DEV_DATABASE_URL=postgresql://pili:pili@db/pili
+      - FLASK_CONFIG=development
