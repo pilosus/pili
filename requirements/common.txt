@@ -17,7 +17,7 @@ Flask-Moment==0.7.0
 Flask-PageDown==0.2.2
 Flask-Script==2.0.6
 Flask-SQLAlchemy==2.3.2
-Flask-thumbnails==0.2.1
+Flask-thumbnails==1.0.6
 Flask-WTF==0.12
 html5lib==0.9999999
 itsdangerous==0.24
