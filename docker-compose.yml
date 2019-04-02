@@ -4,13 +4,8 @@ version: '3.7'
 x-pili-common: &pili-common
   image: pili:${PILI_VERSION:-latest}
   init: true
-  environment:
-    - DATABASE_URL=postgresql://pili:pili@db/pili
-    - SSL_DISABLE=1
-    - FLASK_CONFIG=unix
-    - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672/
-    - CELERY_RESULT_BACKEND=redis://redis:6379/10
-    - SECRET_KEY=oos6upuJahG3Eerezo2Apha4CooPiex7
+  env_file:
+    - ./etc/config/${PILI_CONFIG:-production}.env
 
 
 services:
@@ -51,7 +46,7 @@ services:
       - celery
       - redis
     ports:
-      - 5000:5000
+      - 8080:8080
 
     stdin_open: true
     tty: true
@@ -62,9 +57,9 @@ services:
         max-size: 10k
 
     volumes:
-      - ./pili:/pili/pili
-      - ./etc:/pili/etc
+      - ./pili:/app/pili
+      - ./etc:/app/etc
       - ./tests:/pili/tests
-      - ./setup.cfg:/pili/setup.cfg
-      - ./setup.py:/pili/setup.py
-      - ./manage.py:/pili/manage.py
+      - ./setup.cfg:/app/setup.cfg
+      - ./setup.py:/app/setup.py
+      - ./manage.py:/app/manage.py
