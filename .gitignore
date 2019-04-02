@@ -1,4 +1,5 @@
 *~
+.commit
 .idea
 *.env*
 tmp*

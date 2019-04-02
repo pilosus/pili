@@ -2,14 +2,16 @@ import re
 import threading
 import time
 import unittest
+
 from selenium import webdriver
-from app import create_app, db
-from app.models import Role, User, Post
+
+from pili import create_app, db
+from pili.models import Post, Role, User
 
 
 class SeleniumTestCase(unittest.TestCase):
     client = None
-    
+
     @classmethod
     def setUpClass(cls):
         # start Firefox
@@ -27,6 +29,7 @@ class SeleniumTestCase(unittest.TestCase):
 
             # suppress logging to keep unittest output clean
             import logging
+
             logger = logging.getLogger('werkzeug')
             logger.setLevel("ERROR")
 
@@ -37,10 +40,14 @@ class SeleniumTestCase(unittest.TestCase):
             Post.generate_fake(10)
 
             # add an administrator user
-            admin_role = Role.query.filter_by(permissions=0xff).first()
-            admin = User(email='john@example.com',
-                         username='john', password='cat',
-                         role=admin_role, confirmed=True)
+            admin_role = Role.query.filter_by(permissions=0xFF).first()
+            admin = User(
+                email='john@example.com',
+                username='john',
+                password='cat',
+                role=admin_role,
+                confirmed=True,
+            )
             db.session.add(admin)
             db.session.commit()
 
@@ -51,7 +58,7 @@ class SeleniumTestCase(unittest.TestCase):
             time.sleep(1)
 
             # wait until the page is loaded
-            #cls.client.implicitly_wait(10)
+            # cls.client.implicitly_wait(10)
 
     @classmethod
     def tearDownClass(cls):
@@ -73,26 +80,24 @@ class SeleniumTestCase(unittest.TestCase):
 
     def tearDown(self):
         pass
-    
+
     def test_admin_home_page(self):
         # navigate to home page
         self.client.get('http://localhost:5000/')
-        self.assertTrue(re.search('Hello,\s+Stranger!',
-                                  self.client.page_source))
+        self.assertTrue(re.search('Hello,\s+Stranger!', self.client.page_source))
 
         # wait to let the page being loaded
         time.sleep(1)
-        
+
         # navigate to login page
         self.client.find_element_by_link_text('Log In').click()
         self.assertTrue('<h1>Login</h1>' in self.client.page_source)
 
         # wait to let the page being loaded
         time.sleep(1)
-        
+
         # login
-        self.client.find_element_by_name('email').\
-            send_keys('john@example.com')
+        self.client.find_element_by_name('email').send_keys('john@example.com')
         self.client.find_element_by_name('password').send_keys('cat')
         self.client.find_element_by_name('submit').click()
         self.assertTrue(re.search('Hello,\s+john!', self.client.page_source))

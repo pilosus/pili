@@ -1,0 +1,65 @@
+version: '3.7'
+
+# Shared settings for app and celery workers
+x-pili-common: &pili-common
+  image: pili:${PILI_VERSION:-latest}
+  init: true
+  env_file:
+    - ./etc/config/${PILI_CONFIG:-production}.env
+
+
+services:
+  # Application Configuration
+  db:
+    image: postgres
+    init: true
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: pili
+      POSTGRES_USER: pili
+      POSTGRES_DB: pili
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    init: true
+    ports:
+      - 15672:15672
+      - 5672:5672
+
+  redis:
+    image: redis:5-alpine
+    init: true
+
+  celery:
+    <<: *pili-common
+    command: celery worker -A celery_worker.celery --loglevel=info
+    links:
+      - rabbitmq
+      - redis
+
+  pili:
+    <<: *pili-common
+    build: .
+    command: ./docker-entrypoint.sh
+    links:
+      - db
+      - celery
+      - redis
+    ports:
+      - 8080:8080
+
+    stdin_open: true
+    tty: true
+
+    logging:
+      driver: json-file
+      options:
+        max-size: 10k
+
+    volumes:
+      - ./pili:/app/pili
+      - ./etc:/app/etc
+      - ./tests:/pili/tests
+      - ./setup.cfg:/app/setup.cfg
+      - ./setup.py:/app/setup.py
+      - ./manage.py:/app/manage.py

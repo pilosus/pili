@@ -9,7 +9,7 @@ import os
 COV = None
 if os.environ.get('FLASK_COVERAGE'):
     import coverage
-    COV = coverage.coverage(branch=True, include='app/*')
+    COV = coverage.coverage(branch=True, include='pili/*')
     COV.start()
 
 # set environment variables
@@ -21,8 +21,8 @@ if os.path.exists('.hosting.env'):
         if len(var) == 2 and not var[0].startswith('#'):
             os.environ[var[0]] = var[1]
 
-from app import create_app, db
-from app.models import User, Role, Permission, Follow, Post, Tag, \
+from pili import create_app, db
+from pili.models import User, Role, Permission, Follow, Post, Tag, \
     Comment, Tagification, Category, Structure, Upload, Follow, \
     Message, MessageAck, Like
 from flask_script import Manager, Shell
@@ -84,7 +84,7 @@ def initialize():
 def deploy():
     """Run deployment tasks."""
     from flask_migrate import migrate, upgrade
-    from app.models import Role, User
+    from pili.models import Role, User
 
     # generate an initial migration
     migrate()
