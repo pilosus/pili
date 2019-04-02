@@ -1,24 +1,33 @@
-from flask import render_template, redirect, request, url_for, flash, \
-    current_app
-from flask_login import login_user, logout_user, login_required, \
-    current_user
+from flask import current_app, flash, redirect, render_template, request, url_for
+from flask_login import current_user, login_required, login_user, logout_user
+
 from . import auth
+from .forms import (
+    ChangeEmailForm,
+    ChangePasswordForm,
+    InviteAcceptForm,
+    InviteRequestForm,
+    LoginForm,
+    PasswordResetForm,
+    PasswordResetRequestForm,
+    RegistrationForm,
+)
 from .. import db
-from ..models import User, Post, Permission, Role
-from ..email import send_email
 from ..decorators import permission_required
+from ..email import send_email
 from ..filters import generate_password
-from .forms import LoginForm, RegistrationForm, ChangePasswordForm,\
-    PasswordResetRequestForm, PasswordResetForm, ChangeEmailForm,\
-    InviteRequestForm, InviteAcceptForm
+from ..models import Permission, Post, Role, User
+
 
 @auth.before_app_request
 def before_request():
     if current_user.is_authenticated:
         current_user.ping()
-        if not current_user.confirmed \
-                and request.endpoint[:5] != 'auth.' \
-                and request.endpoint != 'static':
+        if (
+            not current_user.confirmed
+            and request.endpoint[:5] != 'auth.'
+            and request.endpoint != 'static'
+        ):
             return redirect(url_for('auth.unconfirmed'))
 
 
@@ -39,8 +48,9 @@ def login():
             login_user(user, form.remember_me.data)
             return redirect(request.args.get('next') or url_for('main.index'))
         flash('Invalid username or password.', 'warning')
-    return render_template('auth/login.html', form=form,
-                           registration_open=registration_open)
+    return render_template(
+        'auth/login.html', form=form, registration_open=registration_open
+    )
 
 
 @auth.route('/logout')
@@ -54,18 +64,28 @@ def logout():
 @auth.route('/register', methods=['GET', 'POST'])
 def register():
     if current_app.config['PILI_REGISTRATION_OPEN'] is False:
-        flash('Registration for new users is by invitation only. Please contact administration.', 'info')
+        flash(
+            'Registration for new users is by invitation only. Please contact administration.',
+            'info',
+        )
         return redirect(url_for('main.index'))
     form = RegistrationForm()
     if form.validate_on_submit():
-        user = User(email=form.email.data,
-                    username=form.username.data,
-                    password=form.password.data)
+        user = User(
+            email=form.email.data,
+            username=form.username.data,
+            password=form.password.data,
+        )
         db.session.add(user)
         db.session.commit()
         token = user.generate_confirmation_token()
-        send_email(user.email, 'Confirm Your Account',
-                   'auth/email/confirm', user=user, token=token)
+        send_email(
+            user.email,
+            'Confirm Your Account',
+            'auth/email/confirm',
+            user=user,
+            token=token,
+        )
         flash('A confirmation email has been sent to you by email.', 'info')
         return redirect(url_for('auth.login'))
     return render_template('auth/register.html', form=form)
@@ -88,8 +108,13 @@ def confirm(token):
 @login_required
 def resend_confirmation():
     token = current_user.generate_confirmation_token()
-    send_email(current_user.email, 'Confirm Your Account',
-               'auth/email/confirm', user=current_user, token=token)
+    send_email(
+        current_user.email,
+        'Confirm Your Account',
+        'auth/email/confirm',
+        user=current_user,
+        token=token,
+    )
     flash('A new confirmation email has been sent to you by email.', 'info')
     return redirect(url_for('main.index'))
 
@@ -118,12 +143,19 @@ def password_reset_request():
         user = User.query.filter_by(email=form.email.data).first()
         if user:
             token = user.generate_reset_token()
-            send_email(user.email, 'Reset Your Password',
-                       'auth/email/reset_password',
-                       user=user, token=token,
-                       next=request.args.get('next'))
-            flash('An email with instructions to reset your password has been '
-                  'sent to you.', 'info')
+            send_email(
+                user.email,
+                'Reset Your Password',
+                'auth/email/reset_password',
+                user=user,
+                token=token,
+                next=request.args.get('next'),
+            )
+            flash(
+                'An email with instructions to reset your password has been '
+                'sent to you.',
+                'info',
+            )
         else:
             flash('No such email registered.', 'warning')
         return redirect(url_for('auth.login'))
@@ -146,6 +178,7 @@ def password_reset(token):
             return redirect(url_for('main.index'))
     return render_template('auth/reset_password.html', form=form)
 
+
 # TODO
 @auth.route('/invite', methods=['GET', 'POST'])
 @permission_required(Permission.ADMINISTER)
@@ -153,32 +186,44 @@ def invite_request():
     form = InviteRequestForm()
     if form.validate_on_submit():
         role = Role.query.get_or_404(form.role.data)
-        user = User(email=form.email.data,
-                    password=generate_password(10),
-                    invited=True,
-                    role=role)
+        user = User(
+            email=form.email.data,
+            password=generate_password(10),
+            invited=True,
+            role=role,
+        )
         db.session.add(user)
         db.session.commit()
         token = user.generate_invite_token()
-        send_email(user.email, 'Invitation to participate',
-                   'auth/email/invite', id=user.id, token=token)
+        send_email(
+            user.email,
+            'Invitation to participate',
+            'auth/email/invite',
+            id=user.id,
+            token=token,
+        )
         flash('An invitation has been sent by email.', 'info')
         return redirect(url_for('main.index'))
     # TODO
     page = request.args.get('page', 1, type=int)
     # find invited users, sort them so that unconfirmed comes first,
     # sort then all users by date
-    pagination = User.query.filter(User.invited == True).\
-                 order_by(User.confirmed.asc()).\
-                 order_by(User.member_since.desc()).paginate(
-                     page, per_page=current_app.config['PILI_USERS_PER_PAGE'],
-                     error_out=False)
+    pagination = (
+        User.query.filter(User.invited == True)
+        .order_by(User.confirmed.asc())
+        .order_by(User.member_since.desc())
+        .paginate(
+            page, per_page=current_app.config['PILI_USERS_PER_PAGE'], error_out=False
+        )
+    )
     users = pagination.items
-    return render_template('auth/invite_request.html', form=form,
-                           users=users, pagination=pagination)
+    return render_template(
+        'auth/invite_request.html', form=form, users=users, pagination=pagination
+    )
+
 
 @auth.route('/invite/<int:id>/<token>', methods=['GET', 'POST'])
-def invite_accept(id, token):   
+def invite_accept(id, token):
     if not current_user.is_anonymous:
         flash('Invites are for new users only.', 'warning')
         return redirect(url_for('main.index'))
@@ -189,13 +234,12 @@ def invite_accept(id, token):
         return redirect(url_for('main.index'))
     else:
         if user.confirmed:
-            flash('You have previously confirmed your account. Please log in.',
-                  'info')
+            flash('You have previously confirmed your account. Please log in.', 'info')
             return redirect(url_for('auth.login'))
     if form.validate_on_submit():
-        if user.accept_invite(token=token,
-                              username=form.username.data,
-                              new_password=form.password.data):
+        if user.accept_invite(
+            token=token, username=form.username.data, new_password=form.password.data
+        ):
             flash('You have confirmed your account. Thanks!', 'success')
         else:
             flash('The confirmation link is invalid or has expired.', 'warning')
@@ -212,11 +256,18 @@ def change_email_request():
         if current_user.verify_password(form.password.data):
             new_email = form.email.data
             token = current_user.generate_email_change_token(new_email)
-            send_email(new_email, 'Confirm your email address',
-                       'auth/email/change_email',
-                       user=current_user, token=token)
-            flash('An email with instructions to confirm your new email '
-                  'address has been sent to you.', 'info')
+            send_email(
+                new_email,
+                'Confirm your email address',
+                'auth/email/change_email',
+                user=current_user,
+                token=token,
+            )
+            flash(
+                'An email with instructions to confirm your new email '
+                'address has been sent to you.',
+                'info',
+            )
             return redirect(url_for('main.index'))
         else:
             flash('Invalid email or password.', 'warning')
@@ -232,13 +283,13 @@ def change_email(token):
         flash('Invalid request.', 'warning')
     return redirect(url_for('main.index'))
 
+
 @auth.route('/user/<username>')
 def user(username):
     user = User.query.filter_by(username=username).first_or_404()
     page = request.args.get('page', 1, type=int)
     pagination = user.posts.order_by(Post.timestamp.desc()).paginate(
-        page, per_page=current_app.config['PILI_POSTS_PER_PAGE'],
-        error_out=False)
+        page, per_page=current_app.config['PILI_POSTS_PER_PAGE'], error_out=False
+    )
     posts = pagination.items
-    return render_template('user.html', user=user, posts=posts,
-                           pagination=pagination)
+    return render_template('user.html', user=user, posts=posts, pagination=pagination)

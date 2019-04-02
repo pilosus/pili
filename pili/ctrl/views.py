@@ -1,44 +1,82 @@
-from flask import render_template, redirect, url_for, abort, flash, request,\
-    current_app, make_response, send_from_directory, jsonify
-from flask_login import login_required, current_user
-from flask_sqlalchemy import get_debug_queries
-from . import ctrl
-from .. import csrf
-from ..email import send_email
-from .forms import EditProfileForm, EditProfileAdminForm, PostForm, UploadForm, \
-    CategoryForm, EditCategoryForm, NotificationForm, CsrfTokenForm
-from .. import db
-from ..models import Permission, Role, User, Post, \
-    Comment, Tag, Tagification, Category, Upload, Message, MessageAck
-from ..decorators import admin_required, permission_required
-from ..filters import sanitize_alias, sanitize_tags, sanitize_upload, \
-    get_added_removed, is_allowed_file, find_thumbnail
-from werkzeug import secure_filename
-from datetime import datetime
 import os
+from datetime import datetime
+
+from flask import (
+    abort,
+    current_app,
+    flash,
+    jsonify,
+    make_response,
+    redirect,
+    render_template,
+    request,
+    send_from_directory,
+    url_for,
+)
+from flask_login import current_user, login_required
+from flask_sqlalchemy import get_debug_queries
+from werkzeug import secure_filename
+
+from . import ctrl
+from .forms import (
+    CategoryForm,
+    CsrfTokenForm,
+    EditCategoryForm,
+    EditProfileAdminForm,
+    EditProfileForm,
+    NotificationForm,
+    PostForm,
+    UploadForm,
+)
+from .. import csrf, db
+from ..decorators import admin_required, permission_required
+from ..email import send_email
+from ..filters import (
+    find_thumbnail,
+    get_added_removed,
+    is_allowed_file,
+    sanitize_alias,
+    sanitize_tags,
+    sanitize_upload,
+)
+from ..models import (
+    Category,
+    Comment,
+    Message,
+    MessageAck,
+    Permission,
+    Post,
+    Role,
+    Tag,
+    Tagification,
+    Upload,
+    User,
+)
+
 
 @ctrl.route('/', methods=['GET', 'POST'])
 @login_required
 def posts():
     csrf_form = CsrfTokenForm()
     form = PostForm()
-    if current_user.can(Permission.WRITE) and \
-       form.validate_on_submit():
+    if current_user.can(Permission.WRITE) and form.validate_on_submit():
         ## add post
         upload = Upload.query.filter_by(filename=form.image.data).first()
         category = Category.query.filter_by(id=form.category.data).first()
-        post = Post(title=form.title.data,
-                    alias=sanitize_alias(form.alias.data),
-                    timestamp=form.timestamp.data,
-                    body=form.body.data,
-                    description=form.description.data,
-                    author=current_user._get_current_object(),
-                    image=upload,
-                    featured=form.featured.data,
-                    commenting=form.commenting.data,
-                    category=category)
+        post = Post(
+            title=form.title.data,
+            alias=sanitize_alias(form.alias.data),
+            timestamp=form.timestamp.data,
+            body=form.body.data,
+            description=form.description.data,
+            author=current_user._get_current_object(),
+            image=upload,
+            featured=form.featured.data,
+            commenting=form.commenting.data,
+            category=category,
+        )
         db.session.add(post)
-        
+
         ## add tags
         tags = sanitize_tags(form.tags.data)
         if tags:
@@ -51,11 +89,12 @@ def posts():
                 if not tag:
                     tag = Tag(title=tag_title, alias=tag_alias)
                     db.session.add(tag)
-                
+
                 # flush session to obtain post.id and tag.id
                 db.session.flush()
-                tagification = Tagification.query.filter_by\
-                               (tag_id=tag.id, post_id=post.id).first()
+                tagification = Tagification.query.filter_by(
+                    tag_id=tag.id, post_id=post.id
+                ).first()
                 # add entry to M-to-M posts-tags table
                 if not tagification:
                     cl = Tagification(tag_id=tag.id, post_id=post.id)
@@ -65,15 +104,20 @@ def posts():
         return redirect(url_for('.posts'))
     page = request.args.get('page', 1, type=int)
     pagination = Post.query.order_by(Post.timestamp.desc()).paginate(
-        page, per_page=current_app.config['PILI_POSTS_PER_PAGE'],
-        error_out=False)
+        page, per_page=current_app.config['PILI_POSTS_PER_PAGE'], error_out=False
+    )
     posts = pagination.items
     body_truncate = current_app.config['PILI_BODY_TRUNCATE']
-    return render_template('ctrl/posts.html', csrf_form=csrf_form,
-                           form=form, posts=posts,
-                           body_truncate=body_truncate,
-                           datetimepicker=datetime.utcnow(),
-                           pagination=pagination)
+    return render_template(
+        'ctrl/posts.html',
+        csrf_form=csrf_form,
+        form=form,
+        posts=posts,
+        body_truncate=body_truncate,
+        datetimepicker=datetime.utcnow(),
+        pagination=pagination,
+    )
+
 
 # TODO: rewrite as API function
 @ctrl.route('/remove-post', methods=['POST'])
@@ -82,67 +126,70 @@ def remove_post():
         id = request.json['id']
         csrf = request.json['csrf']
     except (KeyError, TypeError):
-        return jsonify({
-            'status': 'error',
-            'message': 'Function takes two parameters: '
-                       'id of the entry to be removed; csrf token',
-        })
-        
+        return jsonify(
+            {
+                'status': 'error',
+                'message': 'Function takes two parameters: '
+                'id of the entry to be removed; csrf token',
+            }
+        )
+
     post = Post.query.get_or_404(id)
     # check permissions
-    if current_user != post.author and \
-       not (current_user.has_role('Administrator') or \
-            current_user.has_role('Editor')):
+    if current_user != post.author and not (
+        current_user.has_role('Administrator') or current_user.has_role('Editor')
+    ):
         abort(403)
     # remove tags
-    # TODO rewrite as 'after_flush' listener, it's much more memory effective 
+    # TODO rewrite as 'after_flush' listener, it's much more memory effective
     if post.tags.count():
         tags = post.tags.all()
         for t in tags:
-            # remove entries from M2M tagification table 
-            Tagification.query.filter_by(tag_id=t.id, post_id=post.id).\
-                delete(synchronize_session='fetch')
+            # remove entries from M2M tagification table
+            Tagification.query.filter_by(tag_id=t.id, post_id=post.id).delete(
+                synchronize_session='fetch'
+            )
             # if the tag is not in use in other post(s), remove it
-            in_other_posts = Tagification.query.\
-                             filter(Tagification.tag_id == t.id,
-                                    Tagification.post_id != post.id).count()
+            in_other_posts = Tagification.query.filter(
+                Tagification.tag_id == t.id, Tagification.post_id != post.id
+            ).count()
             if not in_other_posts:
                 db.session.delete(t)
 
     # remove comments
     for c in post.comments.all():
         db.session.delete(c)
-    
+
     status = 'success'
-    message = "Post '{0}', associated tags and comments have been removed".\
-              format(post.title)
+    message = "Post '{0}', associated tags and comments have been removed".format(
+        post.title
+    )
     db.session.delete(post)
-    return jsonify({
-        'status': status,
-        'message': message,
-    })
+    return jsonify({'status': status, 'message': message})
+
 
 @ctrl.route('/tag/<alias>')
 def tag(alias):
     tag = Tag.query.filter_by(alias=alias).first_or_404()
     page = request.args.get('page', 1, type=int)
     pagination = tag.posts.query.order_by(Post.timestamp.desc()).paginate(
-        page, per_page=current_app.config['PILI_POSTS_PER_PAGE'],
-        error_out=False)    
+        page, per_page=current_app.config['PILI_POSTS_PER_PAGE'], error_out=False
+    )
     posts = pagination.items
-    return render_template('tag.html', tag=tag,
-                           pagination=pagination, posts=posts)
+    return render_template('tag.html', tag=tag, pagination=pagination, posts=posts)
+
 
 @ctrl.route('/user/<username>')
 def user(username):
     user = User.query.filter_by(username=username).first_or_404()
     page = request.args.get('page', 1, type=int)
     pagination = user.posts.order_by(Post.timestamp.desc()).paginate(
-        page, per_page=current_app.config['PILI_POSTS_PER_PAGE'],
-        error_out=False)
+        page, per_page=current_app.config['PILI_POSTS_PER_PAGE'], error_out=False
+    )
     posts = pagination.items
-    return render_template('main/user.html', user=user, posts=posts,
-                           pagination=pagination)
+    return render_template(
+        'main/user.html', user=user, posts=posts, pagination=pagination
+    )
 
 
 @ctrl.route('/edit-profile', methods=['GET', 'POST'])
@@ -188,6 +235,7 @@ def edit_profile_admin(id):
     form.about_me.data = user.about_me
     return render_template('ctrl/edit_profile.html', form=form, user=user)
 
+
 @ctrl.route('/edit-post/<int:id>/<alias>', methods=['GET', 'POST'])
 @login_required
 def edit_post(id, alias):
@@ -199,9 +247,9 @@ def edit_post(id, alias):
     - Administrator (role)
     """
     post = Post.query.get_or_404(id)
-    if current_user != post.author and \
-            not (current_user.has_role('Administrator') or \
-                 current_user.has_role('Editor')):
+    if current_user != post.author and not (
+        current_user.has_role('Administrator') or current_user.has_role('Editor')
+    ):
         abort(403)
     form = PostForm()
     if form.validate_on_submit():
@@ -222,18 +270,14 @@ def edit_post(id, alias):
 
         ### update tags
         new_tags = sanitize_tags(form.tags.data)
-        old_tags = sanitize_tags(
-            ', '.join([c.title for c in post.tags.all()]))
-        added_tag_titles, removed_tag_titles = get_added_removed(
-            new_tags,
-            old_tags)
+        old_tags = sanitize_tags(', '.join([c.title for c in post.tags.all()]))
+        added_tag_titles, removed_tag_titles = get_added_removed(new_tags, old_tags)
         ## add new tags
         added_tag_aliases = [sanitize_alias(c) for c in added_tag_titles]
         for c in zip(added_tag_titles, added_tag_aliases):
             tag_title = c[0]
             tag_alias = c[1]
-            tag = Tag.query.filter(Tag.alias == \
-                                             tag_alias).first()
+            tag = Tag.query.filter(Tag.alias == tag_alias).first()
             # if tag doesn't exist in the db, add it
             if not tag:
                 tag = Tag(title=c[0], alias=c[1])
@@ -245,33 +289,34 @@ def edit_post(id, alias):
 
             cl = Tagification(tag_id=tag.id, post_id=id)
             db.session.add(cl)
-        
+
         ### remove obsolete tags
         removed_tag_aliases = [sanitize_alias(c) for c in removed_tag_titles]
 
-        
         for c in zip(removed_tag_titles, removed_tag_aliases):
             tag_title = c[0]
             tag_alias = c[1]
-            tag = Tag.query.filter(Tag.alias == \
-                                             tag_alias).first()
+            tag = Tag.query.filter(Tag.alias == tag_alias).first()
 
             ## remove relations
-            old_cl = Tagification.query.filter(Tagification.tag_id == \
-                                                 tag.id, \
-                                                 Tagification.post_id == id).first()
+            old_cl = Tagification.query.filter(
+                Tagification.tag_id == tag.id, Tagification.post_id == id
+            ).first()
             db.session.delete(old_cl)
 
             ## remove tag, if it's not used in other posts
-            other_cl = Tagification.query.filter(Tagification.tag_id == \
-                                                   tag.id, \
-                                                   Tagification.post_id != id).first()
+            other_cl = Tagification.query.filter(
+                Tagification.tag_id == tag.id, Tagification.post_id != id
+            ).first()
             if not other_cl:
                 db.session.delete(tag)
-        
+
         flash('The post has been updated.', 'success')
-        return redirect(url_for('main.post', category=post.category.alias,
-                                id=post.id, alias=post.alias))
+        return redirect(
+            url_for(
+                'main.post', category=post.category.alias, id=post.id, alias=post.alias
+            )
+        )
     form.title.data = post.title
     form.alias.data = post.alias
     form.timestamp.data = post.timestamp
@@ -279,13 +324,15 @@ def edit_post(id, alias):
     form.body.data = post.body
     if post.image:
         form.image.data = post.image.filename
-    
+
     form.featured.data = post.featured
     form.commenting.data = post.commenting
     form.category.data = post.category
-    form.tags.data =', '.join([c.title for c in post.tags.all()])
-    return render_template('ctrl/edit_post.html', form=form,
-                           datetimepicker=datetime.utcnow())
+    form.tags.data = ', '.join([c.title for c in post.tags.all()])
+    return render_template(
+        'ctrl/edit_post.html', form=form, datetimepicker=datetime.utcnow()
+    )
+
 
 @ctrl.route('/edit-category/<alias>', methods=['GET', 'POST'])
 @login_required
@@ -294,7 +341,7 @@ def edit_category(alias):
     """Edit an existing category.
     """
     category = Category.query.filter_by(alias=alias).first_or_404()
-    
+
     form = EditCategoryForm()
     if form.validate_on_submit():
         upload = Upload.query.filter_by(filename=form.image.data).first()
@@ -307,8 +354,10 @@ def edit_category(alias):
         category.timestamp = form.timestamp.data
 
         db.session.add(category)
-        flash("Category '{0}' has been successfully updated.".\
-              format(category.title), 'success')
+        flash(
+            "Category '{0}' has been successfully updated.".format(category.title),
+            'success',
+        )
         return redirect(url_for('main.category', alias=category.alias))
     # Render prefilled form
     form.title.data = category.title
@@ -320,8 +369,9 @@ def edit_category(alias):
     form.featured.data = category.featured
     form.timestamp.data = category.timestamp
 
-    return render_template('ctrl/edit_category.html', form=form,
-                           datetimepicker=datetime.utcnow())
+    return render_template(
+        'ctrl/edit_category.html', form=form, datetimepicker=datetime.utcnow()
+    )
 
 
 # TODO
@@ -336,13 +386,18 @@ def edit_notification(id):
         notification.body = form.body.data
         notification.author_id = current_user._get_current_object().id
         db.session.add(notification)
-        flash("Notification '{0}' has been successfully updated.".\
-              format(notification.title), 'success')
+        flash(
+            "Notification '{0}' has been successfully updated.".format(
+                notification.title
+            ),
+            'success',
+        )
         return redirect(url_for('main.notification', id=notification.id))
     # Render prefilled form
     form.title.data = notification.title
     form.body.data = notification.body
     return render_template('ctrl/edit_notification.html', form=form)
+
 
 # TODO
 @ctrl.route('/remove-notification/<int:id>', methods=['GET', 'POST'])
@@ -353,9 +408,14 @@ def remove_notification(id):
     for ack in message.acks:
         db.session.delete(ack)
     db.session.delete(message)
-    flash("Message '{0}' and its associated notifications have been successfully removed.".\
-          format(message.title), 'success')
+    flash(
+        "Message '{0}' and its associated notifications have been successfully removed.".format(
+            message.title
+        ),
+        'success',
+    )
     return redirect(url_for('ctrl.notify'))
+
 
 # TODO
 @ctrl.route('/notification/<int:id>', methods=['GET', 'POST'])
@@ -364,6 +424,7 @@ def remove_notification(id):
 def notification(id):
     message = Message.query.get_or_404(id)
     return render_template('ctrl/notification.html', messages=[message])
+
 
 @ctrl.route('/shutdown')
 def server_shutdown():
@@ -375,14 +436,17 @@ def server_shutdown():
     shutdown()
     return 'Shutting down...'
 
+
 @ctrl.after_app_request
 def after_request(response):
     for query in get_debug_queries():
         if query.duration >= current_app.config['PILI_SLOW_DB_QUERY_TIME']:
-            current_app.logger.warning('Slow query: %s\nParameters: %s\nDuration: %fs\nContext: %s\n' \
-                                       % (query.statement, query.parameters, query.duration,
-                                          query.context))
+            current_app.logger.warning(
+                'Slow query: %s\nParameters: %s\nDuration: %fs\nContext: %s\n'
+                % (query.statement, query.parameters, query.duration, query.context)
+            )
     return response
+
 
 @ctrl.route('/categories', methods=['GET', 'POST'])
 @permission_required(Permission.STRUCTURE)
@@ -394,30 +458,36 @@ def categories():
     # create new category
     if form.validate_on_submit():
         upload = Upload.query.filter_by(filename=form.image.data).first()
-        category = Category(author=current_user._get_current_object(),
-                            title=form.title.data,
-                            alias=sanitize_alias(form.alias.data),
-                            body=form.body.data,
-                            image=upload,
-                            featured=form.featured.data,
-                            timestamp=form.timestamp.data)
+        category = Category(
+            author=current_user._get_current_object(),
+            title=form.title.data,
+            alias=sanitize_alias(form.alias.data),
+            body=form.body.data,
+            image=upload,
+            featured=form.featured.data,
+            timestamp=form.timestamp.data,
+        )
         db.session.add(category)
         flash("Category has been successfully created.", 'success')
         return redirect(url_for('ctrl.categories'))
-    
+
     # Render list of categories with pagination
     page = request.args.get('page', 1, type=int)
     pagination = Category.query.order_by(Category.timestamp.desc()).paginate(
-        page, per_page=current_app.config['PILI_POSTS_PER_PAGE'],
-        error_out=False)
+        page, per_page=current_app.config['PILI_POSTS_PER_PAGE'], error_out=False
+    )
     categories = pagination.items
     body_truncate = current_app.config['PILI_BODY_TRUNCATE']
-    return render_template('ctrl/categories.html', form=form,
-                           csrf_form=csrf_form,
-                           body_truncate=body_truncate,
-                           categories=categories,
-                           datetimepicker=datetime.utcnow(),
-                           pagination=pagination)
+    return render_template(
+        'ctrl/categories.html',
+        form=form,
+        csrf_form=csrf_form,
+        body_truncate=body_truncate,
+        categories=categories,
+        datetimepicker=datetime.utcnow(),
+        pagination=pagination,
+    )
+
 
 @ctrl.route('/remove-category', methods=['POST'])
 @permission_required(Permission.ADMINISTER)
@@ -426,30 +496,31 @@ def remove_category():
         id = request.json['id']
         csrf = request.json['csrf']
     except (KeyError, TypeError):
-        return jsonify({
-            'status': 'error',
-            'message': 'Function takes two parameters: '
-                       'id of the entry to be removed; csrf token',
-        })
-        
+        return jsonify(
+            {
+                'status': 'error',
+                'message': 'Function takes two parameters: '
+                'id of the entry to be removed; csrf token',
+            }
+        )
+
     category = Category.query.get_or_404(id)
     if category.posts.count():
         status = 'warning'
-        message = "Category '{0}' is not empty and cannot be removed".\
-                  format(category.title)
+        message = "Category '{0}' is not empty and cannot be removed".format(
+            category.title
+        )
     else:
         status = 'success'
-        message = "Category '{0}' has been removed".\
-                  format(category.title)
+        message = "Category '{0}' has been removed".format(category.title)
         db.session.delete(category)
-    return jsonify({
-        'status': status,
-        'message': message,
-    })
+    return jsonify({'status': status, 'message': message})
+
 
 @ctrl.route('/structure')
 def structure():
     pass
+
 
 @ctrl.route('/uploads', methods=['GET', 'POST'])
 @permission_required(Permission.UPLOAD)
@@ -461,21 +532,27 @@ def uploads():
         filename = secure_filename(form.image.data.filename)
         form.image.data.save(os.path.join(current_app.config['PILI_UPLOADS'], filename))
         # DB
-        upload = Upload(filename=filename, title=form.title.data,
-                      owner=current_user._get_current_object())
+        upload = Upload(
+            filename=filename,
+            title=form.title.data,
+            owner=current_user._get_current_object(),
+        )
         db.session.add(upload)
-        flash("File '{0}' has been successfully uploaded.".format(filename),
-              'success')
+        flash("File '{0}' has been successfully uploaded.".format(filename), 'success')
         return redirect(url_for('.uploads'))
     # Render template with pagination
     page = request.args.get('page', 1, type=int)
     pagination = Upload.query.order_by(Upload.timestamp.desc()).paginate(
-        page, per_page=current_app.config['PILI_IMAGES_PER_PAGE'],
-        error_out=False)
+        page, per_page=current_app.config['PILI_IMAGES_PER_PAGE'], error_out=False
+    )
     images = pagination.items
-    return render_template('ctrl/uploads.html', form=form,
-                           csrf_form=csrf_form,
-                           images=images, pagination=pagination)
+    return render_template(
+        'ctrl/uploads.html',
+        form=form,
+        csrf_form=csrf_form,
+        images=images,
+        pagination=pagination,
+    )
 
 
 @ctrl.route('/remove-upload', methods=['POST'])
@@ -485,12 +562,14 @@ def remove_upload():
         filename = request.json['filename']
         csrf = request.json['csrf']
     except (KeyError, TypeError):
-        return jsonify({
-            'status': 'danger',
-            'message': 'Function takes two parameters: '
-                       'filename to be removed; csrf token',
-        })
-    
+        return jsonify(
+            {
+                'status': 'danger',
+                'message': 'Function takes two parameters: '
+                'filename to be removed; csrf token',
+            }
+        )
+
     upload = Upload.query.filter_by(filename=filename).first_or_404()
     # Upload exists
     if upload:
@@ -513,16 +592,18 @@ def remove_upload():
             # Remove thumbnails if any
             for thumb in os.listdir(current_app.config['MEDIA_THUMBNAIL_FOLDER']):
                 if thumb.startswith(find_thumbnail(filename)):
-                    os.remove(os.path.join(current_app.config['MEDIA_THUMBNAIL_FOLDER'], thumb))
-            status = "success"                
+                    os.remove(
+                        os.path.join(
+                            current_app.config['MEDIA_THUMBNAIL_FOLDER'], thumb
+                        )
+                    )
+            status = "success"
             message = "File '{0}' has been removed.".format(filename)
     else:
-        status = "danger"        
+        status = "danger"
         message = "File '{0}' not found.".format(filename)
-    return jsonify({
-        'status': status,
-        'message': message,
-    })
+    return jsonify({'status': status, 'message': message})
+
 
 @ctrl.route('/view-upload/<filename>', methods=['GET', 'POST'])
 def view_upload(filename):
@@ -536,12 +617,16 @@ def comments():
     csrf_form = CsrfTokenForm()
     page = request.args.get('page', 1, type=int)
     pagination = Comment.query.order_by(Comment.timestamp.desc()).paginate(
-        page, per_page=current_app.config['PILI_COMMENTS_PER_PAGE'],
-        error_out=False)
+        page, per_page=current_app.config['PILI_COMMENTS_PER_PAGE'], error_out=False
+    )
     comments = pagination.items
-    return render_template('ctrl/comments.html', comments=comments,
-                           csrf_form=csrf_form,
-                           pagination=pagination, page=page)
+    return render_template(
+        'ctrl/comments.html',
+        comments=comments,
+        csrf_form=csrf_form,
+        pagination=pagination,
+        page=page,
+    )
 
 
 @ctrl.route('/comments/enable/<int:id>')
@@ -551,9 +636,13 @@ def comments_enable(id):
     comment = Comment.query.get_or_404(id)
     comment.disabled = False
     db.session.add(comment)
-    return redirect(url_for('.comments',
-                            page=request.args.get('page', 1, type=int),
-                            _anchor='comment{0}'.format(id)))
+    return redirect(
+        url_for(
+            '.comments',
+            page=request.args.get('page', 1, type=int),
+            _anchor='comment{0}'.format(id),
+        )
+    )
 
 
 @ctrl.route('/comments/disable/<int:id>')
@@ -563,9 +652,14 @@ def comments_disable(id):
     comment = Comment.query.get_or_404(id)
     comment.disabled = True
     db.session.add(comment)
-    return redirect(url_for('.comments',
-                            page=request.args.get('page', 1, type=int),
-                            _anchor='comment{0}'.format(id)))
+    return redirect(
+        url_for(
+            '.comments',
+            page=request.args.get('page', 1, type=int),
+            _anchor='comment{0}'.format(id),
+        )
+    )
+
 
 @ctrl.route('/comments/unscreen/<int:id>')
 @login_required
@@ -574,9 +668,13 @@ def comments_unscreen(id):
     comment = Comment.query.get_or_404(id)
     comment.screened = False
     db.session.add(comment)
-    return redirect(url_for('.comments',
-                            page=request.args.get('page', 1, type=int),
-                            _anchor='comment{0}'.format(id)))
+    return redirect(
+        url_for(
+            '.comments',
+            page=request.args.get('page', 1, type=int),
+            _anchor='comment{0}'.format(id),
+        )
+    )
 
 
 @ctrl.route('/comments/screen/<int:id>')
@@ -586,9 +684,14 @@ def comments_screen(id):
     comment = Comment.query.get_or_404(id)
     comment.screened = True
     db.session.add(comment)
-    return redirect(url_for('.comments',
-                            page=request.args.get('page', 1, type=int),
-                            _anchor='comment{0}'.format(id)))
+    return redirect(
+        url_for(
+            '.comments',
+            page=request.args.get('page', 1, type=int),
+            _anchor='comment{0}'.format(id),
+        )
+    )
+
 
 @ctrl.route('/remove-comment', methods=['POST'])
 @login_required
@@ -598,12 +701,14 @@ def remove_comment():
         id = request.json['id']
         csrf = request.json['csrf']
     except (KeyError, TypeError):
-        return jsonify({
-            'status': 'error',
-            'message': 'Function takes two parameters: '
-                       'id of the entry to be removed; csrf token',
-        })
-        
+        return jsonify(
+            {
+                'status': 'error',
+                'message': 'Function takes two parameters: '
+                'id of the entry to be removed; csrf token',
+            }
+        )
+
     comment = Comment.query.get_or_404(id)
     # find all replies
     descendants = []
@@ -617,19 +722,18 @@ def remove_comment():
 
     comments = comments.rstrip(', ')
     if comments:
-        message = 'Comment {0} as well as replies: #{1} have been removed.'.\
-                  format(comment.id, comments)
+        message = 'Comment {0} as well as replies: #{1} have been removed.'.format(
+            comment.id, comments
+        )
     else:
         message = 'Comment {0} has been removed.'.format(comment.id)
 
     # remove comment itself
     db.session.delete(comment)
-    
+
     status = 'success'
-    return jsonify({
-        'status': status,
-        'message': message,
-    })
+    return jsonify({'status': status, 'message': message})
+
 
 @ctrl.route('/comments/bulk', methods=['POST'])
 @login_required
@@ -638,11 +742,13 @@ def comments_bulk():
     def comments_action(comments, action):
         if action == 'remove':
             return remove(comments)
-        
-        msg = {'enable': 'enabled',
-               'disable': 'disabled',
-               'screen': 'screened',
-               'unscreen': 'unscreened'}
+
+        msg = {
+            'enable': 'enabled',
+            'disable': 'disabled',
+            'screen': 'screened',
+            'unscreen': 'unscreened',
+        }
         message = ''
         count = 0
         for id in comments:
@@ -658,14 +764,16 @@ def comments_bulk():
             db.session.add(comment)
             message += str(id) + ', '
             count += 1
-            
+
         message = message.rstrip(', ')
         if count > 1:
-            message = 'Comments {message} have been {action}.'.\
-                      format(message=message, action=msg[action])
+            message = 'Comments {message} have been {action}.'.format(
+                message=message, action=msg[action]
+            )
         else:
-            message = 'Comment {message} has been {action}.'.\
-                      format(message=message, action=msg[action])
+            message = 'Comment {message} has been {action}.'.format(
+                message=message, action=msg[action]
+            )
         return message
 
     def remove(comments):
@@ -679,7 +787,7 @@ def comments_bulk():
                 all_comments.add(comment)
                 # add all its descendants (replies) to a set
                 Comment.dfs(comment, lambda x: all_comments.add(x))
-                
+
             except:
                 continue
         # remove comments and all the replies to them
@@ -690,31 +798,29 @@ def comments_bulk():
 
         message = message.rstrip(', ')
         if count > 1:
-            message = 'Comments {message} have been removed.'.\
-                      format(message=message)
+            message = 'Comments {message} have been removed.'.format(message=message)
         else:
-            message = 'Comment {message} has been removed.'.\
-                      format(message=message)
+            message = 'Comment {message} has been removed.'.format(message=message)
 
         return message
-        
+
     try:
         csrf = request.json['csrf']
         comments = list(map(lambda x: int(x), request.json['comments']))
         action = request.json['action']
     except (KeyError, TypeError):
-        return jsonify({
-            'status': 'error',
-            'message': 'Function takes three parameters: '
-                       'list of comments to be processed; csrf token; action',
-        })
+        return jsonify(
+            {
+                'status': 'error',
+                'message': 'Function takes three parameters: '
+                'list of comments to be processed; csrf token; action',
+            }
+        )
 
     message = comments_action(comments, action)
-    
-    return jsonify({
-            'status': 'success',
-            'message': message
-    })
+
+    return jsonify({'status': 'success', 'message': message})
+
 
 @ctrl.route('/users', methods=['GET', 'POST'])
 @login_required
@@ -722,13 +828,22 @@ def comments_bulk():
 def users():
     csrf_form = CsrfTokenForm()
     page = request.args.get('page', 1, type=int)
-    pagination = User.query.order_by(User.confirmed).order_by(User.member_since.desc()).paginate(
-        page, per_page=current_app.config['PILI_USERS_PER_PAGE'],
-        error_out=False)
+    pagination = (
+        User.query.order_by(User.confirmed)
+        .order_by(User.member_since.desc())
+        .paginate(
+            page, per_page=current_app.config['PILI_USERS_PER_PAGE'], error_out=False
+        )
+    )
     users = pagination.items
-    return render_template('ctrl/users.html', users=users,
-                           csrf_form=csrf_form,
-                           pagination=pagination, page=page)
+    return render_template(
+        'ctrl/users.html',
+        users=users,
+        csrf_form=csrf_form,
+        pagination=pagination,
+        page=page,
+    )
+
 
 @ctrl.route('/users/bulk', methods=['POST'])
 @login_required
@@ -746,8 +861,9 @@ def users_bulk():
             message += str(user.id) + ', '
         message = message.rstrip(', ')
         if message:
-            message = 'Users id#: {message} have been marked as suspended.'.\
-                      format(message=message)
+            message = 'Users id#: {message} have been marked as suspended.'.format(
+                message=message
+            )
             status = 'success'
         else:
             message = 'Nothing to suspend.'
@@ -776,7 +892,7 @@ def users_bulk():
                 Ops.remove_comment(reply)
 
             # reassign ownership of uploaded files to admin
-            admin_role = Role.query.filter_by(permissions=0xff).first()
+            admin_role = Role.query.filter_by(permissions=0xFF).first()
             admin = User.query.filter(User.role == admin_role).first()
             for image in user.images:
                 Ops.image_change_owner(image, admin)
@@ -798,17 +914,19 @@ def users_bulk():
             message = 'Nothing to remove.'
             status = 'warning'
         return status, message
-    
+
     try:
         csrf = request.json['csrf']
         users = list(map(lambda x: int(x), request.json['users']))
         action = request.json['action']
     except (KeyError, TypeError):
-        return jsonify({
-            'status': 'error',
-            'message': 'Function takes three parameters: '
-                       'list of users to be processed; csrf token; action',
-        })
+        return jsonify(
+            {
+                'status': 'error',
+                'message': 'Function takes three parameters: '
+                'list of users to be processed; csrf token; action',
+            }
+        )
 
     if action == 'suspend':
         status, message = suspend(users)
@@ -816,10 +934,8 @@ def users_bulk():
         status, message = remove(users)
     else:
         status, message = (None, None)
-    return jsonify({
-            'status': status,
-            'message': message
-    })
+    return jsonify({'status': status, 'message': message})
+
 
 @ctrl.route('/notify', methods=['GET', 'POST'])
 def notify():
@@ -835,12 +951,14 @@ def notify():
         else:
             recipients = User.query.filter(User.role_id == group_id).all()
         # create a message
-        message = Message(title=form.title.data,
-                          body=form.body.data,
-                          author_id=current_user._get_current_object().id)
+        message = Message(
+            title=form.title.data,
+            body=form.body.data,
+            author_id=current_user._get_current_object().id,
+        )
         db.session.add(message)
         db.session.flush()
-        
+
         # create entries for each recipient
         flash_msg = ""
         for r in recipients:
@@ -850,35 +968,43 @@ def notify():
             # if message should be sent as an email too
             ### TODO
             if as_email:
-                send_email(to=r.email, subject=message.title,
-                           template='ctrl/email/notification',
-                           recipient=r, message=message)
+                send_email(
+                    to=r.email,
+                    subject=message.title,
+                    template='ctrl/email/notification',
+                    recipient=r,
+                    message=message,
+                )
         flash_msg = flash_msg.rstrip(', ')
         flash("Notifications to users: {0} queued.".format(flash_msg), 'success')
         return redirect(url_for('.notify'))
     # TODO
     # render list of messages sent
-    
+
     # Render template with pagination
     page = request.args.get('page', 1, type=int)
     pagination = Message.query.order_by(Message.timestamp.desc()).paginate(
-        page, per_page=current_app.config['PILI_POSTS_PER_PAGE'],
-        error_out=False)
-    messages = pagination.items
-    return render_template('ctrl/notify.html', form=form,
-                           csrf_form=csrf_form,
-                           messages=messages, pagination=pagination
+        page, per_page=current_app.config['PILI_POSTS_PER_PAGE'], error_out=False
     )
-
+    messages = pagination.items
+    return render_template(
+        'ctrl/notify.html',
+        form=form,
+        csrf_form=csrf_form,
+        messages=messages,
+        pagination=pagination,
+    )
 
 
 @ctrl.route('/logs')
 def logs():
     return render_template('ctrl/logs.html')
 
+
 @ctrl.route('/test')
 def test():
     return render_template('ctrl/test.html')
+
 
 class Ops:
     @staticmethod
@@ -886,21 +1012,22 @@ class Ops:
         """Return True if post with is deleted.
         """
         # check permissions
-        if current_user != post.author and \
-           not (current_user.has_role('Administrator') or \
-                current_user.has_role('Editor')):
+        if current_user != post.author and not (
+            current_user.has_role('Administrator') or current_user.has_role('Editor')
+        ):
             abort(403)
         # remove tags
         if post.tags.count():
             tags = post.tags.all()
             for t in tags:
-                # remove entries from M2M tagification table 
-                Tagification.query.filter_by(tag_id=t.id, post_id=post.id).\
-                    delete(synchronize_session='fetch')
+                # remove entries from M2M tagification table
+                Tagification.query.filter_by(tag_id=t.id, post_id=post.id).delete(
+                    synchronize_session='fetch'
+                )
                 # if the tag is not in use in other post(s), remove it
-                in_other_posts = Tagification.query.\
-                                 filter(Tagification.tag_id == t.id,
-                                        Tagification.post_id != post.id).count()
+                in_other_posts = Tagification.query.filter(
+                    Tagification.tag_id == t.id, Tagification.post_id != post.id
+                ).count()
                 if not in_other_posts:
                     db.session.delete(t)
 
@@ -943,4 +1070,4 @@ class Ops:
     def tag_change_owner(tag, admin):
         tag.author = user
         db.session.add(tag)
-        return True        
+        return True

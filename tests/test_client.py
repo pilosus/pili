@@ -1,8 +1,11 @@
 import re
 import unittest
+
 from flask import url_for
+
 from pili import create_app, db
-from pili.models import User, Role
+from pili.models import Role, User
+
 
 class FlaskClientTestCase(unittest.TestCase):
     def setUp(self):
@@ -24,30 +27,33 @@ class FlaskClientTestCase(unittest.TestCase):
 
     def test_register_and_login(self):
         # register a new account
-        response = self.client.post(url_for('auth.register'), data={
-            'email': 'john@example.com',
-            'username': 'john',
-            'password': 'cat',
-            'password2': 'cat'
-        })
+        response = self.client.post(
+            url_for('auth.register'),
+            data={
+                'email': 'john@example.com',
+                'username': 'john',
+                'password': 'cat',
+                'password2': 'cat',
+            },
+        )
         self.assertTrue(response.status_code == 302)
 
         # login with the new account
-        response = self.client.post(url_for('auth.login'), data={
-            'email': 'john@example.com',
-            'password': 'cat'
-        }, follow_redirects=True)
+        response = self.client.post(
+            url_for('auth.login'),
+            data={'email': 'john@example.com', 'password': 'cat'},
+            follow_redirects=True,
+        )
         self.assertTrue(re.search(b'Hello,\s+john!', response.data))
-        self.assertTrue(
-            b'You have not confirmed your account yet' in response.data)
+        self.assertTrue(b'You have not confirmed your account yet' in response.data)
 
         # send a confirmation token
         user = User.query.filter_by(email='john@example.com').first()
         token = user.generate_confirmation_token()
-        response = self.client.get(url_for('auth.confirm', token=token),
-                                   follow_redirects=True)
-        self.assertTrue(
-            b'You have confirmed your account' in response.data)
+        response = self.client.get(
+            url_for('auth.confirm', token=token), follow_redirects=True
+        )
+        self.assertTrue(b'You have confirmed your account' in response.data)
 
         # log out
         response = self.client.get(url_for('auth.logout'), follow_redirects=True)

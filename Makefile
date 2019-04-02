@@ -8,14 +8,14 @@ install:
 
 .PHONY: format
 format:
-	isort -rc -w 120 pili tests
-	black -S -l 120 --py36 pili tests
+	isort -rc -w 88 pili tests
+	black -S -l 88 --target-version py36 pili tests
 
 .PHONY: lint
 lint:
 	python setup.py check -rms
 	flake8 pili/ pili/
-	black -S -l 120 --py36 --check pili tests
+	black -S -l 88 --target-version py36 --check pili tests
 
 .PHONY: mypy
 mypy:

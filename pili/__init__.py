@@ -20,8 +20,9 @@ db = SQLAlchemy()
 pagedown = PageDown()
 thumb = Thumbnail()
 csrf = CSRFProtect()
-celery = Celery(__name__, backend=Config.CELERY_RESULT_BACKEND,
-                broker=Config.CELERY_BROKER_URL)
+celery = Celery(
+    __name__, backend=Config.CELERY_RESULT_BACKEND, broker=Config.CELERY_BROKER_URL
+)
 
 login_manager = LoginManager()
 login_manager.session_protection = 'strong'
@@ -31,9 +32,11 @@ login_manager.login_message_category = 'warning'
 
 def create_app(config_name):
     app = Flask(__name__)
-    template_filters = {name: function
-                        for name, function in getmembers(jinja_filters)
-                        if isfunction(function)}
+    template_filters = {
+        name: function
+        for name, function in getmembers(jinja_filters)
+        if isfunction(function)
+    }
     app.jinja_env.filters.update(template_filters)
 
     app.config.from_object(config[config_name])
@@ -56,18 +59,23 @@ def create_app(config_name):
 
     if not app.debug and not app.testing and not app.config['SSL_DISABLE']:
         from flask_sslify import SSLify
+
         sslify = SSLify(app)
 
     from .main import main as main_blueprint
+
     app.register_blueprint(main_blueprint)
 
     from .ctrl import ctrl as ctrl_blueprint
+
     app.register_blueprint(ctrl_blueprint, url_prefix='/ctrl')
 
     from .auth import auth as auth_blueprint
+
     app.register_blueprint(auth_blueprint, url_prefix='/auth')
 
     from .api_1_0 import api as api_1_0_blueprint
+
     app.register_blueprint(api_1_0_blueprint, url_prefix='/api/v1.0')
 
     return app

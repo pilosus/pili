@@ -1,13 +1,16 @@
-from datetime import datetime
 import hashlib
-from werkzeug.security import generate_password_hash, check_password_hash
-from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
-from markdown import markdown
+from datetime import datetime
+
 import bleach
 from flask import current_app, request, url_for
-from flask_login import UserMixin, AnonymousUserMixin
+from flask_login import AnonymousUserMixin, UserMixin
+from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
+from markdown import markdown
+from werkzeug.security import check_password_hash, generate_password_hash
+
 from pili.exceptions import ValidationError
 from pili.filters import generate_password
+
 from . import db, login_manager
 
 
@@ -48,11 +51,12 @@ class Permission:
         - send invitations to new users
 
     """
+
     READ = 0x01
     FOLLOW = 0x02
     WRITE = 0x04
     COMMENT = 0x08
-    
+
     UPLOAD = 0x10
     MODERATE = 0x20
     STRUCTURE = 0x40
@@ -72,26 +76,32 @@ class Role(db.Model):
     def insert_roles():
         roles = {
             'Suspended': (Permission.READ, False),
-            'Pariah': (Permission.READ |
-                       Permission.FOLLOW, False),
-            'Reader': (Permission.READ |
-                       Permission.FOLLOW |
-                       Permission.COMMENT, True),
-            'Writer': (Permission.READ |
-                       Permission.FOLLOW |
-                       Permission.COMMENT |
-                       Permission.WRITE, False),
-            'Editor': (Permission.READ |
-                       Permission.FOLLOW |
-                       Permission.COMMENT |
-                       Permission.WRITE |
-                       Permission.STRUCTURE |
-                       Permission.UPLOAD, False),
-            'Moderator': (Permission.READ |
-                          Permission.FOLLOW |
-                          Permission.COMMENT |
-                          Permission.MODERATE, False),
-            'Administrator': (0xff, False)
+            'Pariah': (Permission.READ | Permission.FOLLOW, False),
+            'Reader': (Permission.READ | Permission.FOLLOW | Permission.COMMENT, True),
+            'Writer': (
+                Permission.READ
+                | Permission.FOLLOW
+                | Permission.COMMENT
+                | Permission.WRITE,
+                False,
+            ),
+            'Editor': (
+                Permission.READ
+                | Permission.FOLLOW
+                | Permission.COMMENT
+                | Permission.WRITE
+                | Permission.STRUCTURE
+                | Permission.UPLOAD,
+                False,
+            ),
+            'Moderator': (
+                Permission.READ
+                | Permission.FOLLOW
+                | Permission.COMMENT
+                | Permission.MODERATE,
+                False,
+            ),
+            'Administrator': (0xFF, False),
         }
         for r in roles:
             role = Role.query.filter_by(name=r).first()
@@ -113,11 +123,10 @@ class Follow(db.Model):
     relationships, as SQLAlchemy cannot use give access to the custom
     fields in association table used tranparently.
     """
+
     __tablename__ = 'follows'
-    follower_id = db.Column(db.Integer, db.ForeignKey('users.id'),
-                            primary_key=True)
-    followed_id = db.Column(db.Integer, db.ForeignKey('users.id'),
-                            primary_key=True)
+    follower_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
+    followed_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
 
@@ -125,6 +134,7 @@ class Like(db.Model):
     """
     Like is a status for a post or a comment, set by a user.
     """
+
     __tablename__ = 'likes'
     id = db.Column(db.Integer, primary_key=True)
     post_id = db.Column(db.Integer, db.ForeignKey('posts.id'))
@@ -135,9 +145,14 @@ class Like(db.Model):
     def __repr__(self):
         msg_prefix = "<User {user} likes".format(user=self.user_id)
         if self.post_id:
-            return "{msg_prefix} post {post}>".format(msg_prefix=msg_prefix, post=self.post_id)
+            return "{msg_prefix} post {post}>".format(
+                msg_prefix=msg_prefix, post=self.post_id
+            )
         elif self.comment_id:
-            return "{msg_prefix} comment {comment}>".format(msg_prefix=msg_prefix, comment=self.comment_id)
+            return "{msg_prefix} comment {comment}>".format(
+                msg_prefix=msg_prefix, comment=self.comment_id
+            )
+
 
 class Comment(db.Model):
     """Comment is message under a post. 
@@ -145,6 +160,7 @@ class Comment(db.Model):
     (children) represents n-ary tree.
 
     """
+
     __tablename__ = 'comments'
     id = db.Column(db.Integer, primary_key=True)
     parent_id = db.Column(db.Integer, db.ForeignKey('comments.id'))
@@ -167,20 +183,24 @@ class Comment(db.Model):
     # cascade options effectively destroys links to association table
     # 'replies' if any comment referring to it is deleted, i.e. to
     # delete the entries that point to a record that was deleted
-    #replies = db.relationship('Reply',
+    # replies = db.relationship('Reply',
     #                          foreign_keys=[Reply.parent_id],
     #                          backref=db.backref('parent', lazy='joined'),
     #                          lazy='dynamic',
     #                          cascade='all, delete-orphan')
-    replies = db.relationship('Comment',
-                              backref=db.backref('parent', remote_side=[id]),
-                              cascade='all, delete-orphan')
+    replies = db.relationship(
+        'Comment',
+        backref=db.backref('parent', remote_side=[id]),
+        cascade='all, delete-orphan',
+    )
     # 1-to-many Comment/Like
-    likes = db.relationship('Like',
-                            backref='comment',
-                            lazy='dynamic',
-                            foreign_keys=[Like.comment_id],
-                            cascade='all, delete-orphan')
+    likes = db.relationship(
+        'Like',
+        backref='comment',
+        lazy='dynamic',
+        foreign_keys=[Like.comment_id],
+        cascade='all, delete-orphan',
+    )
 
     @staticmethod
     def dfs(comment, fun):
@@ -222,13 +242,15 @@ class Comment(db.Model):
                     next_level.extend(c.replies)
             # level change
             cur_level = next_level
-                
+
     @staticmethod
     def on_changed_body(target, value, oldvalue, initiator):
         allowed_tags = current_app.config['PILI_ALLOWED_COMMENT_TAGS']
-        target.body_html = bleach.linkify(bleach.clean(
-            markdown(value, output_format='html'),
-            tags=allowed_tags, strip=True))
+        target.body_html = bleach.linkify(
+            bleach.clean(
+                markdown(value, output_format='html'), tags=allowed_tags, strip=True
+            )
+        )
 
     def to_json(self):
         json_comment = {
@@ -237,8 +259,7 @@ class Comment(db.Model):
             'body': self.body,
             'body_html': self.body_html,
             'timestamp': self.timestamp,
-            'author': url_for('api.get_user', id=self.author_id,
-                              _external=True),
+            'author': url_for('api.get_user', id=self.author_id, _external=True),
         }
         return json_comment
 
@@ -265,7 +286,7 @@ class Message(db.Model):
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     acks = db.relationship('MessageAck', backref='message', lazy='dynamic')
-    
+
     def to_json(self):
         json_message = {
             'url': url_for('api.get_message', id=self.id, _external=True),
@@ -274,8 +295,7 @@ class Message(db.Model):
             'body': self.body,
             'body_html': self.body_html,
             'timestamp': self.timestamp,
-            'author': url_for('api.get_user', id=self.author_id,
-                              _external=True),
+            'author': url_for('api.get_user', id=self.author_id, _external=True),
         }
         return json_message
 
@@ -283,14 +303,20 @@ class Message(db.Model):
     def on_changed_body(target, value, oldvalue, initiator):
         allowed_tags = current_app.config['PILI_ALLOWED_TAGS']
         allowed_attrs = current_app.config['PILI_ALLOWED_ATTRIBUTES']
-        target.body_html = bleach.linkify(bleach.clean(
-            markdown(value, output_format='html'),
-            tags=allowed_tags, attributes=allowed_attrs, strip=True))
+        target.body_html = bleach.linkify(
+            bleach.clean(
+                markdown(value, output_format='html'),
+                tags=allowed_tags,
+                attributes=allowed_attrs,
+                strip=True,
+            )
+        )
 
     def __repr__(self):
         return '<Message %r by %r>' % (self.id, self.author.username)
 
-db.event.listen(Message.body, 'set', Message.on_changed_body)    
+
+db.event.listen(Message.body, 'set', Message.on_changed_body)
 
 
 class MessageAck(db.Model):
@@ -298,9 +324,12 @@ class MessageAck(db.Model):
     message_id = db.Column(db.Integer, db.ForeignKey('messages.id'))
     recipient_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     read = db.Column(db.Boolean, default=False)
-    
+
     def __repr__(self):
-        return '<MessageAck %r is %r>' % (self.id, 'read' if self.read == True else 'unread')
+        return '<MessageAck %r is %r>' % (
+            self.id,
+            'read' if self.read == True else 'unread',
+        )
 
 
 class User(UserMixin, db.Model):
@@ -320,7 +349,7 @@ class User(UserMixin, db.Model):
     avatar_hash = db.Column(db.String(32))
     posts = db.relationship('Post', backref='author', lazy='dynamic')
     categories = db.relationship('Category', backref='author', lazy='dynamic')
-    tags = db.relationship('Tag', backref='author', lazy='dynamic')  
+    tags = db.relationship('Tag', backref='author', lazy='dynamic')
     images = db.relationship('Upload', backref='owner', lazy='dynamic')
     # one-to-many relationship as a part of many-to-many Follows model
 
@@ -330,59 +359,72 @@ class User(UserMixin, db.Model):
     # single db query.
     # 'dynamic' returns queries instead of items itself, so the further
     # filters could be applied.
-    
+
     # http://docs.sqlalchemy.org/en/latest/orm/relationship_api.html\
     # ?highlight=lazy#sqlalchemy.orm.relationship.params.lazy
-    followed = db.relationship('Follow',
-                               foreign_keys=[Follow.follower_id],
-                               backref=db.backref('follower', lazy='joined'),
-                               lazy='dynamic',
-                               cascade='all, delete-orphan')
-    followers = db.relationship('Follow',
-                                foreign_keys=[Follow.followed_id],
-                                backref=db.backref('followed', lazy='joined'),
-                                lazy='dynamic',
-                                cascade='all, delete-orphan')
-    comments = db.relationship('Comment',
-                               foreign_keys=[Comment.author_id],
-                               backref=db.backref('author', lazy='joined'),
-                               lazy='dynamic',
-                               cascade='all, delete-orphan')
+    followed = db.relationship(
+        'Follow',
+        foreign_keys=[Follow.follower_id],
+        backref=db.backref('follower', lazy='joined'),
+        lazy='dynamic',
+        cascade='all, delete-orphan',
+    )
+    followers = db.relationship(
+        'Follow',
+        foreign_keys=[Follow.followed_id],
+        backref=db.backref('followed', lazy='joined'),
+        lazy='dynamic',
+        cascade='all, delete-orphan',
+    )
+    comments = db.relationship(
+        'Comment',
+        foreign_keys=[Comment.author_id],
+        backref=db.backref('author', lazy='joined'),
+        lazy='dynamic',
+        cascade='all, delete-orphan',
+    )
     # comments recieved by a user as a reply
-    replies = db.relationship('Comment',
-                              foreign_keys=[Comment.recipient_id],
-                              backref=db.backref('recipient', lazy='joined'),
-                              lazy='dynamic',
-                              cascade='all, delete-orphan')
+    replies = db.relationship(
+        'Comment',
+        foreign_keys=[Comment.recipient_id],
+        backref=db.backref('recipient', lazy='joined'),
+        lazy='dynamic',
+        cascade='all, delete-orphan',
+    )
     # messages sent by a user
-    notifications = db.relationship('Message',
-                               foreign_keys=[Message.author_id],
-                               backref=db.backref('author', lazy='joined'),
-                               lazy='dynamic',
-                               cascade='all, delete-orphan')
+    notifications = db.relationship(
+        'Message',
+        foreign_keys=[Message.author_id],
+        backref=db.backref('author', lazy='joined'),
+        lazy='dynamic',
+        cascade='all, delete-orphan',
+    )
     # messages received by a user
-    messages = db.relationship('MessageAck',
-                               foreign_keys=[MessageAck.recipient_id],
-                               backref=db.backref('recipient', lazy='joined'),
-                               lazy='dynamic',
-                               cascade='all, delete-orphan')
+    messages = db.relationship(
+        'MessageAck',
+        foreign_keys=[MessageAck.recipient_id],
+        backref=db.backref('recipient', lazy='joined'),
+        lazy='dynamic',
+        cascade='all, delete-orphan',
+    )
     # likes by a user
     # lazy='dynamic' returns AppenderQuery allowing to use filter, filter_by, order_by
     # so that user_object.likes.filter(Like.comment_id.isnot(None)) can be used
     # to get comment likes only
-    likes = db.relationship('Like',
-                            foreign_keys=[Like.user_id],
-                            backref=db.backref('user', lazy='joined'),
-                            lazy='dynamic',
-                            cascade='all, delete-orphan')
-
+    likes = db.relationship(
+        'Like',
+        foreign_keys=[Like.user_id],
+        backref=db.backref('user', lazy='joined'),
+        lazy='dynamic',
+        cascade='all, delete-orphan',
+    )
 
     def suspend(self):
         suspended = Role.query.filter(Role.name == 'Suspended').first()
         self.role = suspended
         db.session.add(self)
         return True
-    
+
     @staticmethod
     def add_admin():
         """Create pili's administrator.
@@ -393,14 +435,16 @@ class User(UserMixin, db.Model):
         import random
         import string
 
-        admin_role = Role.query.filter_by(permissions=0xff).first()
+        admin_role = Role.query.filter_by(permissions=0xFF).first()
         admin = User.query.filter_by(email=current_app.config['PILI_ADMIN']).first()
         if not admin:
-            admin_user = User(email=current_app.config['PILI_ADMIN'],
-                              username=current_app.config['PILI_ADMIN_NAME'],
-                              password=generate_password(10),
-                              role=admin_role,
-                              confirmed=True)
+            admin_user = User(
+                email=current_app.config['PILI_ADMIN'],
+                username=current_app.config['PILI_ADMIN_NAME'],
+                password=generate_password(10),
+                role=admin_role,
+                confirmed=True,
+            )
             db.session.add(admin_user)
             db.session.commit()
 
@@ -413,15 +457,17 @@ class User(UserMixin, db.Model):
         writer_role = Role.query.filter_by(name='Writer').first()
         seed()
         for i in range(count):
-            u = User(email=forgery_py.internet.email_address(),
-                     username=forgery_py.internet.user_name(True),
-                     role=writer_role,
-                     password=forgery_py.lorem_ipsum.word(),
-                     confirmed=True,
-                     name=forgery_py.name.full_name(),
-                     location=forgery_py.address.city(),
-                     about_me=forgery_py.lorem_ipsum.sentence(),
-                     member_since=forgery_py.date.date(True))
+            u = User(
+                email=forgery_py.internet.email_address(),
+                username=forgery_py.internet.user_name(True),
+                role=writer_role,
+                password=forgery_py.lorem_ipsum.word(),
+                confirmed=True,
+                name=forgery_py.name.full_name(),
+                location=forgery_py.address.city(),
+                about_me=forgery_py.lorem_ipsum.sentence(),
+                member_since=forgery_py.date.date(True),
+            )
             db.session.add(u)
             try:
                 db.session.commit()
@@ -440,12 +486,11 @@ class User(UserMixin, db.Model):
         super(User, self).__init__(**kwargs)
         if self.role is None:
             if self.email == current_app.config['PILI_ADMIN']:
-                self.role = Role.query.filter_by(permissions=0xff).first()
+                self.role = Role.query.filter_by(permissions=0xFF).first()
             if self.role is None:
                 self.role = Role.query.filter_by(default=True).first()
         if self.email is not None and self.avatar_hash is None:
-            self.avatar_hash = hashlib.md5(
-                self.email.encode('utf-8')).hexdigest()
+            self.avatar_hash = hashlib.md5(self.email.encode('utf-8')).hexdigest()
         self.followed.append(Follow(followed=self))
 
     @property
@@ -494,7 +539,7 @@ class User(UserMixin, db.Model):
     def generate_invite_token(self, expiration=3600):
         s = Serializer(current_app.config['SECRET_KEY'], expiration)
         return s.dumps({'accept_invite': self.id})
-    
+
     def accept_invite(self, token, username, new_password):
         s = Serializer(current_app.config['SECRET_KEY'])
         try:
@@ -508,7 +553,7 @@ class User(UserMixin, db.Model):
         self.password = new_password
         db.session.add(self)
         return True
-    
+
     def generate_email_change_token(self, new_email, expiration=3600):
         s = Serializer(current_app.config['SECRET_KEY'], expiration)
         return s.dumps({'change_email': self.id, 'new_email': new_email})
@@ -527,18 +572,19 @@ class User(UserMixin, db.Model):
         if self.query.filter_by(email=new_email).first() is not None:
             return False
         self.email = new_email
-        self.avatar_hash = hashlib.md5(
-            self.email.encode('utf-8')).hexdigest()
+        self.avatar_hash = hashlib.md5(self.email.encode('utf-8')).hexdigest()
         db.session.add(self)
         return True
 
     def can(self, permissions):
-        return self.role is not None and \
-            (self.role.permissions & permissions) == permissions
+        return (
+            self.role is not None
+            and (self.role.permissions & permissions) == permissions
+        )
 
     def has_role(self, role_name):
         return self.role.name == role_name
-    
+
     def is_administrator(self):
         return self.can(Permission.ADMINISTER)
 
@@ -551,10 +597,10 @@ class User(UserMixin, db.Model):
             url = 'https://secure.gravatar.com/avatar'
         else:
             url = 'http://www.gravatar.com/avatar'
-        hash = self.avatar_hash or hashlib.md5(
-            self.email.encode('utf-8')).hexdigest()
+        hash = self.avatar_hash or hashlib.md5(self.email.encode('utf-8')).hexdigest()
         return '{url}/{hash}?s={size}&d={default}&r={rating}'.format(
-            url=url, hash=hash, size=size, default=default, rating=rating)
+            url=url, hash=hash, size=size, default=default, rating=rating
+        )
 
     def follow(self, user):
         if not self.is_following(user):
@@ -567,19 +613,17 @@ class User(UserMixin, db.Model):
             db.session.delete(f)
 
     def is_following(self, user):
-        return self.followed.filter_by(
-            followed_id=user.id).first() is not None
+        return self.followed.filter_by(followed_id=user.id).first() is not None
 
     def is_followed_by(self, user):
-        return self.followers.filter_by(
-            follower_id=user.id).first() is not None
+        return self.followers.filter_by(follower_id=user.id).first() is not None
 
     @property
     def followed_posts(self):
-        return Post.query.join(Follow, Follow.followed_id == Post.author_id)\
-            .filter(Follow.follower_id == self.id)
-    
-    
+        return Post.query.join(Follow, Follow.followed_id == Post.author_id).filter(
+            Follow.follower_id == self.id
+        )
+
     def to_json(self):
         json_user = {
             'url': url_for('api.get_post', id=self.id, _external=True),
@@ -587,13 +631,12 @@ class User(UserMixin, db.Model):
             'member_since': self.member_since,
             'last_seen': self.last_seen,
             'posts': url_for('api.get_user_posts', id=self.id, _external=True),
-            'post_count': self.posts.count()
+            'post_count': self.posts.count(),
         }
         return json_user
 
     def generate_auth_token(self, expiration):
-        s = Serializer(current_app.config['SECRET_KEY'],
-                       expires_in=expiration)
+        s = Serializer(current_app.config['SECRET_KEY'], expires_in=expiration)
         return s.dumps({'id': self.id}).decode('ascii')
 
     @staticmethod
@@ -618,7 +661,8 @@ class AnonymousUser(AnonymousUserMixin):
 
     def has_role(self, role_name):
         return False
-    
+
+
 login_manager.anonymous_user = AnonymousUser
 
 
@@ -628,7 +672,7 @@ def load_user(user_id):
 
 
 ### Association table for many-to-many relationship Tag/Post.
-#classifications = db.Table('classifications',
+# classifications = db.Table('classifications',
 #                           db.Column('tag_id', db.Integer, db.ForeignKey('tags.id')),
 #                           db.Column('post_id', db.Integer, db.ForeignKey('posts.id')))
 
@@ -636,15 +680,13 @@ def load_user(user_id):
 class Tagification(db.Model):
     """Association table for many-to-many relationship Tag/Post.
     """
+
     __tablename__ = 'tagifications'
-    tag_id = db.Column(db.Integer, db.ForeignKey('tags.id'),
-                            primary_key=True)
-    post_id = db.Column(db.Integer, db.ForeignKey('posts.id'),
-                        primary_key=True)
-    
+    tag_id = db.Column(db.Integer, db.ForeignKey('tags.id'), primary_key=True)
+    post_id = db.Column(db.Integer, db.ForeignKey('posts.id'), primary_key=True)
+
     def __repr__(self):
-        return '<Tagification: post %r contains tag %r>' %\
-            (self.post_id, self.tag_id)
+        return '<Tagification: post %r contains tag %r>' % (self.post_id, self.tag_id)
 
 
 class Post(db.Model):
@@ -660,27 +702,33 @@ class Post(db.Model):
     image_id = db.Column(db.Integer, db.ForeignKey('uploads.id'))
     featured = db.Column(db.Boolean, default=False, index=True)
     commenting = db.Column(db.Boolean, index=True)
-    
+
     # 1-to-many Post/Comment
     # https://stackoverflow.com/questions/18677309/flask-sqlalchemy-relationship-error
-    comments = db.relationship('Comment',
-                               backref='post',
-                               lazy='dynamic',
-                               foreign_keys=[Comment.post_id],
-                               cascade='all, delete-orphan')
+    comments = db.relationship(
+        'Comment',
+        backref='post',
+        lazy='dynamic',
+        foreign_keys=[Comment.post_id],
+        cascade='all, delete-orphan',
+    )
     # 1-to-many Post/Like
-    likes = db.relationship('Like',
-                            backref='post',
-                            lazy='dynamic',
-                            foreign_keys=[Like.post_id],
-                            cascade='all, delete-orphan')
+    likes = db.relationship(
+        'Like',
+        backref='post',
+        lazy='dynamic',
+        foreign_keys=[Like.post_id],
+        cascade='all, delete-orphan',
+    )
     # 1-to-many relationship Category/Post
     category_id = db.Column(db.Integer, db.ForeignKey('categories.id'))
     # many-to-many relationship Tag/Post
-    tags = db.relationship('Tag',
-                           secondary='tagifications',
-                           backref=db.backref('posts', lazy='dynamic'),
-                           lazy='dynamic')
+    tags = db.relationship(
+        'Tag',
+        secondary='tagifications',
+        backref=db.backref('posts', lazy='dynamic'),
+        lazy='dynamic',
+    )
 
     @staticmethod
     def generate_fake(count=100):
@@ -694,11 +742,13 @@ class Post(db.Model):
             t = forgery_py.forgery.lorem_ipsum.title(randint(1, 5))
             a = sanitize_alias(t)
             u = User.query.offset(randint(0, user_count - 1)).first()
-            p = Post(body=forgery_py.lorem_ipsum.sentences(randint(1, 5)),
-                     title=t,
-                     alias=a,
-                     timestamp=forgery_py.date.date(True),
-                     author=u)
+            p = Post(
+                body=forgery_py.lorem_ipsum.sentences(randint(1, 5)),
+                title=t,
+                alias=a,
+                timestamp=forgery_py.date.date(True),
+                author=u,
+            )
             db.session.add(p)
             db.session.commit()
 
@@ -706,9 +756,14 @@ class Post(db.Model):
     def on_changed_body(target, value, oldvalue, initiator):
         allowed_tags = current_app.config['PILI_ALLOWED_TAGS']
         allowed_attrs = current_app.config['PILI_ALLOWED_ATTRIBUTES']
-        target.body_html = bleach.linkify(bleach.clean(
-            markdown(value, output_format='html'),
-            tags=allowed_tags, attributes=allowed_attrs, strip=True))
+        target.body_html = bleach.linkify(
+            bleach.clean(
+                markdown(value, output_format='html'),
+                tags=allowed_tags,
+                attributes=allowed_attrs,
+                strip=True,
+            )
+        )
 
     def to_json(self):
         json_post = {
@@ -716,11 +771,9 @@ class Post(db.Model):
             'body': self.body,
             'body_html': self.body_html,
             'timestamp': self.timestamp,
-            'author': url_for('api.get_user', id=self.author_id,
-                              _external=True),
-            'comments': url_for('api.get_post_comments', id=self.id,
-                                _external=True),
-            'comment_count': self.comments.count()
+            'author': url_for('api.get_user', id=self.author_id, _external=True),
+            'comments': url_for('api.get_post_comments', id=self.id, _external=True),
+            'comment_count': self.comments.count(),
         }
         return json_post
 
@@ -734,6 +787,7 @@ class Post(db.Model):
     def __repr__(self):
         return '<Post %r>' % self.alias
 
+
 db.event.listen(Post.body, 'set', Post.on_changed_body)
 # TODO listener for Tag removing after_flush
 # See:
@@ -744,6 +798,7 @@ db.event.listen(Post.body, 'set', Post.on_changed_body)
 class Tag(db.Model):
     """Tag a post belongs to.
     """
+
     __tablename__ = 'tags'
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(64))
@@ -756,19 +811,19 @@ class Tag(db.Model):
             'id': self.id,
             'title': self.title,
             'alias': self.alias,
-            'posts': url_for('api.get_tag_posts', alias=self.alias,
-                                _external=True),
-            'post_count': self.posts.count()
+            'posts': url_for('api.get_tag_posts', alias=self.alias, _external=True),
+            'post_count': self.posts.count(),
         }
         return json_tag
 
     def __repr__(self):
         return '<Tag %r>' % self.alias
 
-    
+
 class Category(db.Model):
     """Category a post belongs to.
     """
+
     __tablename__ = 'categories'
     id = db.Column(db.Integer, primary_key=True)
     author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
@@ -780,20 +835,30 @@ class Category(db.Model):
     image_id = db.Column(db.Integer, db.ForeignKey('uploads.id'))
     featured = db.Column(db.Boolean, default=False, index=True)
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
-    posts = db.relationship('Post', backref='category', lazy='dynamic',
-                            foreign_keys=[Post.category_id],
-                            cascade='all, delete-orphan')
+    posts = db.relationship(
+        'Post',
+        backref='category',
+        lazy='dynamic',
+        foreign_keys=[Post.category_id],
+        cascade='all, delete-orphan',
+    )
 
     @staticmethod
     def on_changed_body(target, value, oldvalue, initiator):
         allowed_tags = current_app.config['PILI_ALLOWED_TAGS']
         allowed_attrs = current_app.config['PILI_ALLOWED_ATTRIBUTES']
-        target.body_html = bleach.linkify(bleach.clean(
-            markdown(value, output_format='html'),
-            tags=allowed_tags, attributes=allowed_attrs, strip=True))
+        target.body_html = bleach.linkify(
+            bleach.clean(
+                markdown(value, output_format='html'),
+                tags=allowed_tags,
+                attributes=allowed_attrs,
+                strip=True,
+            )
+        )
 
     def __repr__(self):
         return '<Category %r>' % self.alias
+
 
 db.event.listen(Category.body, 'set', Category.on_changed_body)
 
@@ -803,21 +868,23 @@ class Structure(db.Model):
     
     Each item is represented by a category.
     """
+
     # https://stackoverflow.com/questions/38801/sql-how-to-store-and-navigate-hierarchies
     # https://stackoverflow.com/questions/23160160/how-do-design-multilevel-database-driven-menu
     __tablename__ = 'structures'
-    id = db.Column(db.Integer, db.ForeignKey('categories.id'),
-                   primary_key=True)
+    id = db.Column(db.Integer, db.ForeignKey('categories.id'), primary_key=True)
     parent_id = db.Column(db.Integer, db.ForeignKey('categories.id'))
     distance = db.Column(db.Integer)
-    
+
+
 class Upload(db.Model):
     """Uploaded files.
     """
+
     __tablename__ = 'uploads'
     id = db.Column(db.Integer, primary_key=True)
     filename = db.Column(db.String(64), unique=True)
-    title = db.Column(db.String(128)) # img alt/title
+    title = db.Column(db.String(128))  # img alt/title
     owner_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     posts = db.relationship('Post', backref='image', lazy='dynamic')
@@ -827,14 +894,15 @@ class Upload(db.Model):
         json_upload = {
             'url': url_for('api.get_upload', filename=self.filename, _external=True),
             'id': self.id,
-            'filename': self.filename,            
+            'filename': self.filename,
             'title': self.title,
             'owner_id': self.owner_id,
-            'posts': url_for('api.get_upload_posts', filename=self.filename,
-                                _external=True),
-            'categories': url_for('api.get_upload_categories', filename=self.filename,
-                                  _external=True)
-
+            'posts': url_for(
+                'api.get_upload_posts', filename=self.filename, _external=True
+            ),
+            'categories': url_for(
+                'api.get_upload_categories', filename=self.filename, _external=True
+            ),
         }
         return json_upload
 
