@@ -7,7 +7,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_pagedown import PageDown
 from flask_thumbnails import Thumbnail
-from flask_wtf.csrf import CsrfProtect
+from flask_wtf.csrf import CSRFProtect, CSRFError
 from config import config, Config
 from celery import Celery
 from inspect import getmembers, isfunction
@@ -19,8 +19,8 @@ moment = Moment()
 db = SQLAlchemy()
 pagedown = PageDown()
 thumb = Thumbnail()
-csrf = CsrfProtect()
-celery = Celery(__name__, backend=Config.CELERY_RESULT_BACKEND, \
+csrf = CSRFProtect()
+celery = Celery(__name__, backend=Config.CELERY_RESULT_BACKEND,
                 broker=Config.CELERY_BROKER_URL)
 
 login_manager = LoginManager()
@@ -31,11 +31,11 @@ login_manager.login_message_category = 'warning'
 
 def create_app(config_name):
     app = Flask(__name__)
-    template_filters = {name: function 
+    template_filters = {name: function
                         for name, function in getmembers(jinja_filters)
                         if isfunction(function)}
     app.jinja_env.filters.update(template_filters)
-    
+
     app.config.from_object(config[config_name])
     config[config_name].init_app(app)
 
@@ -51,9 +51,9 @@ def create_app(config_name):
 
     # change jquery version with another CDN
     app.extensions['bootstrap']['cdns']['jquery'] = WebCDN(
-    '//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/'
+        '//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/'
     )
-    
+
     if not app.debug and not app.testing and not app.config['SSL_DISABLE']:
         from flask_sslify import SSLify
         sslify = SSLify(app)
@@ -69,5 +69,5 @@ def create_app(config_name):
 
     from .api_1_0 import api as api_1_0_blueprint
     app.register_blueprint(api_1_0_blueprint, url_prefix='/api/v1.0')
-    
+
     return app

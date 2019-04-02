@@ -21,11 +21,11 @@ RUN localedef -c -f UTF-8 -i ru_RU ru_RU.UTF-8
 ENV LC_ALL=ru_RU.UTF-8
 ENV LANG=ru_RU.UTF-8
 
-COPY requirements /app/requirements
+COPY requirements.txt /app/requirements.txt
 
 RUN echo ' ---> Installing package dependencies' \
 	&& pip3.7 install --upgrade pip \
-	&& pip3.7 install -r /app/requirements/unix.txt
+	&& pip3.7 install -r /app/requirements.txt
 
 COPY . /app
 

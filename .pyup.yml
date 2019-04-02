@@ -26,14 +26,8 @@ search: False
 # default: empty
 # allowed: list
 requirements:
-  - requirements/common.txt:
+  - requirements.txt:
       # update all dependencies and pin them
-      update: all
-      pin: True
-  - requirements/heroku.txt:
-      # don't update dependencies, use global 'pin' default
-      update: all
-  - requirements/unix.txt:
       update: all
       pin: True
 

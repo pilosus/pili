@@ -1,4 +1,4 @@
-from flask_wtf import Form
+from flask_wtf import FlaskForm
 from wtforms import StringField, TextAreaField, BooleanField, SelectField,\
     SubmitField, DateTimeField, HiddenField
 from flask_wtf.file import FileField, FileRequired, FileAllowed
@@ -8,19 +8,20 @@ from flask_pagedown.fields import PageDownField
 from ..models import Role, User, Post, Category, Upload
 from ..filters import is_allowed_file, file_exists
 
-class NameForm(Form):
+
+class NameForm(FlaskForm):
     name = StringField('What is your name?', validators=[Required()])
     submit = SubmitField('Submit')
 
 
-class EditProfileForm(Form):
+class EditProfileForm(FlaskForm):
     name = StringField('Real name', validators=[Length(0, 64)])
     location = StringField('Location', validators=[Length(0, 64)])
     about_me = TextAreaField('About me')
     submit = SubmitField('Submit')
 
 
-class EditProfileAdminForm(Form):
+class EditProfileAdminForm(FlaskForm):
     email = StringField('Email', validators=[Required(), Length(1, 64),
                                              Email()])
     username = StringField('Username', validators=[
@@ -51,7 +52,7 @@ class EditProfileAdminForm(Form):
             raise ValidationError('Username already in use.')
 
 
-class PostForm(Form):
+class PostForm(FlaskForm):
     title = StringField("Title", validators=[Required(), Length(1, 128)])
     alias = StringField("URL alias", validators=[
         Required(), Length(1, 128), Regexp('^(\w|-)+$', 0,
@@ -74,7 +75,7 @@ class PostForm(Form):
                                  (Category.timestamp.desc()).all()]
 
             
-class EditCategoryForm(Form):
+class EditCategoryForm(FlaskForm):
     title = StringField("Title", validators=[Required(), Length(1, 128)])
     alias = StringField("URL alias", validators=[
         Required(), Length(1, 128), Regexp('^(\w|-)+$', 0,
@@ -105,7 +106,8 @@ class CategoryForm(EditCategoryForm):
         if Category.query.filter_by(alias=field.data).first():
             raise ValidationError('Category with such alias already exists.')
 
-class UploadForm(Form):
+
+class UploadForm(FlaskForm):
     # https://flask-wtf.readthedocs.org/en/latest/form.html#module-flask_wtf.file
     # https://stackoverflow.com/questions/21155930/flask-wtforms-filefield-not-validating
     image = FileField('Image File',
@@ -118,7 +120,8 @@ class UploadForm(Form):
 
     # https://wtforms.readthedocs.org/en/latest/validators.html#custom-validators
 
-class NotificationForm(Form):
+
+class NotificationForm(FlaskForm):
     title = StringField("Title", validators=[Required(), Length(1, 128)])
     body = PageDownField("Text", validators=[Required()])
     group = SelectField('To', coerce=int, default=0)
@@ -133,7 +136,7 @@ class NotificationForm(Form):
                              for group in Role.query.order_by(Role.name).all()]
         self.group.choices.append((0, "All users ({0})".format(User.query.count())))
     
-class CsrfTokenForm(Form):
+
+class CsrfTokenForm(FlaskForm):
     """A form used on pages with AJAX POST requests to get access to an CSRF token."""
     id = HiddenField('Entry id', validators=[Required()])
-    

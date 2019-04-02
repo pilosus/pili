@@ -1,4 +1,4 @@
-from flask_wtf import Form
+from flask_wtf import FlaskForm
 from wtforms import StringField, TextAreaField, BooleanField, SelectField,\
     SubmitField, HiddenField, IntegerField
 from wtforms.validators import Required, Length, Email, Regexp
@@ -6,19 +6,20 @@ from wtforms import ValidationError
 from flask_pagedown.fields import PageDownField
 from ..models import Role, User
 
-class NameForm(Form):
+
+class NameForm(FlaskForm):
     name = StringField('What is your name?', validators=[Required()])
     submit = SubmitField('Submit')
 
 
-class EditProfileForm(Form):
+class EditProfileForm(FlaskForm):
     name = StringField('Real name', validators=[Length(0, 64)])
     location = StringField('Location', validators=[Length(0, 64)])
     about_me = TextAreaField('About me')
     submit = SubmitField('Submit')
 
 
-class EditProfileAdminForm(Form):
+class EditProfileAdminForm(FlaskForm):
     email = StringField('Email', validators=[Required(), Length(1, 64),
                                              Email()])
     username = StringField('Username', validators=[
@@ -48,7 +49,7 @@ class EditProfileAdminForm(Form):
                 User.query.filter_by(username=field.data).first():
             raise ValidationError('Username already in use.')
 
-class CommentForm(Form):
+
+class CommentForm(FlaskForm):
     body = StringField('Enter your comment', validators=[Required()])
     submit = SubmitField('Submit')
-   
