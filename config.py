@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
 import os
-#import app.email
-from app.filters import to_bool
+#import pili.email
+from pili.filters import to_bool
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 class Config:
@@ -22,7 +22,7 @@ class Config:
 
     # CELERY
     CELERY_INSTEAD_THREADING = to_bool(os.environ.get('CELERY_INSTEAD_THREADING'))
-    #CELERY_IMPORT = ('app.email')
+    #CELERY_IMPORT = ('pili.email')
     CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL') 
     CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND')
 
@@ -38,7 +38,7 @@ class Config:
     
     PILI_MAIL_SUBJECT_PREFIX = '[{0}] '.format(PILI_APP_NAME)
     PILI_MAIL_SENDER = '{0} Mailer <{1}>'.format(PILI_APP_NAME, MAIL_USERNAME)
-    PILI_ADMIN = os.environ.get('PILI_ADMIN') or 'samigullinv@gmail.com' # app admin email
+    PILI_ADMIN = os.environ.get('PILI_ADMIN') or 'samigullinv@gmail.com' # pili admin email
     PILI_ADMIN_NAME = os.environ.get('PILI_ADMIN_NAME') or 'Administrator'
     PILI_POSTS_PER_PAGE = int(os.environ.get('PILI_POSTS_PER_PAGE', 10))
     PILI_CATEGORIES_PER_PAGE = int(os.environ.get('PILI_CATEGORIES_PER_PAGE', 10))
@@ -52,7 +52,7 @@ class Config:
     PILI_SLOW_DB_QUERY_TIME = 0.5
     PILI_ROLES_EDIT_OTHERS_POSTS = ['Editor', 'Administrator']
     PILI_SHOW_ALL_FOLLOWED = ['index', 'tag', 'category']
-    PILI_STATIC_DIR = os.path.join(basedir, 'app/static')
+    PILI_STATIC_DIR = os.path.join(basedir, 'pili/static')
     PILI_UPLOADS = os.path.join(PILI_STATIC_DIR, 'uploads')
     PILI_ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'gif', 'png']
 

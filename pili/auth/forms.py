@@ -3,7 +3,7 @@ from wtforms import StringField, PasswordField, BooleanField, SubmitField, Selec
 from wtforms.validators import Required, Length, Email, Regexp, EqualTo
 from wtforms import ValidationError
 from ..models import User, Role
-from app.jinja_filters import permissions2str
+from pili.jinja_filters import permissions2str
 
 class LoginForm(Form):
     email = StringField('Email', validators=[Required(), Length(1, 64),

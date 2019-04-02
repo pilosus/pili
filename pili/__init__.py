@@ -11,7 +11,7 @@ from flask_wtf.csrf import CsrfProtect
 from config import config, Config
 from celery import Celery
 from inspect import getmembers, isfunction
-import app.jinja_filters
+import pili.jinja_filters
 
 bootstrap = Bootstrap()
 mail = Mail()

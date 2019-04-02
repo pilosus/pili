@@ -1,9 +1,23 @@
-version: '3'
-services:
+version: '3.7'
 
+# Shared settings for app and celery workers
+x-pili-common: &pili-common
+  image: pili:${PILI_VERSION:-latest}
+  init: true
+  environment:
+    - DATABASE_URL=postgresql://pili:pili@db/pili
+    - SSL_DISABLE=1
+    - FLASK_CONFIG=unix
+    - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672/
+    - CELERY_RESULT_BACKEND=redis://redis:6379/10
+    - SECRET_KEY=oos6upuJahG3Eerezo2Apha4CooPiex7
+
+
+services:
   # Application Configuration
   db:
     image: postgres
+    init: true
     restart: always
     environment:
       POSTGRES_PASSWORD: pili
@@ -12,30 +26,24 @@ services:
 
   rabbitmq:
     image: rabbitmq:3-management
+    init: true
     ports:
       - 15672:15672
       - 5672:5672
 
   redis:
-    image: redis:5
+    image: redis:5-alpine
+    init: true
 
   celery:
-    image: pili:${PILI_VERSION:-latest}
+    <<: *pili-common
     command: celery worker -A celery_worker.celery --loglevel=info
     links:
       - rabbitmq
       - redis
 
-    environment:
-      - DATABASE_URL=postgresql://pili:pili@db/pili
-      - SSL_DISABLE=1
-      - FLASK_CONFIG=unix
-      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672/
-      - CELERY_RESULT_BACKEND=redis://redis:6379/10
-      - SECRET_KEY=oos6upuJahG3Eerezo2Apha4CooPiex7
-
   pili:
-    image: pili:${PILI_VERSION:-latest}
+    <<: *pili-common
     build: .
     command: ./docker-entrypoint.sh
     links:
@@ -54,17 +62,9 @@ services:
         max-size: 10k
 
     volumes:
-      - ./app:/app/app
-      - ./etc:/app/etc
-      - ./tests:/app/tests
-      - ./setup.cfg:/app/setup.cfg
-      - ./setup.py:/app/setup.py
-      - ./manage.py:/app/manage.py
-
-    environment:
-      - DATABASE_URL=postgresql://pili:pili@db/pili
-      - SSL_DISABLE=1
-      - FLASK_CONFIG=unix
-      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672/
-      - CELERY_RESULT_BACKEND=redis://redis:6379/10
-      - SECRET_KEY=oos6upuJahG3Eerezo2Apha4CooPiex7
+      - ./pili:/pili/pili
+      - ./etc:/pili/etc
+      - ./tests:/pili/tests
+      - ./setup.cfg:/pili/setup.cfg
+      - ./setup.py:/pili/setup.py
+      - ./manage.py:/pili/manage.py

@@ -3,8 +3,8 @@ import threading
 import time
 import unittest
 from selenium import webdriver
-from app import create_app, db
-from app.models import Role, User, Post
+from pili import create_app, db
+from pili.models import Role, User, Post
 
 
 class SeleniumTestCase(unittest.TestCase):

@@ -1,8 +1,8 @@
 import unittest
 import time
 from datetime import datetime
-from app import create_app, db
-from app.models import User, AnonymousUser, Role, Permission, Follow
+from pili import create_app, db
+from pili.models import User, AnonymousUser, Role, Permission, Follow
 
 
 class UserModelTestCase(unittest.TestCase):

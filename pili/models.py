@@ -6,8 +6,8 @@ from markdown import markdown
 import bleach
 from flask import current_app, request, url_for
 from flask_login import UserMixin, AnonymousUserMixin
-from app.exceptions import ValidationError
-from app.filters import generate_password
+from pili.exceptions import ValidationError
+from pili.filters import generate_password
 from . import db, login_manager
 
 
@@ -385,7 +385,7 @@ class User(UserMixin, db.Model):
     
     @staticmethod
     def add_admin():
-        """Create app's administrator.
+        """Create pili's administrator.
 
         Roles should be inserted to the database prior to creation of
         the administrator user.
@@ -685,7 +685,7 @@ class Post(db.Model):
     @staticmethod
     def generate_fake(count=100):
         from random import seed, randint
-        from app.filters import sanitize_alias
+        from pili.filters import sanitize_alias
         import forgery_py
 
         seed()
