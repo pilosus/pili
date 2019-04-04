@@ -39,7 +39,7 @@ def send_email_thread(to, subject, template, **kwargs):
     return thr
 
 
-@celery.task
+@celery.task(serializer='pickle')
 def send_celery_async_email(msg):
     mail.send(msg)
 

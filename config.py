@@ -5,6 +5,7 @@ import os
 from pili.filters import to_bool
 basedir = os.path.abspath(os.path.dirname(__file__))
 
+
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY')
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024 # 16 Mb
@@ -21,7 +22,9 @@ class Config:
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
 
     # CELERY
+    CELERY_ACCEPT_CONTENT = ['json', 'pickle']
     CELERY_INSTEAD_THREADING = to_bool(os.environ.get('CELERY_INSTEAD_THREADING'))
+    CELERY_TASK_SERIALIZER = to_bool(os.environ.get('CELERY_TASK_SERIALIZER')) or 'pickle'
     #CELERY_IMPORT = ('pili.email')
     CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL') 
     CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND')
@@ -84,6 +87,16 @@ class DevelopmentConfig(Config):
     SQLALCHEMY_DATABASE_URI = os.environ.get('DEV_DATABASE_URL') or \
         'sqlite:///' + os.path.join(basedir, 'data-dev.sqlite')
 
+    @staticmethod
+    def init_app(app):
+        # log to stderr
+        import logging
+        from logging import StreamHandler
+
+        file_handler = StreamHandler()
+        file_handler.setLevel(logging.DEBUG)
+        app.logger.addHandler(file_handler)
+
 
 class TestingConfig(Config):
     TESTING = True
@@ -138,6 +151,7 @@ class HerokuConfig(ProductionConfig):
         file_handler.setLevel(logging.WARNING)
         app.logger.addHandler(file_handler)
 
+
 class UnixConfig(ProductionConfig):
     SSL_DISABLE = bool(os.environ.get('SSL_DISABLE'))
 
@@ -158,7 +172,8 @@ class UnixConfig(ProductionConfig):
         syslog_handler = SysLogHandler()
         syslog_handler.setLevel(logging.WARNING)
         app.logger.addHandler(syslog_handler)        
-        
+
+
 config = {
     'development': DevelopmentConfig,
     'testing': TestingConfig,
