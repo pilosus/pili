@@ -37,6 +37,14 @@ services:
       - rabbitmq
       - redis
 
+  flower:
+    <<: *pili-common
+    command: ./flower-entrypoint.sh
+    links:
+      - rabbitmq
+    ports:
+      - 5678:5678
+
   pili:
     <<: *pili-common
     build: .

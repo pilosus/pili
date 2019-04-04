@@ -20,5 +20,5 @@ then
     python3.7 manage.py runserver --host 0.0.0.0 --port 8080
 else
     echo "Run uWSGI production server"
-    uwsgi --ini /app/etc/uwsgi.ini:production
+    uwsgi --ini /app/etc/uwsgi.ini:${FLASK_CONFIG}
 fi

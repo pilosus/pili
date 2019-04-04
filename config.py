@@ -24,14 +24,17 @@ class Config:
     # CELERY
     CELERY_ACCEPT_CONTENT = ['json', 'pickle']
     CELERY_INSTEAD_THREADING = to_bool(os.environ.get('CELERY_INSTEAD_THREADING'))
-    CELERY_TASK_SERIALIZER = to_bool(os.environ.get('CELERY_TASK_SERIALIZER')) or 'pickle'
-    #CELERY_IMPORT = ('pili.email')
-    CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL') 
+    CELERY_TASK_SERIALIZER = os.environ.get('CELERY_TASK_SERIALIZER') or 'pickle'
+    CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL')
     CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND')
+
+    # FLOWER
+    FLOWER_PORT = os.environ.get('FLOWER_PORT') or 5678
+    FLOWER_BROKER_API = os.environ.get('FLOWER_BROKER_API')
+    FLOWER_BROKER = None if FLOWER_BROKER_API else CELERY_BROKER_URL
 
     # APP
     PILI_APP_LOCALE_DEFAULT = os.environ.get('PILI_APP_LOCALE_DEFAULT')
-    
     PILI_FB_API_ID = os.environ.get('PILI_FB_API_ID')
     PILI_APP_NAME = 'Pili'
     PILI_APP_SITE_NAME = os.environ.get('PILI_APP_SITE_NAME')

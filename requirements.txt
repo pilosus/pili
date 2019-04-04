@@ -34,6 +34,7 @@ uWSGI==2.0.18
 
 # Monitoring
 uwsgitop==0.10
+flower==0.9.3
 
 # Development
 ipython==6.5.0
