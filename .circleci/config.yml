@@ -47,8 +47,14 @@ jobs:
             docker-compose -f ./docker-compose.test.yml up
       - push:
           name: Push application Docker image
+          context: registry.pilosus
           command: |
-            IMAGE_TAG=${CIRCLE_TAG:-latest}
+            IMAGE_TAG=${CIRCLE_TAG:-CIRCLE_SHA1}
+
+            if [ "${CIRCLE_BRANCH}" == "master" ]; then
+              IMAGE_TAG=latest
+            fi
+
             docker login -u $REGISTRY_LOGIN -p $REGISTRY_PASSWORD $REGISTRY_URL || true
             docker tag pilosus/pili "${REGISTRY_URL}/pilosus/pili:${IMAGE_TAG}"
             docker push "${REGISTRY_URL}/pilosus/pili:${IMAGE_TAG}"
