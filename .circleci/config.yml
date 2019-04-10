@@ -35,7 +35,7 @@ jobs:
       - run:
           name: Save Docker image layer cache
           command: |
-            mkdir -p /caches
+            mkdir -p /caches/pilosus
             docker save -o /caches/pilosus/pili.tar pilosus/pili
       - save_cache:
           key: v1-{{ .Branch }}-{{ epoch }}
@@ -50,11 +50,9 @@ jobs:
           context: registry.pilosus
           command: |
             IMAGE_TAG=${CIRCLE_TAG:-CIRCLE_SHA1}
-
             if [ "${CIRCLE_BRANCH}" == "master" ]; then
               IMAGE_TAG=latest
             fi
-
             docker login -u $REGISTRY_LOGIN -p $REGISTRY_PASSWORD $REGISTRY_URL || true
             docker tag pilosus/pili "${REGISTRY_URL}/pilosus/pili:${IMAGE_TAG}"
             docker push "${REGISTRY_URL}/pilosus/pili:${IMAGE_TAG}"
