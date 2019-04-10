@@ -1,7 +1,7 @@
 FROM centos:7
 
 RUN echo '---> Setting up build environment' \
-	&& yum install -y gcc make openssl-devel bzip2-devel libffi-devel sqlite-devel wget
+	&& yum install -y git gcc make openssl-devel bzip2-devel libffi-devel sqlite-devel wget
 
 RUN echo '---> Setting up Python' \
     && cd /usr/src \
