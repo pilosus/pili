@@ -65,7 +65,8 @@ def logout():
 def register():
     if current_app.config['PILI_REGISTRATION_OPEN'] is False:
         flash(
-            'Registration for new users is by invitation only. Please contact administration.',
+            'Registration for new users is by invitation only. '
+            'Please contact administration.',
             'info',
         )
         return redirect(url_for('main.index'))
@@ -209,7 +210,7 @@ def invite_request():
     # find invited users, sort them so that unconfirmed comes first,
     # sort then all users by date
     pagination = (
-        User.query.filter(User.invited == True)
+        User.query.filter(User.invited is True)
         .order_by(User.confirmed.asc())
         .order_by(User.member_since.desc())
         .paginate(

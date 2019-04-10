@@ -11,10 +11,10 @@ from wtforms import (
     TextAreaField,
     ValidationError,
 )
-from wtforms.validators import DataRequired, Email, Length, Regexp, Required
+from wtforms.validators import Email, Length, Regexp, Required
 
-from ..filters import file_exists, is_allowed_file
-from ..models import Category, Post, Role, Upload, User
+from ..filters import file_exists
+from ..models import Category, Role, User
 
 
 class NameForm(FlaskForm):
@@ -80,7 +80,7 @@ class PostForm(FlaskForm):
             Required(),
             Length(1, 128),
             Regexp(
-                '^(\w|-)+$',
+                r'^(\w|-)+$',
                 0,
                 'Alias must contain only lowercase ' 'letters and dashes',
             ),
@@ -112,7 +112,7 @@ class EditCategoryForm(FlaskForm):
             Required(),
             Length(1, 128),
             Regexp(
-                '^(\w|-)+$',
+                r'^(\w|-)+$',
                 0,
                 'Alias must contain only lowercase ' 'letters and dashes',
             ),

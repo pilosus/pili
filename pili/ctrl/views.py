@@ -6,7 +6,6 @@ from flask import (
     current_app,
     flash,
     jsonify,
-    make_response,
     redirect,
     render_template,
     request,
@@ -15,7 +14,7 @@ from flask import (
 )
 from flask_login import current_user, login_required
 from flask_sqlalchemy import get_debug_queries
-from werkzeug import secure_filename
+from werkzeug.utils import secure_filename
 
 from . import ctrl
 from .forms import (
@@ -28,17 +27,10 @@ from .forms import (
     PostForm,
     UploadForm,
 )
-from .. import csrf, db
+from .. import db
 from ..decorators import admin_required, permission_required
 from ..email import send_email
-from ..filters import (
-    find_thumbnail,
-    get_added_removed,
-    is_allowed_file,
-    sanitize_alias,
-    sanitize_tags,
-    sanitize_upload,
-)
+from ..filters import find_thumbnail, get_added_removed, sanitize_alias, sanitize_tags
 from ..models import (
     Category,
     Comment,
@@ -60,7 +52,7 @@ def posts():
     csrf_form = CsrfTokenForm()
     form = PostForm()
     if current_user.can(Permission.WRITE) and form.validate_on_submit():
-        ## add post
+        # add post
         upload = Upload.query.filter_by(filename=form.image.data).first()
         category = Category.query.filter_by(id=form.category.data).first()
         post = Post(
@@ -77,7 +69,7 @@ def posts():
         )
         db.session.add(post)
 
-        ## add tags
+        # add tags
         tags = sanitize_tags(form.tags.data)
         if tags:
             tag_aliases = [sanitize_alias(t) for t in tags]
@@ -124,7 +116,7 @@ def posts():
 def remove_post():
     try:
         id = request.json['id']
-        csrf = request.json['csrf']
+        csrf = request.json['csrf']  # noqa: F841
     except (KeyError, TypeError):
         return jsonify(
             {
@@ -240,7 +232,7 @@ def edit_profile_admin(id):
 @login_required
 def edit_post(id, alias):
     """Edit an existing post.
-    
+
     User has to be logged in and be either:
     - Author of the post
     - Editor (role)
@@ -268,14 +260,13 @@ def edit_post(id, alias):
 
         db.session.add(post)
 
-        ### update tags
+        # update tags
         new_tags = sanitize_tags(form.tags.data)
         old_tags = sanitize_tags(', '.join([c.title for c in post.tags.all()]))
         added_tag_titles, removed_tag_titles = get_added_removed(new_tags, old_tags)
-        ## add new tags
+        # add new tags
         added_tag_aliases = [sanitize_alias(c) for c in added_tag_titles]
         for c in zip(added_tag_titles, added_tag_aliases):
-            tag_title = c[0]
             tag_alias = c[1]
             tag = Tag.query.filter(Tag.alias == tag_alias).first()
             # if tag doesn't exist in the db, add it
@@ -290,21 +281,20 @@ def edit_post(id, alias):
             cl = Tagification(tag_id=tag.id, post_id=id)
             db.session.add(cl)
 
-        ### remove obsolete tags
+        # remove obsolete tags
         removed_tag_aliases = [sanitize_alias(c) for c in removed_tag_titles]
 
         for c in zip(removed_tag_titles, removed_tag_aliases):
-            tag_title = c[0]
             tag_alias = c[1]
             tag = Tag.query.filter(Tag.alias == tag_alias).first()
 
-            ## remove relations
+            # remove relations
             old_cl = Tagification.query.filter(
                 Tagification.tag_id == tag.id, Tagification.post_id == id
             ).first()
             db.session.delete(old_cl)
 
-            ## remove tag, if it's not used in other posts
+            # remove tag, if it's not used in other posts
             other_cl = Tagification.query.filter(
                 Tagification.tag_id == tag.id, Tagification.post_id != id
             ).first()
@@ -409,9 +399,8 @@ def remove_notification(id):
         db.session.delete(ack)
     db.session.delete(message)
     flash(
-        "Message '{0}' and its associated notifications have been successfully removed.".format(
-            message.title
-        ),
+        "Message '{0}' and its associated notifications "
+        "have been successfully removed.".format(message.title),
         'success',
     )
     return redirect(url_for('ctrl.notify'))
@@ -494,7 +483,7 @@ def categories():
 def remove_category():
     try:
         id = request.json['id']
-        csrf = request.json['csrf']
+        csrf = request.json['csrf']  # noqa: F841
     except (KeyError, TypeError):
         return jsonify(
             {
@@ -560,7 +549,7 @@ def uploads():
 def remove_upload():
     try:
         filename = request.json['filename']
-        csrf = request.json['csrf']
+        csrf = request.json['csrf']  # noqa: F841
     except (KeyError, TypeError):
         return jsonify(
             {
@@ -699,7 +688,7 @@ def comments_screen(id):
 def remove_comment():
     try:
         id = request.json['id']
-        csrf = request.json['csrf']
+        csrf = request.json['csrf']  # noqa: F841
     except (KeyError, TypeError):
         return jsonify(
             {
@@ -788,7 +777,7 @@ def comments_bulk():
                 # add all its descendants (replies) to a set
                 Comment.dfs(comment, lambda x: all_comments.add(x))
 
-            except:
+            except Exception:
                 continue
         # remove comments and all the replies to them
         for c in all_comments:
@@ -805,7 +794,7 @@ def comments_bulk():
         return message
 
     try:
-        csrf = request.json['csrf']
+        csrf = request.json['csrf']  # noqa: F841
         comments = list(map(lambda x: int(x), request.json['comments']))
         action = request.json['action']
     except (KeyError, TypeError):
@@ -916,7 +905,7 @@ def users_bulk():
         return status, message
 
     try:
-        csrf = request.json['csrf']
+        csrf = request.json['csrf']  # noqa: F841
         users = list(map(lambda x: int(x), request.json['users']))
         action = request.json['action']
     except (KeyError, TypeError):
@@ -966,7 +955,7 @@ def notify():
             ack = MessageAck(message_id=message.id, recipient_id=r.id)
             db.session.add(ack)
             # if message should be sent as an email too
-            ### TODO
+            # TODO
             if as_email:
                 send_email(
                     to=r.email,

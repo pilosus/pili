@@ -1,10 +1,7 @@
-from flask import abort, current_app, g, jsonify, request, url_for
+from flask import jsonify
 
 from . import api
-from .decorators import permission_required
-from .errors import forbidden
-from .. import db
-from ..models import Permission, Post
+from ..models import Message
 
 
 @api.route('/messages/<int:id>')

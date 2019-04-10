@@ -19,8 +19,8 @@ def sanitize_alias(s):
     whitespace characters separating words are to be replaced with
     dashes.
     """
-    alias = sub("\s+", "-", unidecode(s.strip()))
-    return sub("[^\w-]+", '', alias).lower()
+    alias = sub(r"\s+", "-", unidecode(s.strip()))
+    return sub(r"[^\w-]+", '', alias).lower()
 
 
 def sanitize_tags(s):
@@ -33,15 +33,17 @@ def sanitize_tags(s):
 
 
 def sanitize_upload(s):
-    """Return a string containing only lowercase latin letters, minus, underscrore signs and dots.
+    """
+    Return a string containing only lowercase latin letters, minus,
+    underscrore signs and dots.
 
     Input string is trimed, non-word characters to be removed,
     whitespace characters separating words are to be replaced with
     dashes.
 
     """
-    fn = sub("\s+", "-", unidecode(s.strip()))
-    return sub("[^\w-_.]+", '', fn).lower()
+    fn = sub(r"\s+", "-", unidecode(s.strip()))
+    return sub(r"[^\w-_.]+", '', fn).lower()
 
 
 def is_allowed_file(filename):

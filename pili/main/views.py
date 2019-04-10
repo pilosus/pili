@@ -13,11 +13,10 @@ from flask_login import current_user, login_required
 from flask_sqlalchemy import get_debug_queries
 
 from . import main
-from .forms import CommentForm, EditProfileAdminForm, EditProfileForm
+from .forms import CommentForm
 from .. import db
 from ..ctrl.forms import CsrfTokenForm
-from ..decorators import admin_required, permission_required
-from ..filters import get_added_removed, sanitize_alias, sanitize_tags
+from ..decorators import permission_required
 from ..models import (
     Category,
     Comment,
@@ -26,9 +25,7 @@ from ..models import (
     MessageAck,
     Permission,
     Post,
-    Role,
     Tag,
-    Tagification,
     User,
 )
 
@@ -82,12 +79,6 @@ def tag(alias):
         show_followed=show_followed,
         pagination=pagination,
     )
-
-    pagination = tag.posts.order_by(Post.timestamp.desc()).paginate(
-        page, per_page=current_app.config['PILI_POSTS_PER_PAGE'], error_out=False
-    )
-    posts = pagination.items
-    return render_template('main/tag.html', tag=tag, pagination=pagination, posts=posts)
 
 
 @main.route('/user/<username>/profile')
@@ -183,25 +174,25 @@ def post(category, id, alias, parent_id=None):
     )
 
 
-# TODO: rewrite as API function
-@main.route('/like', methods=['POST'])
-@login_required
-@permission_required(Permission.FOLLOW)
-def like_item():
-    try:
-        post_id = request.json.get('post_id', None)
-        comment_id = request.json.get('comment_id', None)
-        user_id = request.json.get('user_id', None)
-        action = request.json.get('action', None)
-        csrf = request.json.get('csrf', None)
-    except (KeyError, TypeError):
-        return jsonify(
-            {
-                'status': 'error',
-                'message': 'Function takes four parameters: '
-                'post or commend id; user id; action type; csrf token',
-            }
-        )
+# # TODO: rewrite as API function
+# @main.route('/like', methods=['POST'])
+# @login_required
+# @permission_required(Permission.FOLLOW)
+# def like_item():
+#     try:
+#         post_id = request.json.get('post_id', None)
+#         comment_id = request.json.get('comment_id', None)
+#         user_id = request.json.get('user_id', None)
+#         action = request.json.get('action', None)
+#         csrf = request.json.get('csrf', None)
+#     except (KeyError, TypeError):
+#         return jsonify(
+#             {
+#                 'status': 'error',
+#                 'message': 'Function takes four parameters: '
+#                 'post or commend id; user id; action type; csrf token',
+#             }
+#         )
 
 
 @main.route('/likes/post/<int:id>/like')
@@ -306,7 +297,7 @@ def replies_bulk():
         return "{message} {fail}".format(message=message, fail=fail), status
 
     try:
-        csrf = request.json['csrf']
+        csrf = request.json['csrf']  # noqa: F841
         comments = list(map(lambda x: int(x), request.json['comments']))
         action = request.json['action']
     except (KeyError, TypeError):
@@ -520,7 +511,7 @@ def comments(username):
 def replies(username):
     """List of comments written as a reply to the user.
     """
-    ### Restrict viewing comments to a user to the user itself
+    # Restrict viewing comments to a user to the user itself
     # if current_user.is_anonymous or not current_user.username == username:
     #    flash('You have no permission to see comments to the user.')
     #    return redirect(url_for('.index'))
@@ -550,7 +541,7 @@ def replies(username):
 def notifications(username):
     """List of messages sent to to the user.
     """
-    ### Restrict viewing messages to a user to the user itself
+    # Restrict viewing messages to a user to the user itself
     if not current_user.username == username:
         flash('You have no permission to see notifications to the user.')
         return redirect(url_for('.index'))
@@ -606,18 +597,19 @@ def notifications_bulk():
         fail = fail.rstrip(', ')
         status = 'success'
         if message:
-            message = 'Notifications: {message} have been {action}.'.format(
-                message=message, action=msg[action]
+            message = 'Notifications: {message} have been ' '{action}.'.format(
+                message, msg[action]
             )
         if fail:
-            fail = 'Notifications: {fail} failed. You are not a recipient of them.'.format(
-                fail=fail, action=msg[action]
+            fail = (
+                'Notifications: {fail} failed. You are not '
+                'a recipient of them.'.format(fail)
             )
             status = 'warning'
         return "{message} {fail}".format(message=message, fail=fail), status
 
     try:
-        csrf = request.json['csrf']
+        csrf = request.json['csrf']  # noqa: F841
         notifications = list(map(lambda x: int(x), request.json['notifications']))
         action = request.json['action']
     except (KeyError, TypeError):
@@ -656,7 +648,7 @@ def remove_notification(username, id):
     ):
         flash('You have no permission to remove a notifications addressed to the user.')
         return redirect(url_for('.index'))
-    user = User.query.filter_by(username=username).first_or_404()
+    user = User.query.filter_by(username=username).first_or_404()  # noqa: F841
     ack = MessageAck.query.get_or_404(id)
     db.session.delete(ack)
     flash("Notification {0} has been removed.".format(id), 'success')
@@ -670,9 +662,9 @@ def comment_reply(id, repliee_id, post_id):
     """Reply to a comment.
     """
     comment = Comment.query.get_or_404(id)
-    repliee = User.query.filter_by(id=repliee_id).get_or_404()
-    post = Post.query.get_or_404(id)
-    replier = current_user._get_current_object()
+    repliee = User.query.filter_by(id=repliee_id).get_or_404()  # noqa: F841
+    post = Post.query.get_or_404(id)  # noqa: F841
+    replier = current_user._get_current_object()  # noqa: F841
 
     db.session.add(comment)
     # return redirect(url_for('.post',

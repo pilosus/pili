@@ -23,7 +23,8 @@ def pluralize(counter, singular_postfix='', plural_postfix='s'):
     Cit{{ num_of_cities|pluralize:("y", "ies") }}  -> 10 Cities, 1 City
 
     :param counter: int
-    :param singular_postfix: str a filtered word's singlular form should be postfixed with
+    :param singular_postfix: str a filtered word's singlular form
+    should be postfixed with
     :param plural_postfix: str a filtered word's plural form should be postfixed with
     :return: str
     """

@@ -17,25 +17,25 @@ from . import db, login_manager
 class Permission:
     """Permission for App's users.
 
-    READ: 
+    READ:
         - read articles
 
     FOLLOW:
         - follow users, like posts and comments
 
-    WRITE: 
+    WRITE:
         - write articles
         - edit articles written by the user
 
-    UPLOAD: 
+    UPLOAD:
         - upload files
         - remove own uploaded files
 
-    COMMENT: 
+    COMMENT:
         - comment to articles
         - reply to other comment
 
-    MODERATE: 
+    MODERATE:
         - remove comment
         - block user
 
@@ -44,7 +44,7 @@ class Permission:
         - remove categories
         - edit categories
 
-    ADMINISTER: 
+    ADMINISTER:
         - read logs
         - change other users roles
         - confirm users registration
@@ -155,10 +155,10 @@ class Like(db.Model):
 
 
 class Comment(db.Model):
-    """Comment is message under a post. 
+    """
+    Comment is message under a post.
     Comment that has a parent treated as a reply. Comment with replies
     (children) represents n-ary tree.
-
     """
 
     __tablename__ = 'comments'
@@ -173,7 +173,8 @@ class Comment(db.Model):
     author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     recipient_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     post_id = db.Column(db.Integer, db.ForeignKey('posts.id'))
-    ## http://docs.sqlalchemy.org/en/latest/orm/join_conditions.html
+
+    # http://docs.sqlalchemy.org/en/latest/orm/join_conditions.html
     # there several fields in Reply class whose foreign_keys are
     # 'comment.id' that's why we need an explicit use of foreign_keys
     # dict in 'replies' field here.
@@ -328,7 +329,7 @@ class MessageAck(db.Model):
     def __repr__(self):
         return '<MessageAck %r is %r>' % (
             self.id,
-            'read' if self.read == True else 'unread',
+            'read' if self.read is True else 'unread',
         )
 
 
@@ -432,9 +433,6 @@ class User(UserMixin, db.Model):
         Roles should be inserted to the database prior to creation of
         the administrator user.
         """
-        import random
-        import string
-
         admin_role = Role.query.filter_by(permissions=0xFF).first()
         admin = User.query.filter_by(email=current_app.config['PILI_ADMIN']).first()
         if not admin:
@@ -512,7 +510,7 @@ class User(UserMixin, db.Model):
         s = Serializer(current_app.config['SECRET_KEY'])
         try:
             data = s.loads(token)
-        except:
+        except Exception:
             return False
         if data.get('confirm') != self.id:
             return False
@@ -528,7 +526,7 @@ class User(UserMixin, db.Model):
         s = Serializer(current_app.config['SECRET_KEY'])
         try:
             data = s.loads(token)
-        except:
+        except Exception:
             return False
         if data.get('reset') != self.id:
             return False
@@ -544,7 +542,7 @@ class User(UserMixin, db.Model):
         s = Serializer(current_app.config['SECRET_KEY'])
         try:
             data = s.loads(token)
-        except:
+        except Exception:
             return False
         if data.get('accept_invite') != self.id:
             return False
@@ -562,7 +560,7 @@ class User(UserMixin, db.Model):
         s = Serializer(current_app.config['SECRET_KEY'])
         try:
             data = s.loads(token)
-        except:
+        except Exception:
             return False
         if data.get('change_email') != self.id:
             return False
@@ -644,7 +642,7 @@ class User(UserMixin, db.Model):
         s = Serializer(current_app.config['SECRET_KEY'])
         try:
             data = s.loads(token)
-        except:
+        except Exception:
             return None
         return User.query.get(data['id'])
 
@@ -671,7 +669,7 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 
-### Association table for many-to-many relationship Tag/Post.
+# Association table for many-to-many relationship Tag/Post.
 # classifications = db.Table('classifications',
 #                           db.Column('tag_id', db.Integer, db.ForeignKey('tags.id')),
 #                           db.Column('post_id', db.Integer, db.ForeignKey('posts.id')))
@@ -864,8 +862,8 @@ db.event.listen(Category.body, 'set', Category.on_changed_body)
 
 
 class Structure(db.Model):
-    """Hierarchy of menu items.
-    
+    """
+    Hierarchy of menu items.
     Each item is represented by a category.
     """
 

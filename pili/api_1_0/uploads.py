@@ -1,12 +1,9 @@
 import json
 
-from flask import abort, current_app, g, jsonify, request, url_for
+from flask import current_app, jsonify, request, url_for
 
 from . import api
-from .decorators import permission_required
-from .errors import forbidden
-from .. import db
-from ..models import Category, Permission, Post, Upload
+from ..models import Category, Post, Upload
 
 
 @api.route('/uploads/')

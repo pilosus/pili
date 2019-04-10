@@ -1,4 +1,4 @@
-from flask import abort, current_app, g, jsonify, request, url_for
+from flask import current_app, g, jsonify, request, url_for
 
 from . import api
 from .decorators import permission_required
