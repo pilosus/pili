@@ -25,7 +25,7 @@ def before_request():
         current_user.ping()
         if (
             not current_user.confirmed
-            and request.endpoint[:5] != 'auth.'
+            and request.endpoint[:5] != 'auth.'  # type: ignore
             and request.endpoint != 'static'
         ):
             return redirect(url_for('auth.unconfirmed'))

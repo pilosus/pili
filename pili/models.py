@@ -233,7 +233,7 @@ class Comment(db.Model):
         """
         cur_level = [comment]
         while cur_level:
-            next_level = []
+            next_level = []  # type: ignore
             for c in cur_level:
                 # do not touch original comment to comply with dfs version
                 if not c == comment:
@@ -504,7 +504,7 @@ class User(UserMixin, db.Model):
 
     def generate_confirmation_token(self, expiration=3600):
         s = Serializer(current_app.config['SECRET_KEY'], expiration)
-        return s.dumps({'confirm': self.id}).decode('utf-8')  # decode bytes in Python 3
+        return s.dumps({'confirm': self.id}).decode('utf-8')  # type: ignore
 
     def confirm(self, token):
         s = Serializer(current_app.config['SECRET_KEY'])
@@ -635,7 +635,7 @@ class User(UserMixin, db.Model):
 
     def generate_auth_token(self, expiration):
         s = Serializer(current_app.config['SECRET_KEY'], expires_in=expiration)
-        return s.dumps({'id': self.id}).decode('ascii')
+        return s.dumps({'id': self.id}).decode('ascii')  # type: ignore
 
     @staticmethod
     def verify_auth_token(token):

@@ -13,10 +13,12 @@ from celery import Celery
 from inspect import getmembers, isfunction
 import pili.jinja_filters
 
+from typing import Any
+
 bootstrap = Bootstrap()
 mail = Mail()
 moment = Moment()
-db = SQLAlchemy()
+db = SQLAlchemy()  # type: Any
 pagedown = PageDown()
 thumb = Thumbnail()
 csrf = CSRFProtect()
@@ -39,7 +41,7 @@ def create_app(config_name):
     }
     app.jinja_env.filters.update(template_filters)
 
-    app.config.from_object(config[config_name])
+    app.config.from_object(config[config_name])  # type: ignore
     config[config_name].init_app(app)
 
     bootstrap.init_app(app)
