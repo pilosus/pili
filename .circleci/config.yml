@@ -57,9 +57,12 @@ jobs:
           name: Push application Docker image
           context: registry.pilosus
           command: |
-            IMAGE_TAG=${CIRCLE_TAG:-CIRCLE_SHA1}
-            if [ "${CIRCLE_BRANCH}" == "master" ]; then
+            if [ ! -z "${CIRCLE_TAG}" ]; then
+              IMAGE_TAG=${CIRCLE_TAG}
+            elif [ "${CIRCLE_BRANCH}" == "master" ]; then
               IMAGE_TAG=latest
+            else
+              IMAGE_TAG=${CIRCLE_SHA1}
             fi
             docker login -u $REGISTRY_LOGIN -p $REGISTRY_PASSWORD $REGISTRY_URL || true
             docker tag pilosus/pili "${REGISTRY_URL}/pilosus/pili:${IMAGE_TAG}"
