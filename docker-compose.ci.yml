@@ -1,9 +1,13 @@
 version: '3'
+services:
   app:
     build:
       context: .
     image: pilosus/pili
-    command: >
-      bash -c "python3.7 manage.py initialize
-      && python3.7 manage.py deploy
-      && python3.7 manage.py test"
+    environment:
+      FLASK_INIT: 1
+      FLASK_DEPLOY: 1
+      FLASK_CONFIG: testing
+      SECRET_KEY: testing
+      SSL_DISABLE: 1
+    command: ./docker-entrypoint.sh

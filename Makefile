@@ -13,7 +13,7 @@ format:
 
 .PHONY: lint
 lint:
-	python setup.py check -rms
+	python3.7 setup.py check -rms
 	flake8 pili/ pili/
 	black -S -l 88 --target-version py36 --check pili tests
 
@@ -54,5 +54,5 @@ clean:
 	rm -f .coverage
 	rm -f .coverage.*
 	rm -rf build
-	python setup.py clean
+	python3.7 setup.py clean
 
