@@ -21,6 +21,24 @@ lint:
 mypy:
 	mypy pili
 
+.PHONY: build
+build:
+	docker-compose build
+
+.PHONY: up
+up:
+	docker-compose up -d
+
+.PHONY: down
+down:
+	docker-compose down -v
+
+.PHONY: test
+test:
+    # could be donw with $(MAKE) up, but that will invoke another make, which is an overkill
+	docker-compose up -d
+	docker-compose exec pili python3.7 manage.py test
+	docker-compose down -v
 
 .PHONY: clean
 clean:
