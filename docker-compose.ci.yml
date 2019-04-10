@@ -1,0 +1,9 @@
+version: '3'
+  app:
+    build:
+      context: .
+    image: pilosus/pili
+    command: >
+      bash -c "python3.7 manage.py initialize
+      && python3.7 manage.py deploy
+      && python3.7 manage.py test"
