@@ -63,7 +63,11 @@ jobs:
             else
               IMAGE_TAG=${CIRCLE_SHA1}
             fi
-            docker login -u $REGISTRY_LOGIN -p $REGISTRY_PASSWORD $REGISTRY_URL || true
+            echo "Login to docker registry ${REGISTRY_LOGIN}@${REGISTRY_URL}"
+            docker login -u $REGISTRY_LOGIN -p $REGISTRY_PASSWORD $REGISTRY_URL
+            echo "Tag image ${REGISTRY_URL}/pilosus/pili:${IMAGE_TAG}"
             docker tag pilosus/pili "${REGISTRY_URL}/pilosus/pili:${IMAGE_TAG}"
+            echo "Push image ${REGISTRY_URL}/pilosus/pili:${IMAGE_TAG}"
             docker push "${REGISTRY_URL}/pilosus/pili:${IMAGE_TAG}"
+            echo "Logout from ${REGISTRY_URL}"
             docker logout $REGISTRY_URL
