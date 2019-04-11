@@ -1,3 +1,6 @@
+.. image:: https://circleci.com/gh/pilosus/pili/tree/master.svg?style=svg
+    :target: https://circleci.com/gh/pilosus/pili/tree/master
+
 ########
 Pili App
 ########
@@ -95,9 +98,69 @@ The libraries belong to their owners and should not be considered as a
 part of the application.
 
 
+.. _DockerDeployment:
+
+======================
+Deployment with Docker
+======================
+
+
+Local development
+-----------------
+
+#. Install ``docker>=18.06`` and ``docker-compose>=1.23.0``
+#. Set environment variable ``PILI_CONFIG=development``
+(you can place it to ``.env`` file in the root directory of the project)
+#. Create file ``/etc/config/development.env`` and save enviroment variables needed for the app, e.g.::
+
+    FLASK_CONFIG=development
+    FLASK_ENV=development
+    FLASK_INIT=1  # initialize DB with python manage.py initialize
+    FLASK_DEPLOY=1  # prepopulate DB with python manage.py deploy
+    SECRET_KEY=your_key
+    SSL_DISABLE=1  # you don't need this in localhost
+    DATABASE_URL=postgresql://pili:pili@db/pili  # use DB as docker-compose service
+    CELERY_INSTEAD_THREADING=True  # use celery cervice
+    CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672/  # use RabbitMQ as celery's broker
+    CELERY_RESULT_BACKEND=redis://redis:6379/10  # celery result backend
+    FLOWER_PORT=5678  # monitoring tool for celery
+    FLOWER_BROKER_API=http://guest:guest@rabbitmq:15672/api/
+    MAIL_SERVER=your_smtp
+    MAIL_PORT=587
+    MAIL_USE_TLS=True
+    MAIL_USERNAME=you@your@smtp
+    MAIL_PASSWORD=your_password
+
+#. Run services with ``docker-compose up``
+#. Open service with ``browse http://localhost:8080``
+#. Open celery monitoring with ``browse http://localhost:5678``
+
+
+Use ``make`` for the routine operations like:
+
+#. Start/stop docker services with ``make up`` and ``make down`` respectively
+#. Run linters with ``make lint``
+#. Run `mypy`_ static analysis tool with ``make mypy``
+#. Format code with `black formatter`_
+
+.. _black formatter: https://github.com/ambv/black
+.. _mypy: http://mypy-lang.org/
+
+
+Production
+----------
+
+The project uses `Circle CI`_ for CI/CD. As its final step CI/CD pushes docker image to a private docker registry.
+The image can be used then in ``docker run``, ``docker-compose`` or in a ``Kubernetes cluster``.
+
+.. _Circle CI: https://circleci.com/
+
+
 ==========
 Deployment
 ==========
+
+This section considered deprecated, see DockerDeployment_ for the suggested deployment model.
 
 -----------------
 Environment setup
@@ -219,6 +282,8 @@ Every time the database models (``app/models.py``) change do the following::
 ========================
 Deployment in production
 ========================
+
+This section considered deprecated, see DockerDeployment_ for the suggested deployment model.
 
 ------------------------------------
 Reverse-proxy and Application server

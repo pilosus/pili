@@ -54,7 +54,6 @@ jobs:
             docker-compose -f ./docker-compose.ci.yml run app make mypy
       - deploy:
           name: Push application Docker image
-          context: registry.pilosus
           command: |
             if [ ! -z "${CIRCLE_TAG}" ]; then
               IMAGE_TAG=${CIRCLE_TAG}
@@ -63,11 +62,12 @@ jobs:
             else
               IMAGE_TAG=${CIRCLE_SHA1}
             fi
-            echo "Login to docker registry ${REGISTRY_LOGIN}@${REGISTRY_URL}"
+            # All env variables set in Build settings -> Environment variables
+            echo "Login to docker registry"
             docker login -u $REGISTRY_LOGIN -p $REGISTRY_PASSWORD $REGISTRY_URL
-            echo "Tag image ${REGISTRY_URL}/pilosus/pili:${IMAGE_TAG}"
+            echo "Tag image pilosus/pili:${IMAGE_TAG}"
             docker tag pilosus/pili "${REGISTRY_URL}/pilosus/pili:${IMAGE_TAG}"
-            echo "Push image ${REGISTRY_URL}/pilosus/pili:${IMAGE_TAG}"
+            echo "Push image pilosus/pili:${IMAGE_TAG}"
             docker push "${REGISTRY_URL}/pilosus/pili:${IMAGE_TAG}"
-            echo "Logout from ${REGISTRY_URL}"
+            echo "Logout from docker registry"
             docker logout $REGISTRY_URL

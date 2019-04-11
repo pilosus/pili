@@ -5,7 +5,7 @@ x-pili-common: &pili-common
   image: pili:${PILI_VERSION:-latest}
   init: true
   env_file:
-    - ./etc/config/${PILI_CONFIG:-production}.env
+    - ./etc/config/${PILI_CONFIG:-development}.env
 
 
 services:
