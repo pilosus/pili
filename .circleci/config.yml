@@ -1,9 +1,6 @@
 version: 2
 jobs:
   build:
-    filters:
-      tags:
-        only: /.*/
     working_directory: /app
     docker:
       - image: docker:18.06.3-ce-git
@@ -52,7 +49,7 @@ jobs:
           name: Run mypy
           command: |
             docker-compose -f ./docker-compose.ci.yml run app make mypy
-      - deploy:
+      - run:
           name: Push application Docker image
           command: |
             if [ ! -z "${CIRCLE_TAG}" ]; then
@@ -71,3 +68,14 @@ jobs:
             docker push "${REGISTRY_URL}/pilosus/pili:${IMAGE_TAG}"
             echo "Logout from docker registry"
             docker logout $REGISTRY_URL
+
+
+workflows:
+  version: 2
+  # Run on all tags and all branches
+  common-build:
+    jobs:
+      - build:
+          filters:
+            tags:
+              only: /.*/
