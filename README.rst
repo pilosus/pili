@@ -104,13 +104,12 @@ part of the application.
 Deployment with Docker
 ======================
 
-
+-----------------
 Local development
 -----------------
 
 #. Install ``docker>=18.06`` and ``docker-compose>=1.23.0``
-#. Set environment variable ``PILI_CONFIG=development``
-(you can place it to ``.env`` file in the root directory of the project)
+#. Set environment variable ``PILI_CONFIG=development`` (you can place it to ``.env`` file in the root directory of the project)
 #. Create file ``/etc/config/development.env`` and save enviroment variables needed for the app, e.g.::
 
     FLASK_CONFIG=development
@@ -147,6 +146,7 @@ Use ``make`` for the routine operations like:
 .. _mypy: http://mypy-lang.org/
 
 
+----------
 Production
 ----------
 
