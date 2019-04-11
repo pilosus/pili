@@ -57,7 +57,7 @@ jobs:
             elif [ "${CIRCLE_BRANCH}" == "master" ]; then
               IMAGE_TAG=latest
             else
-              IMAGE_TAG=${CIRCLE_SHA1}
+              IMAGE_TAG=${CIRCLE_BRANCH}
             fi
             # All env variables set in Build settings -> Environment variables
             echo "Login to docker registry"
