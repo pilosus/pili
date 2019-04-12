@@ -97,6 +97,69 @@ These libraries are found under::
 The libraries belong to their owners and should not be considered as a
 part of the application.
 
+.. _k8s:
+
+=========================================
+Deployment with Kubernetes (experimental)
+=========================================
+
+See Kubernetes configs in ``etc/k8s/`` directory. Assume the following commands are run within that directory.
+
+-------------
+Configuration
+-------------
+
+#. Add environment variables as a ``ConfigMap``::
+
+  kubectl create configmap pili-config --from-env-file=../env/testing.env
+
+
+#. Make sure config is added correctly::
+
+  kubectl get configmap pili-config -o yaml
+  kubectl describe configmap pili-config
+
+#. Add private docker registry credentials as a ``Secret`` using local ``~/.docker/config.json``::
+
+  kubectl create secret generic registry-credentials \
+      --from-file=.dockerconfigjson=/home/vitaly/.docker/config.json \
+      --type=kubernetes.io/dockerconfigjson
+
+#. Make sure secret's added correctly::
+
+  kubectl get secret registry-credentials --output="jsonpath={.data.\.dockerconfigjson}" | base64 --decode
+
+
+----------------
+Pili backend app
+----------------
+
+#. Apply ``Deployment``::
+
+  kubectl apply -f pili-deployment.yaml
+
+#. Make sure deployment's applied::
+
+  kubectl get pods
+
+#. Apply ``Service``::
+
+  kubectl apply -f pili-service.yaml
+
+#. Make sure services has started:
+
+  kubectl describe service pili
+  minikube service pili
+
+--------------
+Nginx frontend
+--------------
+
+Nginx frontend serves static files and proxy passing requests to the backend. Apply deployment and service wuth::
+
+  kubectl apply -f nginx-deployment.yaml
+  kubectl apply -f nginx-service.yaml
+
 
 .. _DockerDeployment:
 
@@ -110,7 +173,7 @@ Local development
 
 #. Install ``docker>=18.06`` and ``docker-compose>=1.23.0``
 #. Set environment variable ``PILI_CONFIG=development`` (you can place it to ``.env`` file in the root directory of the project)
-#. Create file ``/etc/config/development.env`` and save enviroment variables needed for the app, e.g.::
+#. Create file ``/etc/env/development.env`` and save enviroment variables needed for the app, e.g.::
 
     FLASK_CONFIG=development
     FLASK_ENV=development
