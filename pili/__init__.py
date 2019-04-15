@@ -41,7 +41,7 @@ def create_app(config_name):
     }
     app.jinja_env.filters.update(template_filters)
 
-    app.config.from_object(config[config_name])  # type: ignore
+    app.config.from_object(config[config_name])
     config[config_name].init_app(app)
 
     bootstrap.init_app(app)
