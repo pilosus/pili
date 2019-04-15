@@ -51,7 +51,7 @@ docutils==0.14
 # Testing
 ForgeryPy==0.1
 Pygments==2.3.1
-colorama==0.3.7
+colorama==0.4.1
 coverage==4.2
 httpie==0.9.6
 requests==2.21.0
