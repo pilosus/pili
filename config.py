@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import os
-#import pili.email
 from pili.filters import to_bool
 basedir = os.path.abspath(os.path.dirname(__file__))
 
@@ -32,6 +31,9 @@ class Config:
     FLOWER_PORT = os.environ.get('FLOWER_PORT') or 5678
     FLOWER_BROKER_API = os.environ.get('FLOWER_BROKER_API')
     FLOWER_BROKER = None if FLOWER_BROKER_API else CELERY_BROKER_URL
+
+    # SENTRY
+    SENTRY_DSN = os.environ.get('SENTRY_DSN')
 
     # APP
     PILI_APP_LOCALE_DEFAULT = os.environ.get('PILI_APP_LOCALE_DEFAULT')
@@ -116,24 +118,9 @@ class ProductionConfig(Config):
     def init_app(cls, app):
         Config.init_app(app)
 
-        # email errors to the administrators
-        import logging
-        from logging.handlers import SMTPHandler
-        credentials = None
-        secure = None
-        if getattr(cls, 'MAIL_USERNAME', None) is not None:
-            credentials = (cls.MAIL_USERNAME, cls.MAIL_PASSWORD)
-            if getattr(cls, 'MAIL_USE_TLS', None):
-                secure = ()
-        mail_handler = SMTPHandler(
-            mailhost=(cls.MAIL_SERVER, cls.MAIL_PORT),
-            fromaddr=cls.PILI_MAIL_SENDER,
-            toaddrs=[cls.PILI_ADMIN],
-            subject=cls.PILI_MAIL_SUBJECT_PREFIX + ' Application Error',
-            credentials=credentials,
-            secure=secure)
-        mail_handler.setLevel(logging.ERROR)
-        app.logger.addHandler(mail_handler)
+        # handle proxy server headers
+        from werkzeug.contrib.fixers import ProxyFix
+        app.wsgi_app = ProxyFix(app.wsgi_app)
 
 
 class HerokuConfig(ProductionConfig):
@@ -142,10 +129,6 @@ class HerokuConfig(ProductionConfig):
     @classmethod
     def init_app(cls, app):
         ProductionConfig.init_app(app)
-
-        # handle proxy server headers
-        from werkzeug.contrib.fixers import ProxyFix
-        app.wsgi_app = ProxyFix(app.wsgi_app)
 
         # log to stderr
         import logging

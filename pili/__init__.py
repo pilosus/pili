@@ -11,9 +11,12 @@ from flask_wtf.csrf import CSRFProtect, CSRFError
 from config import config, Config
 from celery import Celery
 from inspect import getmembers, isfunction
+from raven.contrib.flask import Sentry
+from typing import Any
+
+from pili.version import get_version
 import pili.jinja_filters
 
-from typing import Any
 
 bootstrap = Bootstrap()
 mail = Mail()
@@ -25,6 +28,7 @@ csrf = CSRFProtect()
 celery = Celery(
     __name__, backend=Config.CELERY_RESULT_BACKEND, broker=Config.CELERY_BROKER_URL
 )
+sentry = Sentry()
 
 login_manager = LoginManager()
 login_manager.session_protection = 'strong'
@@ -53,6 +57,14 @@ def create_app(config_name):
     thumb.init_app(app)
     csrf.init_app(app)
     celery.conf.update(app.config)
+
+    sentry_config = {
+        'dsn': config[config_name].SENTRY_DSN,
+        'include_paths': ['pili'],
+        'release': get_version(),
+    }
+    app.config.update(SENTRY_CONFIG=sentry_config)
+    sentry.init_app(app)
 
     # change jquery version with another CDN
     app.extensions['bootstrap']['cdns']['jquery'] = WebCDN(
