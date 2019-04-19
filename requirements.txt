@@ -19,6 +19,7 @@ Markdown==3.1
 Pillow==6.0.0
 Unidecode==1.0.23
 bleach==3.1.0
+ujson==1.35
 
 # Queue
 celery==4.3.0
@@ -29,6 +30,7 @@ psycopg2==2.8.2
 alembic==1.0.8
 amqp==2.4.2
 redis==3.2.1
+hiredis==1.0.0
 
 # Servers
 uWSGI==2.0.18
