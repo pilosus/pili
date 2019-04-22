@@ -3,10 +3,10 @@ import pickle
 import sys
 import time
 from functools import wraps
-from typing import Any, Callable, Iterable, Mapping, Optional
+from typing import Any, Callable, Dict, Iterable, Mapping, List, Optional
 
 import redis
-from flask import _app_ctx_stack, current_app
+from flask import _app_ctx_stack, current_app  # type: ignore
 
 from pili.connectors import BaseConnector
 
@@ -17,7 +17,7 @@ from pili.connectors import BaseConnector
 try:
     import ujson as json
 except ImportError:
-    import json
+    import json  # type: ignore
 
 
 #
@@ -107,28 +107,30 @@ class RateLimitExceededError(Exception):
     pass
 
 
-def _get_function_full_name(func: Callable, delimiter: str = ':') -> str:
+def _get_function_full_name(func: Callable[..., Any], delimiter: str = ':') -> str:
     return "{module}{delimiter}{name}".format(
         module=func.__module__, delimiter=delimiter, name=func.__qualname__
     )
 
 
 def timer(
-    func: Callable,
+    func: Callable[..., Any],
     alternative_name: str = None,
     logger: Optional[logging.Logger] = None,
-) -> Callable:
+) -> Callable[..., Any]:
     """
     Log function execution time
     """
+    if logger is None:
+        logger = current_app.logger
 
     def _args_to_str(l: Iterable[Any]) -> str:
         return ', '.join(map(str, l))
 
-    def _kwargs_to_str(d: Mapping) -> str:
+    def _kwargs_to_str(d: Mapping[Any, Any]) -> str:
         return ', '.join(['{}={}'.format(k, v) for k, v in d.items()])
 
-    def _inner(*args: list, **kwargs: dict) -> Any:
+    def _inner(*args: List[Any], **kwargs: Dict[Any, Any]) -> Any:
         start_time = time.time_ns()
         result = func(*args, **kwargs)
         delta_ms = round((time.time_ns() - start_time) / 1_000_000)
@@ -144,7 +146,7 @@ def timer(
         )
         result_bytes = sys.getsizeof(result)
 
-        logger.debug(
+        logger.debug(  # type: ignore
             '{func_str} of size {size} bytes '
             'has been loaded from cache in {delta} '
             'milliseconds'.format(size=result_bytes, func_str=func_str, delta=delta_ms)
@@ -155,8 +157,8 @@ def timer(
 
 
 def _generate_function_key(
-    func: Callable, prefix: str, postfix_func: Optional[Callable] = None
-) -> Callable:
+    func: Callable[..., Any], prefix: str, postfix_func: Optional[Callable[..., Any]] = None
+) -> Callable[..., Any]:
     """
     Generate string representing a callable to be used as a key for key-value storage
 
@@ -187,19 +189,22 @@ def cache(
     *,
     connector: Optional[RedisConnector] = None,
     silent: bool = True,
-    key_func: Optional[Callable] = None,
-    load_func: Callable = json.loads,
-    dump_func: Callable = json.dumps,
+    key_func: Optional[Callable[..., Any]] = None,
+    load_func: Callable[..., Any] = json.loads,
+    dump_func: Callable[..., Any] = json.dumps,
     logger: Optional[logging.Logger] = None,
-) -> Callable:
+) -> Callable[..., Any]:
     """
     Cache decorator
     """
+    if connector is None:
+        connector = current_app.connectors.redis
+
     # Get app's default logger if looger is omitted
     if logger is None:
-        logger = connector.app.logger
+        logger = connector.app.logger  # type: ignore
 
-    def _decorator(func: Callable) -> Callable:
+    def _decorator(func: Callable[..., Any]) -> Callable[..., Any]:
         key_generator = _generate_function_key(
             func=func, prefix='cache', postfix_func=key_func
         )
@@ -211,25 +216,25 @@ def cache(
 
             if not current_app.config.get('CACHE_DISABLE'):
                 try:
-                    connector.get_key = timer(
-                        func=connector.get_key,
+                    connector.get_key = timer(  # type: ignore
+                        func=connector.get_key,  # type: ignore
                         alternative_name=func.__name__,
                         logger=logger,
                     )
-                    result = load_func(connector.get_key(cache_key))
+                    result = load_func(connector.get_key(cache_key))  # type: ignore
                     cache_miss = False
                 except TypeError:
-                    logger.info('No cache found for key: {}'.format(cache_key))
+                    logger.info('No cache found for key: {}'.format(cache_key))  # type: ignore
                 except ValueError:
                     message = 'Cache cannot be loaded for key: {}'.format(cache_key)
-                    logger.exception(message)
+                    logger.exception(message)  # type: ignore
                     if not silent:
                         raise CacheError(message)
                 except redis.RedisError:
                     message = 'Redis connection failed while getting key: {}'.format(
                         cache_key
                     )
-                    logger.exception(message)
+                    logger.exception(message)  # type: ignore
                     if not silent:
                         raise RedisConnectorError(message)
 
@@ -237,19 +242,19 @@ def cache(
                 result = func(*args, **kwargs)
 
                 try:
-                    connector.set_key(cache_key, dump_func(result), expire_seconds)
+                    connector.set_key(cache_key, dump_func(result), expire_seconds)  # type: ignore
                 except (ValueError, pickle.PickleError):
                     message = 'Function \'s `{}` result cannot be serialized'.format(
                         func.__name__
                     )
-                    logger.exception(message)
+                    logger.exception(message)  # type: ignore
                     if not silent:
                         raise CacheError(message)
                 except redis.RedisError:
                     message = 'Redis connection failed while setting key: {}'.format(
                         cache_key
                     )
-                    logger.info(message)
+                    logger.info(message)  # type: ignore
                     if not silent:
                         raise RedisConnectorError(message)
             return result
@@ -264,9 +269,9 @@ def cache_flask_view(
     *,
     connector: Optional[RedisConnector] = None,
     silent: bool = True,
-    key_func: Optional[Callable] = None,
+    key_func: Optional[Callable[..., Any]] = None,
     logger: Optional[logging.Logger] = None,
-) -> Callable:
+) -> Callable[..., Any]:
     """
     Cache decorator for Flask function-based views
     """
@@ -286,18 +291,18 @@ def rate_limit(
     *,
     connector: Optional[RedisConnector] = None,
     silent: bool = True,
-    key_func: Optional[Callable] = None,
-    load_func: Callable = json.loads,
+    key_func: Optional[Callable[..., Any]] = None,
+    load_func: Callable[..., Any] = json.loads,
     logger: Optional[logging.Logger] = None,
-) -> Callable:
+) -> Callable[..., Any]:
     """
     Rate limit decorator
     """
     # Get app's default logger if looger is omitted
     if logger is None:
-        logger = connector.app.logger
+        logger = connector.app.logger  # type: ignore
 
-    def _decorator(func: Callable) -> Callable:
+    def _decorator(func: Callable[..., Any]) -> Callable[..., Any]:
         # You may want to specify key_func to get user's ID or IP address
         # in order to set rate limit per user
         # key_func may ignore view's arguments, getting instead either:
@@ -319,20 +324,20 @@ def rate_limit(
             result = None
 
             try:
-                result = load_func(connector.get_key(cache_key))
+                result = load_func(connector.get_key(cache_key))  # type: ignore
             except TypeError:
                 # key doesn't exist yet, keep result as is
                 pass
             except ValueError:
                 message = 'Cache cannot be loaded for key: {}'.format(cache_key)
-                logger.exception(message)
+                logger.exception(message)  # type: ignore
                 if not silent:
                     raise CacheError(message)
             except redis.RedisError:
                 message = 'Redis connection failed while getting key: {}'.format(
                     cache_key
                 )
-                logger.exception(message)
+                logger.exception(message)  # type: ignore
                 if not silent:
                     raise RedisConnectorError(message)
 
@@ -340,7 +345,7 @@ def rate_limit(
                 raise RateLimitExceededError('Rate limit exceeded')
 
             # increment key and set expiration atomically
-            pipe = connector.connection.pipeline()
+            pipe = connector.connection.pipeline()  # type: ignore
             pipe.incr(cache_key, 1)  # increase RPS counter
             pipe.expire(cache_key, 5)  # drop key in 5 seconds
             pipe.execute()

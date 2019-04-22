@@ -44,7 +44,7 @@ class BaseConnector(object):
         """
         Connector's entrypoint
         """
-        context = flask._app_ctx_stack.top
+        context = flask._app_ctx_stack.top  # type: ignore
         if context is not None:
             connector_name = self.__class__.__name__
             if not hasattr(context, connector_name):

@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Any, Dict, Optional
 
 
 class RequestError(Exception):
@@ -13,11 +13,12 @@ class RequestError(Exception):
         message: str,
         status_code: Optional[int] = None,
         origin: Optional[Exception] = None,
-        extra: Optional[dict] = None,
+        extra: Optional[Dict[Any, Any]] = None,
     ) -> None:
         Exception.__init__(self)
         self.message = message
         self.status_code = status_code or 500
+        self.origin = origin
         self.extra = extra or {}
 
 

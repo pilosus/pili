@@ -18,7 +18,7 @@ from pili.exceptions import (
 #
 
 
-def json_error_handler(exc: Exception) -> Response:
+def json_error_handler(exc: RequestError) -> Response:
     """
     Basic error handler with JSON response
     """
