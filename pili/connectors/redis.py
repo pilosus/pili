@@ -130,12 +130,8 @@ def timer(func: Callable, alternative_name: str=None, logger: Optional[logging.L
         result_bytes = sys.getsizeof(result)
 
         logger.debug('{func_str} of size {size} bytes '
-                     'has been loaded from cache for {delta} '
+                     'has been loaded from cache in {delta} '
                      'milliseconds'.format(size=result_bytes, func_str=func_str, delta=delta_ms))
-
-        logger.debug('`{func_name}({args}, {kwargs})` '
-                     'loaded from redis cache for `{delta}`. '
-                     '{len(result)} bytes retrieved.')
         return result
     return _inner
 
@@ -191,7 +187,7 @@ def cache(
             cache_miss, result = True, None
             cache_key = key_generator(*args, **kwargs)
 
-            if not current_app.config.CACHE_DISABLE:
+            if not current_app.config.get('CACHE_DISABLE'):
                 try:
                     connector.get_key = timer(func=connector.get_key, alternative_name=func.__name__, logger=logger)
                     result = load_func(connector.get_key(cache_key))

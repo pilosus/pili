@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, request
 from flask.logging import default_handler
 from flask_bootstrap import Bootstrap
 from flask_bootstrap import WebCDN
@@ -23,6 +23,13 @@ import pili.jinja_filters
 import logging
 
 
+def get_client_remote_addr(*args, **kwargs):
+    """
+    Get user's remote address from the Request
+    """
+    return request.environ.get('HTTP_X_FORWARDED_FOR') or request.environ.get('REMOTE_ADDR')
+
+
 # Initialize extensions
 bootstrap = Bootstrap()
 mail = Mail()
@@ -37,9 +44,9 @@ celery = Celery(
 sentry = Sentry()
 
 redis = RedisConnector()
-cache = partial(cache, connector=redis)
-cache_flask_view = partial(cache_flask_view, connector=redis)
-rate_limit = partial(rate_limit, connector=redis)
+cache = partial(cache, connector=redis, key_func=get_client_remote_addr)
+cache_flask_view = partial(cache_flask_view, connector=redis, key_func=get_client_remote_addr)
+rate_limit = partial(rate_limit, connector=redis, key_func=get_client_remote_addr)
 
 login_manager = LoginManager()
 login_manager.session_protection = 'strong'

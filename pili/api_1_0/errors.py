@@ -45,6 +45,9 @@ def json_error_handler(exc: Exception) -> Response:
     if not sentry_disable and (status_code not in sentry_exclude):
         current_app.connectors.sentry.client.captureException(origin)
 
+    # Log to default app's logger
+    current_app.logger.exception(str(origin))
+
     response = jsonify({'errors': {'message': message, 'status_code': status_code, **extra}})
     response.status_code = status_code
     return response

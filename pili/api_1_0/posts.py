@@ -6,8 +6,11 @@ from pili.models import Permission, Post
 from pili.api_1_0 import api
 from pili.api_1_0.decorators import permission_required
 
+from pili import cache_flask_view
+
 
 @api.route('/posts/')
+@cache_flask_view(expire_seconds=15*60)
 def get_posts():
     page = request.args.get('page', 1, type=int)
     pagination = Post.query.paginate(
