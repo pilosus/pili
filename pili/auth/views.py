@@ -1,6 +1,11 @@
 from flask import current_app, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required, login_user, logout_user
 
+from .. import db
+from ..decorators import permission_required
+from ..email import send_email
+from ..filters import generate_password
+from ..models import Permission, Post, Role, User
 from . import auth
 from .forms import (
     ChangeEmailForm,
@@ -12,11 +17,6 @@ from .forms import (
     PasswordResetRequestForm,
     RegistrationForm,
 )
-from .. import db
-from ..decorators import permission_required
-from ..email import send_email
-from ..filters import generate_password
-from ..models import Permission, Post, Role, User
 
 
 @auth.before_app_request

@@ -27,7 +27,9 @@ def get_client_remote_addr(*args, **kwargs):
     """
     Get user's remote address from the Request
     """
-    return request.environ.get('HTTP_X_FORWARDED_FOR') or request.environ.get('REMOTE_ADDR')
+    return request.environ.get('HTTP_X_FORWARDED_FOR') or request.environ.get(
+        'REMOTE_ADDR'
+    )
 
 
 # Initialize extensions
@@ -45,7 +47,9 @@ sentry = Sentry()
 
 redis = RedisConnector()
 cache = partial(cache, connector=redis, key_func=get_client_remote_addr)
-cache_flask_view = partial(cache_flask_view, connector=redis, key_func=get_client_remote_addr)
+cache_flask_view = partial(
+    cache_flask_view, connector=redis, key_func=get_client_remote_addr
+)
 rate_limit = partial(rate_limit, connector=redis, key_func=get_client_remote_addr)
 
 login_manager = LoginManager()
@@ -58,6 +62,7 @@ def register_extensions(app):
     """
     Register and update extensions and connectors
     """
+
     class Connectors:
         pass
 
@@ -110,6 +115,7 @@ def register_extensions(app):
     # SSL support
     if not app.debug and not app.testing and not app.config['SSL_DISABLE']:
         from flask_sslify import SSLify
+
         sslify = SSLify(app)
 
 
@@ -118,15 +124,19 @@ def register_blueprints(app):
     Register blueprints to the app
     """
     from .main import main as main_blueprint
+
     app.register_blueprint(main_blueprint)
 
     from .ctrl import ctrl as ctrl_blueprint
+
     app.register_blueprint(ctrl_blueprint, url_prefix='/ctrl')
 
     from .auth import auth as auth_blueprint
+
     app.register_blueprint(auth_blueprint, url_prefix='/auth')
 
     from .api_1_0 import api as api_1_0_blueprint
+
     app.register_blueprint(api_1_0_blueprint, url_prefix='/api/v1.0')
 
 
@@ -136,7 +146,9 @@ def configure_logging(app) -> None:
     """
     app.logger.removeHandler(default_handler)
 
-    log_formatter = logging.Formatter(fmt=app.config['LOG_FMT'], datefmt=app.config['LOG_DATEFMT'])
+    log_formatter = logging.Formatter(
+        fmt=app.config['LOG_FMT'], datefmt=app.config['LOG_DATEFMT']
+    )
     log_handler = logging.StreamHandler()
     log_handler.setFormatter(log_formatter)
     log_handler.setLevel(app.config['LOG_LEVEL'])

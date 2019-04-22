@@ -12,8 +12,6 @@ from flask import (
 from flask_login import current_user, login_required
 from flask_sqlalchemy import get_debug_queries
 
-from . import main
-from .forms import CommentForm
 from .. import db
 from ..ctrl.forms import CsrfTokenForm
 from ..decorators import permission_required
@@ -28,6 +26,8 @@ from ..models import (
     Tag,
     User,
 )
+from . import main
+from .forms import CommentForm
 
 
 @main.route('/')

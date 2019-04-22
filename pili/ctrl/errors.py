@@ -1,7 +1,7 @@
 from flask import jsonify, render_template, request
 
-from . import ctrl
 from .. import CSRFError
+from . import ctrl
 
 
 @ctrl.app_errorhandler(403)
