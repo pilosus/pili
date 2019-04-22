@@ -2,8 +2,8 @@ import json
 
 from flask import current_app, jsonify, request, url_for
 
-from . import api
-from ..models import Post, Tag
+from pili.models import Post, Tag
+from pili.api_1_0 import api
 
 
 @api.route('/tags/')

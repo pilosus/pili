@@ -1,13 +1,16 @@
 from flask import current_app, g, jsonify, request, url_for
 
-from . import api
-from .decorators import permission_required
-from .errors import forbidden
-from .. import db
-from ..models import Permission, Post
+from pili import exceptions
+from pili import db
+from pili.models import Permission, Post
+from pili.api_1_0 import api
+from pili.api_1_0.decorators import permission_required
+
+from pili import cache_flask_view
 
 
 @api.route('/posts/')
+@cache_flask_view(expire_seconds=15*60)
 def get_posts():
     page = request.args.get('page', 1, type=int)
     pagination = Post.query.paginate(
@@ -55,7 +58,7 @@ def new_post():
 def edit_post(id):
     post = Post.query.get_or_404(id)
     if g.current_user != post.author and not g.current_user.can(Permission.ADMINISTER):
-        return forbidden('Insufficient permissions')
+        raise exceptions.ForbiddenError('Insufficient permissions')
     post.body = request.json.get('body', post.body)
     db.session.add(post)
     return jsonify(post.to_json())

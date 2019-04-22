@@ -1,14 +1,34 @@
-#!/usr/bin/env python
-
 import os
+import logging
+
 from pili.filters import to_bool
+
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 
 class Config:
+    ENVIRONMENT = 'development'
     SECRET_KEY = os.environ.get('SECRET_KEY')
-    MAX_CONTENT_LENGTH = 16 * 1024 * 1024 # 16 Mb
+    MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16 Mb
+
+    # Logging
+    LOG_LEVEL = logging.DEBUG
+    LOG_FMT = '%(asctime)s [%(levelname)s][%(filename)s:%(lineno)d][%(name)s] %(message)s'
+    LOG_DATEFMT = '%Y-%m-%d %H:%M:%S'
+
+    # SSL
     SSL_DISABLE = False
+
+    # Cache
+    CACHE_DISABLE = to_bool(os.environ.get('CACHE_DISABLE', True))
+    REDIS_HOST = os.environ.get('REDIS_HOST', 'redis')
+    REDIS_PORT = int(os.environ.get('REDIS_PORT', 6379))
+    REDIS_DB = int(os.environ.get('REDIS_DB', 1))
+    REDIS_PASSWORD = os.environ.get('REDIS_PASSWORD', None)
+    REDIS_TIMEOUT = int(os.environ.get('REDIS_TIMEOUT', 3))
+    REDIS_CONNECT_TIMEOUT = int(os.environ.get('REDIS_CONNECT_TIMEOUT', 3))
+
+    # SQLAlchemy
     SQLALCHEMY_COMMIT_ON_TEARDOWN = True
     SQLALCHEMY_RECORD_QUERIES = True
     SQLALCHEMY_TRACK_MODIFICATIONS = False
@@ -33,7 +53,10 @@ class Config:
     FLOWER_BROKER = None if FLOWER_BROKER_API else CELERY_BROKER_URL
 
     # SENTRY
+    SENTRY_DISABLE = False
     SENTRY_DSN = os.environ.get('SENTRY_DSN')
+    SENTRY_USER_ATTRS = ['username', 'name', 'email']
+    SENTRY_EXCLUDE_STATUS_CODES = []
 
     # APP
     PILI_APP_LOCALE_DEFAULT = os.environ.get('PILI_APP_LOCALE_DEFAULT')
@@ -64,13 +87,13 @@ class Config:
     PILI_UPLOADS = os.path.join(PILI_STATIC_DIR, 'uploads')
     PILI_ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'gif', 'png']
 
-    ##  Flask-thumbnails settings
+    #  Flask-thumbnails settings
     MEDIA_FOLDER = PILI_UPLOADS
     MEDIA_URL = '/static/uploads/'
     MEDIA_THUMBNAIL_FOLDER = os.path.join(PILI_UPLOADS, 'thumbnails') # chmod 775
     MEDIA_THUMBNAIL_URL = '/static/uploads/thumbnails/'
 
-    ## Allowed html tags and attributes
+    # Allowed html tags and attributes
     PILI_ALLOWED_TAGS = ['a', 'abbr', 'acronym', 'b', 'blockquote', 'code',
                          'em', 'i', 'img', 'li', 'ol', 'pre', 'strong', 'ul',
                          'h1', 'h2', 'h3', 'p', 'div', 'span']
@@ -91,28 +114,29 @@ class DevelopmentConfig(Config):
     DEBUG = True
     SQLALCHEMY_DATABASE_URI = os.environ.get('DEV_DATABASE_URL') or \
         'sqlite:///' + os.path.join(basedir, 'data-dev.sqlite')
+    SENTRY_DISABLE = False
 
     @staticmethod
     def init_app(app):
-        # log to stderr
-        import logging
-        from logging import StreamHandler
-
-        file_handler = StreamHandler()
-        file_handler.setLevel(logging.DEBUG)
-        app.logger.addHandler(file_handler)
+        pass
 
 
 class TestingConfig(Config):
+    ENVIRONMENT = 'test'
     TESTING = True
     SQLALCHEMY_DATABASE_URI = os.environ.get('TEST_DATABASE_URL') or \
         'sqlite:///' + os.path.join(basedir, 'data-test.sqlite')
     WTF_CSRF_ENABLED = False
+    SENTRY_DISABLE = False
 
 
 class ProductionConfig(Config):
+    ENVIRONMENT = 'production'
+    SSL_DISABLE = bool(os.environ.get('SSL_DISABLE'))
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
         'sqlite:///' + os.path.join(basedir, 'data.sqlite')
+    LOG_LEVEL = logging.WARNING
+    SENTRY_EXCLUDE_STATUS_CODES = [401, 403]
 
     @classmethod
     def init_app(cls, app):
@@ -130,13 +154,6 @@ class HerokuConfig(ProductionConfig):
     def init_app(cls, app):
         ProductionConfig.init_app(app)
 
-        # log to stderr
-        import logging
-        from logging import StreamHandler
-        file_handler = StreamHandler()
-        file_handler.setLevel(logging.WARNING)
-        app.logger.addHandler(file_handler)
-
 
 class UnixConfig(ProductionConfig):
     SSL_DISABLE = bool(os.environ.get('SSL_DISABLE'))
@@ -148,16 +165,6 @@ class UnixConfig(ProductionConfig):
         # handle proxy server headers
         from werkzeug.contrib.fixers import ProxyFix
         app.wsgi_app = ProxyFix(app.wsgi_app)
-
-        ## log to syslog
-        # write to /var/log/messages
-        # can be configured to write to a separate log file
-        # see docs
-        import logging
-        from logging.handlers import SysLogHandler
-        syslog_handler = SysLogHandler()
-        syslog_handler.setLevel(logging.WARNING)
-        app.logger.addHandler(syslog_handler)        
 
 
 config = {
