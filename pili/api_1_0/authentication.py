@@ -1,10 +1,9 @@
 from flask import g, jsonify
 from flask_httpauth import HTTPBasicAuth
 
+from pili import exceptions, rate_limit
 from pili.api_1_0 import api
 from pili.models import AnonymousUser, User
-from pili import exceptions
-from pili import rate_limit
 
 auth = HTTPBasicAuth()
 

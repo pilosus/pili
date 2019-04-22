@@ -1,16 +1,13 @@
 from flask import current_app, g, jsonify, request, url_for
 
-from pili import exceptions
-from pili import db
-from pili.models import Permission, Post
+from pili import cache_flask_view, db, exceptions
 from pili.api_1_0 import api
 from pili.api_1_0.decorators import permission_required
-
-from pili import cache_flask_view
+from pili.models import Permission, Post
 
 
 @api.route('/posts/')
-@cache_flask_view(expire_seconds=15*60)
+@cache_flask_view(expire_seconds=15 * 60)
 def get_posts():
     page = request.args.get('page', 1, type=int)
     pagination = Post.query.paginate(

@@ -1,6 +1,5 @@
 from subprocess import check_output
 
-
 COMMIT_FILE = '.commit'
 GIT_COMMAND = 'git describe --tags --long --dirty'
 VERSION_FORMAT = '{tag}.dev{commit_count}+{commit_hash}'

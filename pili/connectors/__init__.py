@@ -4,7 +4,7 @@ from typing import Optional
 
 
 class BaseConnector(object):
-    def __init__(self, app: Optional[flask.Flask]=None) -> None:
+    def __init__(self, app: Optional[flask.Flask] = None) -> None:
         """
         Bind app to the object
         """

@@ -16,17 +16,6 @@ from flask_login import current_user, login_required
 from flask_sqlalchemy import get_debug_queries
 from werkzeug.utils import secure_filename
 
-from . import ctrl
-from .forms import (
-    CategoryForm,
-    CsrfTokenForm,
-    EditCategoryForm,
-    EditProfileAdminForm,
-    EditProfileForm,
-    NotificationForm,
-    PostForm,
-    UploadForm,
-)
 from .. import db
 from ..decorators import admin_required, permission_required
 from ..email import send_email
@@ -43,6 +32,17 @@ from ..models import (
     Tagification,
     Upload,
     User,
+)
+from . import ctrl
+from .forms import (
+    CategoryForm,
+    CsrfTokenForm,
+    EditCategoryForm,
+    EditProfileAdminForm,
+    EditProfileForm,
+    NotificationForm,
+    PostForm,
+    UploadForm,
 )
 
 

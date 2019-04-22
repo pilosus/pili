@@ -1,18 +1,22 @@
-from flask import jsonify, current_app, Response
+from typing import Optional
+
+from flask import Response, current_app, jsonify
 from werkzeug.exceptions import MethodNotAllowed
 from werkzeug.routing import RequestRedirect
 
-from pili.exceptions import RequestError, ValidationError, UnauthorizedError, ForbiddenError
-from pili.connectors.redis import RateLimitExceededError
-
 from pili.api_1_0 import api
-
-from typing import Optional
-
+from pili.connectors.redis import RateLimitExceededError
+from pili.exceptions import (
+    ForbiddenError,
+    RequestError,
+    UnauthorizedError,
+    ValidationError,
+)
 
 #
 # Exceptions
 #
+
 
 def json_error_handler(exc: Exception) -> Response:
     """
@@ -48,7 +52,9 @@ def json_error_handler(exc: Exception) -> Response:
     # Log to default app's logger
     current_app.logger.exception(str(origin))
 
-    response = jsonify({'errors': {'message': message, 'status_code': status_code, **extra}})
+    response = jsonify(
+        {'errors': {'message': message, 'status_code': status_code, **extra}}
+    )
     response.status_code = status_code
     return response
 
