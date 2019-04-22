@@ -1,9 +1,9 @@
 from flask import current_app, g, jsonify, request, url_for
 
-from . import api
-from .decorators import permission_required
-from .. import db
-from ..models import Comment, Permission, Post
+from pili import db
+from pili.models import Comment, Permission, Post
+from pili.api_1_0 import api
+from pili.api_1_0.decorators import permission_required
 
 
 @api.route('/comments/')

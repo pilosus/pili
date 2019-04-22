@@ -2,8 +2,8 @@ import json
 
 from flask import current_app, jsonify, request, url_for
 
-from . import api
-from ..models import Category, Post, Upload
+from pili.api_1_0 import api
+from pili.models import Category, Post, Upload
 
 
 @api.route('/uploads/')

@@ -1,9 +1,9 @@
 from flask import g, jsonify
 from flask_httpauth import HTTPBasicAuth
 
-from . import api
-from .errors import forbidden, unauthorized
-from ..models import AnonymousUser, User
+from pili.api_1_0 import api
+from pili.models import AnonymousUser, User
+from pili import exceptions
 
 auth = HTTPBasicAuth()
 
@@ -27,20 +27,20 @@ def verify_password(email_or_token, password):
 
 @auth.error_handler
 def auth_error():
-    return unauthorized('Invalid credentials')
+    raise exceptions.UnauthorizedError('Invalid credentials')
 
 
 @api.before_request
 @auth.login_required
 def before_request():
     if not g.current_user.is_anonymous and not g.current_user.confirmed:
-        return forbidden('Unconfirmed account')
+        raise exceptions.ForbiddenError('Unconfirmed account')
 
 
 @api.route('/token')
 def get_token():
     if g.current_user.is_anonymous or g.token_used:
-        return unauthorized('Invalid credentials')
+        raise exceptions.UnauthorizedError('Invalid credentials')
     return jsonify(
         {
             'token': g.current_user.generate_auth_token(expiration=3600),

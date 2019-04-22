@@ -1,7 +1,7 @@
 from flask import current_app, jsonify, request, url_for
 
-from . import api
-from ..models import Post, User
+from pili.api_1_0 import api
+from pili.models import Post, User
 
 
 @api.route('/users/<int:id>')

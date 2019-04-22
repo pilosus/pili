@@ -76,6 +76,7 @@ def register_extensions(app):
     sentry_config = {
         'dsn': app.config['SENTRY_DSN'],
         'include_paths': ['pili'],
+        'environment': app.config.get('ENVIRONMENT', 'test'),
         'release': get_version(),
     }
     app.config.update(SENTRY_CONFIG=sentry_config)

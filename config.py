@@ -7,6 +7,7 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 
 
 class Config:
+    ENVIRONMENT = 'development'
     SECRET_KEY = os.environ.get('SECRET_KEY')
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16 Mb
 
@@ -54,6 +55,7 @@ class Config:
     # SENTRY
     SENTRY_DISABLE = False
     SENTRY_DSN = os.environ.get('SENTRY_DSN')
+    SENTRY_USER_ATTRS = ['username', 'name', 'email']
     SENTRY_EXCLUDE_STATUS_CODES = []
 
     # APP
@@ -120,6 +122,7 @@ class DevelopmentConfig(Config):
 
 
 class TestingConfig(Config):
+    ENVIRONMENT = 'test'
     TESTING = True
     SQLALCHEMY_DATABASE_URI = os.environ.get('TEST_DATABASE_URL') or \
         'sqlite:///' + os.path.join(basedir, 'data-test.sqlite')
@@ -128,10 +131,12 @@ class TestingConfig(Config):
 
 
 class ProductionConfig(Config):
+    ENVIRONMENT = 'production'
     SSL_DISABLE = bool(os.environ.get('SSL_DISABLE'))
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
         'sqlite:///' + os.path.join(basedir, 'data.sqlite')
     LOG_LEVEL = logging.WARNING
+    SENTRY_EXCLUDE_STATUS_CODES = [401, 403]
 
     @classmethod
     def init_app(cls, app):

@@ -1,7 +1,7 @@
 from flask import jsonify
 
-from . import api
-from ..models import Message
+from pili.api_1_0 import api
+from pili.models import Message
 
 
 @api.route('/messages/<int:id>')
