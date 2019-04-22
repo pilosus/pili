@@ -4,6 +4,7 @@ from flask_httpauth import HTTPBasicAuth
 from pili.api_1_0 import api
 from pili.models import AnonymousUser, User
 from pili import exceptions
+from pili import rate_limit
 
 auth = HTTPBasicAuth()
 
@@ -38,6 +39,7 @@ def before_request():
 
 
 @api.route('/token')
+@rate_limit(rps=1)
 def get_token():
     if g.current_user.is_anonymous or g.token_used:
         raise exceptions.UnauthorizedError('Invalid credentials')
