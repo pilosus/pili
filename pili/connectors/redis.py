@@ -3,7 +3,7 @@ import pickle
 import sys
 import time
 from functools import wraps
-from typing import Any, Callable, Dict, Iterable, Mapping, List, Optional
+from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional
 
 import redis
 from flask import _app_ctx_stack, current_app  # type: ignore
@@ -157,7 +157,9 @@ def timer(
 
 
 def _generate_function_key(
-    func: Callable[..., Any], prefix: str, postfix_func: Optional[Callable[..., Any]] = None
+    func: Callable[..., Any],
+    prefix: str,
+    postfix_func: Optional[Callable[..., Any]] = None,
 ) -> Callable[..., Any]:
     """
     Generate string representing a callable to be used as a key for key-value storage
@@ -224,7 +226,9 @@ def cache(
                     result = load_func(connector.get_key(cache_key))  # type: ignore
                     cache_miss = False
                 except TypeError:
-                    logger.info('No cache found for key: {}'.format(cache_key))  # type: ignore
+                    logger.info(  # type: ignore
+                        'No cache found for key: {}'.format(cache_key)
+                    )
                 except ValueError:
                     message = 'Cache cannot be loaded for key: {}'.format(cache_key)
                     logger.exception(message)  # type: ignore
@@ -242,7 +246,9 @@ def cache(
                 result = func(*args, **kwargs)
 
                 try:
-                    connector.set_key(cache_key, dump_func(result), expire_seconds)  # type: ignore
+                    connector.set_key(  # type: ignore
+                        cache_key, dump_func(result), expire_seconds
+                    )
                 except (ValueError, pickle.PickleError):
                     message = 'Function \'s `{}` result cannot be serialized'.format(
                         func.__name__

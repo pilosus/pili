@@ -58,5 +58,5 @@ Pygments==2.3.1
 colorama==0.4.1
 coverage==4.5.3
 httpie==1.0.2
-requests==2.21.0
+#requests==2.21.0
 selenium==3.141.0
