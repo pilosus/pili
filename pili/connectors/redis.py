@@ -226,9 +226,9 @@ def cache(
                     result = load_func(connector.get_key(cache_key))  # type: ignore
                     cache_miss = False
                 except TypeError:
-                    logger.info(
+                    logger.info(  # type: ignore
                         'No cache found for key: {}'.format(cache_key)
-                    )  # type: ignore
+                    )
                 except ValueError:
                     message = 'Cache cannot be loaded for key: {}'.format(cache_key)
                     logger.exception(message)  # type: ignore
@@ -246,9 +246,9 @@ def cache(
                 result = func(*args, **kwargs)
 
                 try:
-                    connector.set_key(
+                    connector.set_key(  # type: ignore
                         cache_key, dump_func(result), expire_seconds
-                    )  # type: ignore
+                    )
                 except (ValueError, pickle.PickleError):
                     message = 'Function \'s `{}` result cannot be serialized'.format(
                         func.__name__
