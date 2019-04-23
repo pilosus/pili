@@ -21,16 +21,26 @@ if os.path.exists('.hosting.env'):
         if len(var) == 2 and not var[0].startswith('#'):
             os.environ[var[0]] = var[1]
 
+
 from pili import create_app, db
 from pili.models import User, Role, Permission, Follow, Post, Tag, \
     Comment, Tagification, Category, Structure, Upload, Follow, \
     Message, MessageAck, Like
 from flask_script import Manager, Shell
 from flask_migrate import Migrate, MigrateCommand
+from werkzeug.middleware.dispatcher import DispatcherMiddleware
+from prometheus_client import make_wsgi_app
 
 app = create_app(os.getenv('FLASK_CONFIG') or 'default')
+
+# Add prometheus wsgi middleware to route /metrics requests
+app_dispatch = DispatcherMiddleware(app, {
+    '/metrics': make_wsgi_app()
+})
+
 manager = Manager(app)
 migrate = Migrate(app, db)
+
 
 def make_shell_context():
     return dict(app=app, db=db, User=User, Role=Role,
@@ -39,6 +49,7 @@ def make_shell_context():
                 Tagification=Tagification, Category=Category,
                 Structure=Structure, Upload=Upload, Message=Message,
                 MessageAck=MessageAck, Like=Like)
+
 manager.add_command("shell", Shell(make_context=make_shell_context))
 manager.add_command('db', MigrateCommand)
 
@@ -73,13 +84,15 @@ def profile(length=25, profile_dir=None):
                                       profile_dir=profile_dir)
     app.run()
 
+
 @manager.command
 def initialize():
     """Create all databases, initialize migration scripts before deploying."""
     from flask_migrate import init
     db.create_all()
     init()
-    
+
+
 @manager.command
 def deploy():
     """Run deployment tasks."""
