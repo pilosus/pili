@@ -1,4 +1,4 @@
-from flask import Flask, request
+from flask import Flask, request, g
 from flask.logging import default_handler
 from flask_bootstrap import Bootstrap
 from flask_bootstrap import WebCDN
@@ -15,12 +15,14 @@ from inspect import getmembers, isfunction
 from raven.contrib.flask import Sentry
 from typing import Any
 from functools import partial
+from prometheus_client import Counter, Histogram, Info
 
 from pili.connectors.redis import RedisConnector, cache, cache_flask_view, rate_limit
 from pili.version import get_version
 
 import pili.jinja_filters
 import logging
+import time
 
 
 def get_client_remote_addr(*args, **kwargs):
@@ -56,6 +58,50 @@ login_manager = LoginManager()
 login_manager.session_protection = 'strong'
 login_manager.login_view = 'auth.login'
 login_manager.login_message_category = 'warning'
+
+
+METRICS_REQUEST_LATENCY = Histogram(
+    'app_request_latency_seconds', 'Application Request Latency', ['method', 'endpoint']
+)
+METRICS_REQUEST_COUNT = Counter(
+    'app_request_count',
+    'Application Request Count',
+    ['method', 'endpoint', 'http_status'],
+)
+
+METRICS_INFO = Info('app_version', 'Application Version')
+
+
+def before_request():
+    """
+    Get start time of a request
+    """
+    g._prometheus_metrics_request_start_time = time.time()
+
+
+def after_request(response):
+    """
+    Register Prometheus metrics after each request
+    """
+    request_latency = time.time() - g._prometheus_metrics_request_start_time
+    METRICS_REQUEST_LATENCY.labels(request.method, request.path).observe(
+        request_latency
+    )
+    METRICS_REQUEST_COUNT.labels(
+        request.method, request.path, response.status_code
+    ).inc()
+    return response
+
+
+def register_middlewares(app):
+    """
+    Register middlewares
+    """
+    app.before_request(before_request)
+    app.after_request(after_request)
+    METRICS_INFO.info(
+        {'version': get_version(), 'config': app.config.get('ENVIRONMENT', 'undefined')}
+    )
 
 
 def register_extensions(app):
@@ -172,4 +218,6 @@ def create_app(config_name):
     # register blueprints
     register_blueprints(app)
 
+    # register middlewares: metrics, error handling
+    register_middlewares(app)
     return app
