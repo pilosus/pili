@@ -1,8 +1,9 @@
 from flask import current_app, g, jsonify, request, url_for
 
-from pili import cache_flask_view, db, exceptions
+from pili import exceptions
 from pili.api_1_0 import api
 from pili.api_1_0.decorators import permission_required
+from pili.app import cache_flask_view, db
 from pili.models import Permission, Post
 
 

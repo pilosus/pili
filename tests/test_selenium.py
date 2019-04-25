@@ -5,7 +5,7 @@ import unittest
 
 from selenium import webdriver
 
-from pili import create_app, db
+from pili.app import create_app, db
 from pili.models import Post, Role, User
 
 

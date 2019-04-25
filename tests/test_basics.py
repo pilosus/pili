@@ -2,7 +2,7 @@ import unittest
 
 from flask import current_app
 
-from pili import create_app, db
+from pili.app import create_app, db
 
 
 class BasicsTestCase(unittest.TestCase):

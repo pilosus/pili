@@ -10,8 +10,7 @@ from wtforms import (
 from wtforms.validators import Email, EqualTo, Length, Regexp, Required
 
 from pili.jinja_filters import permissions2str
-
-from ..models import Role, User
+from pili.models import Role, User
 
 
 class LoginForm(FlaskForm):

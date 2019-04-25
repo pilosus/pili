@@ -3,7 +3,7 @@ from threading import Thread
 from flask import current_app, render_template
 from flask_mail import Message
 
-from . import celery, mail
+from pili.app import celery, mail
 
 
 def send_email(to, subject, template, **kwargs):
