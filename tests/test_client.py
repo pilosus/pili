@@ -3,14 +3,14 @@ import unittest
 
 from flask import url_for
 
-from pili import create_app, db
+from pili.app import create_app, db
 from pili.models import Role, User
 
 
 class FlaskClientTestCase(unittest.TestCase):
     def setUp(self):
         self.app = create_app('testing')
-        self.app_context = self.app.app_context()
+        self.app_context = self.app.test_request_context()
         self.app_context.push()
         db.create_all()
         Role.insert_roles()

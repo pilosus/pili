@@ -2,7 +2,7 @@ import time
 import unittest
 from datetime import datetime
 
-from pili import create_app, db
+from pili.app import create_app, db
 from pili.models import AnonymousUser, Follow, Permission, Role, User
 
 

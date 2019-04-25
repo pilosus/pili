@@ -10,6 +10,7 @@ class Config:
     ENVIRONMENT = 'development'
     SECRET_KEY = os.environ.get('SECRET_KEY')
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16 Mb
+    METRICS_URL = '/metrics'
 
     # Logging
     LOG_LEVEL = logging.DEBUG
@@ -135,7 +136,7 @@ class ProductionConfig(Config):
     SSL_DISABLE = bool(os.environ.get('SSL_DISABLE'))
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
         'sqlite:///' + os.path.join(basedir, 'data.sqlite')
-    LOG_LEVEL = logging.WARNING
+    LOG_LEVEL = logging.INFO
     SENTRY_EXCLUDE_STATUS_CODES = [401, 403]
 
     @classmethod

@@ -9,7 +9,7 @@ from wtforms import (
 )
 from wtforms.validators import Email, Length, Regexp, Required
 
-from ..models import Role, User
+from pili.models import Role, User
 
 
 class NameForm(FlaskForm):

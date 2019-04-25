@@ -8,10 +8,9 @@ from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from markdown import markdown
 from werkzeug.security import check_password_hash, generate_password_hash
 
+from pili.app import db, login_manager
 from pili.exceptions import ValidationError
 from pili.filters import generate_password
-
-from . import db, login_manager
 
 
 class Permission:

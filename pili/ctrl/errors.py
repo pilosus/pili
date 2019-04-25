@@ -1,7 +1,7 @@
 from flask import jsonify, render_template, request
+from flask_wtf.csrf import CSRFError
 
-from .. import CSRFError
-from . import ctrl
+from pili.ctrl import ctrl
 
 
 @ctrl.app_errorhandler(403)

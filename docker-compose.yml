@@ -4,6 +4,8 @@ version: '3.7'
 x-pili-common: &pili-common
   image: pili:${PILI_VERSION:-latest}
   init: true
+  environment:
+    - PILI_CONFIG=${PILI_CONFIG:-testing}
   env_file:
     - ./etc/env/${PILI_CONFIG:-development}.env
 
@@ -31,15 +33,17 @@ services:
     init: true
 
   celery:
+    # scale workers when needed
+    # docker-compose up --scale celery=3
     <<: *pili-common
-    command: celery worker -A celery_worker.celery --loglevel=info
+    command: celery worker -A pili.entrypoints.celery.celery --loglevel=info
     links:
       - rabbitmq
       - redis
 
   flower:
     <<: *pili-common
-    command: ./flower-entrypoint.sh
+    command: flower -A pili.entrypoints.celery.celery --loglevel=info
     links:
       - rabbitmq
     ports:
@@ -48,7 +52,11 @@ services:
   pili:
     <<: *pili-common
     build: .
-    command: ./docker-entrypoint.sh
+    command: >
+      sh -c "echo '--> Provision DB' &&
+             pili --config=${PILI_CONFIG} provision --db_init --db_migrate --db_upgrade --db_prepopulate &&
+             echo '--> Run uWSGI' &&
+             pili --config=${PILI_CONFIG} uwsgi --section=${PILI_CONFIG}"
     links:
       - db
       - celery
@@ -70,4 +78,3 @@ services:
       - ./tests:/pili/tests
       - ./setup.cfg:/app/setup.cfg
       - ./setup.py:/app/setup.py
-      - ./manage.py:/app/manage.py

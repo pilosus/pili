@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """Celery worker to be run as follows:
-(venv) $ celery worker -A celery_worker.celery --loglevel=info
+(venv) $ celery worker -A pili.entrypoints.celery.celery --loglevel=info
 
 Environment variables (such as MAIL_SERVER, MAIL_USERNAME, etc.)
 should be set using export:
@@ -18,7 +18,8 @@ settings are effectively absent.
 """
 
 import os
-from pili import celery, create_app
 
-app = create_app(os.getenv('FLASK_CONFIG') or 'default')
+from pili.app import celery, create_app  # noqa
+
+app = create_app(config_name=os.getenv('PILI_CONFIG', 'development'))
 app.app_context().push()

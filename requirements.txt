@@ -1,3 +1,7 @@
+# Misc
+# hack to prevent deprecation warning of requests package installed as a dependency
+urllib3==1.22
+
 # Flask
 Flask==1.0.2
 Flask-Bootstrap==3.3.7.1
@@ -13,6 +17,7 @@ Flask-thumbnails==1.0.6
 Flask-WTF==0.14.2
 WTForms==2.2.1
 Flask-SSLify==0.1.5
+click==7.0.0
 
 # Data processing
 Markdown==3.1
@@ -59,5 +64,5 @@ Pygments==2.3.1
 colorama==0.4.1
 coverage==4.5.3
 httpie==1.0.2
-#requests==2.21.0
 selenium==3.141.0
+

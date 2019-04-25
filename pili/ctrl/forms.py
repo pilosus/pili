@@ -13,8 +13,8 @@ from wtforms import (
 )
 from wtforms.validators import Email, Length, Regexp, Required
 
-from ..filters import file_exists
-from ..models import Category, Role, User
+from pili.filters import file_exists
+from pili.models import Category, Role, User
 
 
 class NameForm(FlaskForm):

@@ -16,11 +16,17 @@ from flask_login import current_user, login_required
 from flask_sqlalchemy import get_debug_queries
 from werkzeug.utils import secure_filename
 
-from .. import db
-from ..decorators import admin_required, permission_required
-from ..email import send_email
-from ..filters import find_thumbnail, get_added_removed, sanitize_alias, sanitize_tags
-from ..models import (
+from pili.app import db
+from pili.ctrl import ctrl
+from pili.decorators import admin_required, permission_required
+from pili.email import send_email
+from pili.filters import (
+    find_thumbnail,
+    get_added_removed,
+    sanitize_alias,
+    sanitize_tags,
+)
+from pili.models import (
     Category,
     Comment,
     Message,
@@ -33,7 +39,7 @@ from ..models import (
     Upload,
     User,
 )
-from . import ctrl
+
 from .forms import (
     CategoryForm,
     CsrfTokenForm,

@@ -1,6 +1,6 @@
 from flask import jsonify, render_template, request
 
-from . import main
+from pili.main import main
 
 
 @main.app_errorhandler(403)

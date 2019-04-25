@@ -12,10 +12,12 @@ from flask import (
 from flask_login import current_user, login_required
 from flask_sqlalchemy import get_debug_queries
 
-from .. import db
-from ..ctrl.forms import CsrfTokenForm
-from ..decorators import permission_required
-from ..models import (
+from pili.app import db
+from pili.ctrl.forms import CsrfTokenForm
+from pili.decorators import permission_required
+from pili.main import main
+from pili.main.forms import CommentForm
+from pili.models import (
     Category,
     Comment,
     Like,
@@ -26,8 +28,6 @@ from ..models import (
     Tag,
     User,
 )
-from . import main
-from .forms import CommentForm
 
 
 @main.route('/')
