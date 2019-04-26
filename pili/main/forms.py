@@ -7,13 +7,13 @@ from wtforms import (
     TextAreaField,
     ValidationError,
 )
-from wtforms.validators import Email, Length, Regexp, Required
+from wtforms.validators import Email, Length, Regexp, DataRequired
 
 from pili.models import Role, User
 
 
 class NameForm(FlaskForm):
-    name = StringField('What is your name?', validators=[Required()])
+    name = StringField('What is your name?', validators=[DataRequired()])
     submit = SubmitField('Submit')
 
 
@@ -25,11 +25,11 @@ class EditProfileForm(FlaskForm):
 
 
 class EditProfileAdminForm(FlaskForm):
-    email = StringField('Email', validators=[Required(), Length(1, 64), Email()])
+    email = StringField('Email', validators=[DataRequired(), Length(1, 64), Email()])
     username = StringField(
         'Username',
         validators=[
-            Required(),
+            DataRequired(),
             Length(1, 64),
             Regexp(
                 '^[A-Za-z][A-Za-z0-9_.]*$',
@@ -68,5 +68,5 @@ class EditProfileAdminForm(FlaskForm):
 
 
 class CommentForm(FlaskForm):
-    body = StringField('Enter your comment', validators=[Required()])
+    body = StringField('Enter your comment', validators=[DataRequired()])
     submit = SubmitField('Submit')

@@ -11,14 +11,14 @@ from wtforms import (
     TextAreaField,
     ValidationError,
 )
-from wtforms.validators import Email, Length, Regexp, Required
+from wtforms.validators import Email, Length, Regexp, DataRequired
 
 from pili.filters import file_exists
 from pili.models import Category, Role, User
 
 
 class NameForm(FlaskForm):
-    name = StringField('What is your name?', validators=[Required()])
+    name = StringField('What is your name?', validators=[DataRequired()])
     submit = SubmitField('Submit')
 
 
@@ -30,11 +30,11 @@ class EditProfileForm(FlaskForm):
 
 
 class EditProfileAdminForm(FlaskForm):
-    email = StringField('Email', validators=[Required(), Length(1, 64), Email()])
+    email = StringField('Email', validators=[DataRequired(), Length(1, 64), Email()])
     username = StringField(
         'Username',
         validators=[
-            Required(),
+            DataRequired(),
             Length(1, 64),
             Regexp(
                 '^[A-Za-z][A-Za-z0-9_.]*$',
@@ -73,11 +73,11 @@ class EditProfileAdminForm(FlaskForm):
 
 
 class PostForm(FlaskForm):
-    title = StringField("Title", validators=[Required(), Length(1, 128)])
+    title = StringField("Title", validators=[DataRequired(), Length(1, 128)])
     alias = StringField(
         "URL alias",
         validators=[
-            Required(),
+            DataRequired(),
             Length(1, 128),
             Regexp(
                 r'^(\w|-)+$',
@@ -86,9 +86,9 @@ class PostForm(FlaskForm):
             ),
         ],
     )
-    description = StringField("Description", validators=[Required(), Length(1, 160)])
+    description = StringField("Description", validators=[DataRequired(), Length(1, 160)])
     timestamp = DateTimeField("Date and time", format='%Y-%m-%d %H:%M:%S')
-    body = PageDownField("Text", validators=[Required()])
+    body = PageDownField("Text", validators=[DataRequired()])
     image = StringField("Image", validators=[Length(0, 64)])
     tags = StringField("Tags", validators=[Length(0, 64)])
     featured = BooleanField('Featured')
@@ -105,11 +105,11 @@ class PostForm(FlaskForm):
 
 
 class EditCategoryForm(FlaskForm):
-    title = StringField("Title", validators=[Required(), Length(1, 128)])
+    title = StringField("Title", validators=[DataRequired(), Length(1, 128)])
     alias = StringField(
         "URL alias",
         validators=[
-            Required(),
+            DataRequired(),
             Length(1, 128),
             Regexp(
                 r'^(\w|-)+$',
@@ -118,8 +118,8 @@ class EditCategoryForm(FlaskForm):
             ),
         ],
     )
-    description = StringField("Description", validators=[Required(), Length(1, 160)])
-    body = PageDownField("Text", validators=[Required()])
+    description = StringField("Description", validators=[DataRequired(), Length(1, 160)])
+    body = PageDownField("Text", validators=[DataRequired()])
     image = StringField("Image", validators=[Length(0, 64)])
     timestamp = DateTimeField("Date and time", format='%Y-%m-%d %H:%M:%S')
     featured = BooleanField('Featured')
@@ -155,15 +155,15 @@ class UploadForm(FlaskForm):
             file_exists,
         ],
     )
-    title = StringField("Title", validators=[Required(), Length(1, 128)])
+    title = StringField("Title", validators=[DataRequired(), Length(1, 128)])
     submit = SubmitField('Submit')
 
     # https://wtforms.readthedocs.org/en/latest/validators.html#custom-validators
 
 
 class NotificationForm(FlaskForm):
-    title = StringField("Title", validators=[Required(), Length(1, 128)])
-    body = PageDownField("Text", validators=[Required()])
+    title = StringField("Title", validators=[DataRequired(), Length(1, 128)])
+    body = PageDownField("Text", validators=[DataRequired()])
     group = SelectField('To', coerce=int, default=0)
     email = BooleanField('Send as email')
     submit = SubmitField('Submit')
@@ -186,4 +186,4 @@ class NotificationForm(FlaskForm):
 class CsrfTokenForm(FlaskForm):
     """A form used on pages with AJAX POST requests to get access to an CSRF token."""
 
-    id = HiddenField('Entry id', validators=[Required()])
+    id = HiddenField('Entry id', validators=[DataRequired()])
