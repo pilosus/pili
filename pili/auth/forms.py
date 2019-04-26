@@ -7,7 +7,7 @@ from wtforms import (
     SubmitField,
     ValidationError,
 )
-from wtforms.validators import Email, EqualTo, Length, Regexp, DataRequired
+from wtforms.validators import DataRequired, Email, EqualTo, Length, Regexp
 
 from pili.jinja_filters import permissions2str
 from pili.models import Role, User
@@ -36,7 +36,10 @@ class RegistrationForm(FlaskForm):
     )
     password = PasswordField(
         'Password',
-        validators=[DataRequired(), EqualTo('password2', message='Passwords must match.')],
+        validators=[
+            DataRequired(),
+            EqualTo('password2', message='Passwords must match.'),
+        ],
     )
     password2 = PasswordField('Confirm password', validators=[DataRequired()])
     submit = SubmitField('Register')
@@ -54,7 +57,10 @@ class ChangePasswordForm(FlaskForm):
     old_password = PasswordField('Old password', validators=[DataRequired()])
     password = PasswordField(
         'New password',
-        validators=[DataRequired(), EqualTo('password2', message='Passwords must match')],
+        validators=[
+            DataRequired(),
+            EqualTo('password2', message='Passwords must match'),
+        ],
     )
     password2 = PasswordField('Passwords must match', validators=[DataRequired()])
     submit = SubmitField('Update Password')
@@ -69,7 +75,10 @@ class PasswordResetForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Length(1, 64), Email()])
     password = PasswordField(
         'New password',
-        validators=[DataRequired(), EqualTo('password2', message='Passwords must match')],
+        validators=[
+            DataRequired(),
+            EqualTo('password2', message='Passwords must match'),
+        ],
     )
     password2 = PasswordField('Confirm password', validators=[DataRequired()])
     submit = SubmitField('Reset Password')
@@ -112,7 +121,10 @@ class InviteAcceptForm(FlaskForm):
     )
     password = PasswordField(
         'Password',
-        validators=[DataRequired(), EqualTo('password2', message='Passwords must match.')],
+        validators=[
+            DataRequired(),
+            EqualTo('password2', message='Passwords must match.'),
+        ],
     )
     password2 = PasswordField('Confirm password', validators=[DataRequired()])
     submit = SubmitField('Register')
@@ -123,7 +135,9 @@ class InviteAcceptForm(FlaskForm):
 
 
 class ChangeEmailForm(FlaskForm):
-    email = StringField('New Email', validators=[DataRequired(), Length(1, 64), Email()])
+    email = StringField(
+        'New Email', validators=[DataRequired(), Length(1, 64), Email()]
+    )
     password = PasswordField('Password', validators=[DataRequired()])
     submit = SubmitField('Update Email Address')
 

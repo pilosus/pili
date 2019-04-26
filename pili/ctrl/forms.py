@@ -11,7 +11,7 @@ from wtforms import (
     TextAreaField,
     ValidationError,
 )
-from wtforms.validators import Email, Length, Regexp, DataRequired
+from wtforms.validators import DataRequired, Email, Length, Regexp
 
 from pili.filters import file_exists
 from pili.models import Category, Role, User
@@ -86,7 +86,9 @@ class PostForm(FlaskForm):
             ),
         ],
     )
-    description = StringField("Description", validators=[DataRequired(), Length(1, 160)])
+    description = StringField(
+        "Description", validators=[DataRequired(), Length(1, 160)]
+    )
     timestamp = DateTimeField("Date and time", format='%Y-%m-%d %H:%M:%S')
     body = PageDownField("Text", validators=[DataRequired()])
     image = StringField("Image", validators=[Length(0, 64)])
@@ -118,7 +120,9 @@ class EditCategoryForm(FlaskForm):
             ),
         ],
     )
-    description = StringField("Description", validators=[DataRequired(), Length(1, 160)])
+    description = StringField(
+        "Description", validators=[DataRequired(), Length(1, 160)]
+    )
     body = PageDownField("Text", validators=[DataRequired()])
     image = StringField("Image", validators=[Length(0, 64)])
     timestamp = DateTimeField("Date and time", format='%Y-%m-%d %H:%M:%S')

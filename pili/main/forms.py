@@ -7,7 +7,7 @@ from wtforms import (
     TextAreaField,
     ValidationError,
 )
-from wtforms.validators import Email, Length, Regexp, DataRequired
+from wtforms.validators import DataRequired, Email, Length, Regexp
 
 from pili.models import Role, User
 
