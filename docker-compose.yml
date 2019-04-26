@@ -53,8 +53,8 @@ services:
     <<: *pili-common
     build: .
     command: >
-      sh -c "echo '--> Provision DB' &&
-             pili --config=${PILI_CONFIG} provision --db_init --db_migrate --db_upgrade --db_prepopulate &&
+      sh -c "#echo '--> Provision DB' &&
+             #pili --config=${PILI_CONFIG} provision --db_init --db_migrate --db_upgrade --db_prepopulate &&
              echo '--> Run uWSGI' &&
              pili --config=${PILI_CONFIG} uwsgi --section=${PILI_CONFIG}"
     links:
@@ -89,7 +89,7 @@ services:
     links:
       - pili
     ports:
-      - 80:80
+      - "80:80"
 
     stdin_open: true
     tty: true

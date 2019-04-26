@@ -151,7 +151,7 @@ def server(
 def uwsgi(ctx: Any, section: str) -> None:
     config_name = ctx.obj['config']
     os.system(
-        'exec uwsgi --ini /app/etc/uwsgi.ini:{0} --pyargv "{1}"'.format(
+        'exec uwsgi --ini /app/etc/uwsgi/pili.ini:{0} --pyargv "{1}"'.format(
             section, config_name
         )
     )
