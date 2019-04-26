@@ -7,25 +7,25 @@ from wtforms import (
     SubmitField,
     ValidationError,
 )
-from wtforms.validators import Email, EqualTo, Length, Regexp, Required
+from wtforms.validators import DataRequired, Email, EqualTo, Length, Regexp
 
 from pili.jinja_filters import permissions2str
 from pili.models import Role, User
 
 
 class LoginForm(FlaskForm):
-    email = StringField('Email', validators=[Required(), Length(1, 64), Email()])
-    password = PasswordField('Password', validators=[Required()])
+    email = StringField('Email', validators=[DataRequired(), Length(1, 64), Email()])
+    password = PasswordField('Password', validators=[DataRequired()])
     remember_me = BooleanField('Keep me logged in')
     submit = SubmitField('Log In')
 
 
 class RegistrationForm(FlaskForm):
-    email = StringField('Email', validators=[Required(), Length(1, 64), Email()])
+    email = StringField('Email', validators=[DataRequired(), Length(1, 64), Email()])
     username = StringField(
         'Username',
         validators=[
-            Required(),
+            DataRequired(),
             Length(1, 64),
             Regexp(
                 '^[A-Za-z][A-Za-z0-9_.]*$',
@@ -36,9 +36,12 @@ class RegistrationForm(FlaskForm):
     )
     password = PasswordField(
         'Password',
-        validators=[Required(), EqualTo('password2', message='Passwords must match.')],
+        validators=[
+            DataRequired(),
+            EqualTo('password2', message='Passwords must match.'),
+        ],
     )
-    password2 = PasswordField('Confirm password', validators=[Required()])
+    password2 = PasswordField('Confirm password', validators=[DataRequired()])
     submit = SubmitField('Register')
 
     def validate_email(self, field):
@@ -51,27 +54,33 @@ class RegistrationForm(FlaskForm):
 
 
 class ChangePasswordForm(FlaskForm):
-    old_password = PasswordField('Old password', validators=[Required()])
+    old_password = PasswordField('Old password', validators=[DataRequired()])
     password = PasswordField(
         'New password',
-        validators=[Required(), EqualTo('password2', message='Passwords must match')],
+        validators=[
+            DataRequired(),
+            EqualTo('password2', message='Passwords must match'),
+        ],
     )
-    password2 = PasswordField('Passwords must match', validators=[Required()])
+    password2 = PasswordField('Passwords must match', validators=[DataRequired()])
     submit = SubmitField('Update Password')
 
 
 class PasswordResetRequestForm(FlaskForm):
-    email = StringField('Email', validators=[Required(), Length(1, 64), Email()])
+    email = StringField('Email', validators=[DataRequired(), Length(1, 64), Email()])
     submit = SubmitField('Reset Password')
 
 
 class PasswordResetForm(FlaskForm):
-    email = StringField('Email', validators=[Required(), Length(1, 64), Email()])
+    email = StringField('Email', validators=[DataRequired(), Length(1, 64), Email()])
     password = PasswordField(
         'New password',
-        validators=[Required(), EqualTo('password2', message='Passwords must match')],
+        validators=[
+            DataRequired(),
+            EqualTo('password2', message='Passwords must match'),
+        ],
     )
-    password2 = PasswordField('Confirm password', validators=[Required()])
+    password2 = PasswordField('Confirm password', validators=[DataRequired()])
     submit = SubmitField('Reset Password')
 
     def validate_email(self, field):
@@ -80,7 +89,7 @@ class PasswordResetForm(FlaskForm):
 
 
 class InviteRequestForm(FlaskForm):
-    email = StringField('Email', validators=[Required(), Length(1, 64), Email()])
+    email = StringField('Email', validators=[DataRequired(), Length(1, 64), Email()])
     role = SelectField('Role', coerce=int, default=1)
     submit = SubmitField('Invite')
 
@@ -101,7 +110,7 @@ class InviteAcceptForm(FlaskForm):
     username = StringField(
         'Username',
         validators=[
-            Required(),
+            DataRequired(),
             Length(1, 64),
             Regexp(
                 '^[A-Za-z][A-Za-z0-9_.]*$',
@@ -112,9 +121,12 @@ class InviteAcceptForm(FlaskForm):
     )
     password = PasswordField(
         'Password',
-        validators=[Required(), EqualTo('password2', message='Passwords must match.')],
+        validators=[
+            DataRequired(),
+            EqualTo('password2', message='Passwords must match.'),
+        ],
     )
-    password2 = PasswordField('Confirm password', validators=[Required()])
+    password2 = PasswordField('Confirm password', validators=[DataRequired()])
     submit = SubmitField('Register')
 
     def validate_username(self, field):
@@ -123,8 +135,10 @@ class InviteAcceptForm(FlaskForm):
 
 
 class ChangeEmailForm(FlaskForm):
-    email = StringField('New Email', validators=[Required(), Length(1, 64), Email()])
-    password = PasswordField('Password', validators=[Required()])
+    email = StringField(
+        'New Email', validators=[DataRequired(), Length(1, 64), Email()]
+    )
+    password = PasswordField('Password', validators=[DataRequired()])
     submit = SubmitField('Update Email Address')
 
     def validate_email(self, field):

@@ -75,6 +75,6 @@ services:
     volumes:
       - ./pili:/app/pili
       - ./etc:/app/etc
-      - ./tests:/pili/tests
+      - ./tests:/app/tests
       - ./setup.cfg:/app/setup.cfg
       - ./setup.py:/app/setup.py

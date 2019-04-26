@@ -37,7 +37,7 @@ down:
 test:
     # could be donw with $(MAKE) up, but that will invoke another make, which is an overkill
 	docker-compose up -d
-	docker-compose exec pili python3.7 manage.py test
+	docker-compose exec pili pili test
 	docker-compose down -v
 
 .PHONY: clean
