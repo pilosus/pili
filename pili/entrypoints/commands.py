@@ -1,10 +1,10 @@
 import os
 import sys
-import unittest
 from typing import Any, Dict
 
 import click
 import flask_migrate
+import pytest
 from werkzeug.serving import run_simple
 
 from pili.app import create_app, db
@@ -184,8 +184,7 @@ def shell(ctx: Any) -> None:
 @cli.command(help="Run Tests")
 @click.pass_context
 def test(ctx: Any) -> None:
-    tests = unittest.TestLoader().discover('tests')
-    unittest.TextTestRunner(verbosity=2).run(tests)
+    pytest.main(['-vvs', '--cov=/app/pili', '/app/tests'])
 
 
 if __name__ == '__main__':
