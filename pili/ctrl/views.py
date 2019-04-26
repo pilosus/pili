@@ -960,16 +960,22 @@ def notify():
             flash_msg += str(r.id) + ', '
             ack = MessageAck(message_id=message.id, recipient_id=r.id)
             db.session.add(ack)
+
             # if message should be sent as an email too
-            # TODO
             if as_email:
-                send_email(
-                    to=r.email,
-                    subject=message.title,
-                    template='ctrl/email/notification',
-                    recipient=r,
-                    message=message,
-                )
+                if r.username and message.id:
+                    send_email(
+                        to=r.email,
+                        subject=message.title,
+                        template='ctrl/email/notification',
+                        recipient=r,
+                        message=message,
+                    )
+                else:
+                    current_app.logger.warning(
+                        'Recipient has no username: {}'.format(r.email)
+                    )
+
         flash_msg = flash_msg.rstrip(', ')
         flash("Notifications to users: {0} queued.".format(flash_msg), 'success')
         return redirect(url_for('ctrl.notify'))

@@ -210,7 +210,7 @@ def invite_request():
     # find invited users, sort them so that unconfirmed comes first,
     # sort then all users by date
     pagination = (
-        User.query.filter(User.invited is True)
+        User.query.filter(User.invited.is_(True))
         .order_by(User.confirmed.asc())
         .order_by(User.member_since.desc())
         .paginate(
