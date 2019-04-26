@@ -168,17 +168,18 @@ def shell(ctx: Any) -> None:
     banner = 'Python {0} on {1}\nApp: {2} [{3}]\nInstance: {4}'.format(
         sys.version, sys.platform, app.import_name, app.env, app.instance_path
     )
-    try:
-        from IPython import embed
-        from traitlets.config import get_config
+    with app.app_context():
+        try:
+            from IPython import embed
+            from traitlets.config import get_config
 
-        config = get_config()
-        config.InteractiveShellEmbed.colors = "Linux"
-        embed(banner1=banner, config=config, **context)
-    except ImportError:
-        import code
+            config = get_config()
+            config.InteractiveShellEmbed.colors = "Linux"
+            embed(banner1=banner, config=config, **context)
+        except ImportError:
+            import code
 
-        code.interact(banner=banner, local=context)
+            code.interact(banner=banner, local=context)
 
 
 @cli.command(help="Run Tests")

@@ -30,7 +30,9 @@ class Config:
     REDIS_CONNECT_TIMEOUT = int(os.environ.get('REDIS_CONNECT_TIMEOUT', 3))
 
     # SQLAlchemy
-    #SQLALCHEMY_COMMIT_ON_TEARDOWN = True
+    # TODO commit on teardown considered dangerous and deprecated
+    # Remove the option and add explicit db.session.commit() throughout the code
+    SQLALCHEMY_COMMIT_ON_TEARDOWN = True
     SQLALCHEMY_RECORD_QUERIES = True
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
@@ -89,10 +91,10 @@ class Config:
     PILI_ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'gif', 'png']
 
     #  Flask-thumbnails settings
-    MEDIA_FOLDER = PILI_UPLOADS
-    MEDIA_URL = '/static/uploads/'
-    MEDIA_THUMBNAIL_FOLDER = os.path.join(PILI_UPLOADS, 'thumbnails') # chmod 775
-    MEDIA_THUMBNAIL_URL = '/static/uploads/thumbnails/'
+    THUMBNAIL_MEDIA_ROOT = '/app/pili/static/uploads'
+    THUMBNAIL_MEDIA_URL = '/static/uploads/'
+    THUMBNAIL_MEDIA_THUMBNAIL_ROOT = '/app/pili/static/uploads/thumbnails'
+    THUMBNAIL_MEDIA_THUMBNAIL_URL = '/static/uploads/thumbnails'
 
     # Allowed html tags and attributes
     PILI_ALLOWED_TAGS = ['a', 'abbr', 'acronym', 'b', 'blockquote', 'code',
@@ -148,32 +150,10 @@ class ProductionConfig(Config):
         app.wsgi_app = ProxyFix(app.wsgi_app)
 
 
-class HerokuConfig(ProductionConfig):
-    SSL_DISABLE = bool(os.environ.get('SSL_DISABLE'))
-
-    @classmethod
-    def init_app(cls, app):
-        ProductionConfig.init_app(app)
-
-
-class UnixConfig(ProductionConfig):
-    SSL_DISABLE = bool(os.environ.get('SSL_DISABLE'))
-
-    @classmethod
-    def init_app(cls, app):
-        ProductionConfig.init_app(app)
-
-        # handle proxy server headers
-        from werkzeug.contrib.fixers import ProxyFix
-        app.wsgi_app = ProxyFix(app.wsgi_app)
-
-
 config = {
     'development': DevelopmentConfig,
     'testing': TestingConfig,
     'production': ProductionConfig,
-    'heroku': HerokuConfig,
-    'unix': UnixConfig,
 
     'default': DevelopmentConfig
 }

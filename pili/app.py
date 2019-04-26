@@ -5,7 +5,7 @@ from inspect import getmembers, isfunction
 from typing import Any
 
 from celery import Celery
-from flask import Flask, g, request
+from flask import Flask, request
 from flask.logging import default_handler
 from flask_bootstrap import Bootstrap, WebCDN
 from flask_login import LoginManager
@@ -75,14 +75,14 @@ def before_request():
     """
     Get start time of a request
     """
-    g._prometheus_metrics_request_start_time = time.time()
+    request._prometheus_metrics_request_start_time = time.time()
 
 
 def after_request(response):
     """
     Register Prometheus metrics after each request
     """
-    request_latency = time.time() - g._prometheus_metrics_request_start_time
+    request_latency = time.time() - request._prometheus_metrics_request_start_time
     METRICS_REQUEST_LATENCY.labels(request.method, request.path).observe(
         request_latency
     )

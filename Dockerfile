@@ -12,6 +12,9 @@ RUN echo '---> Setting up user environment' \
 COPY . /app
 WORKDIR /app
 
+RUN echo '---> Setting upload directory' \
+    && chmod 755 -R /app/pili/static/uploads
+
 RUN localedef -c -f UTF-8 -i en_US en_US.UTF-8
 ENV LANG=en_US.UTF-8
 ENV TERM=xterm-256color

@@ -78,3 +78,4 @@ services:
       - ./tests:/app/tests
       - ./setup.cfg:/app/setup.cfg
       - ./setup.py:/app/setup.py
+      - ./config.py:/app/config.py

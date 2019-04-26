@@ -972,7 +972,7 @@ def notify():
                 )
         flash_msg = flash_msg.rstrip(', ')
         flash("Notifications to users: {0} queued.".format(flash_msg), 'success')
-        return redirect(url_for('.notify'))
+        return redirect(url_for('ctrl.notify'))
     # TODO
     # render list of messages sent
 

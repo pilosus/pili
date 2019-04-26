@@ -574,6 +574,7 @@ def notifications_bulk():
             'read': 'marked as read',
             'unread': 'marked as not read',
             'remove': 'removed',
+            'message': '',
         }
         message = ''
         fail = ''
@@ -593,17 +594,15 @@ def notifications_bulk():
                 count += 1
             else:
                 fail += str(id) + ', '
+
         message = message.rstrip(', ')
         fail = fail.rstrip(', ')
         status = 'success'
         if message:
-            message = 'Notifications: {message} have been ' '{action}.'.format(
-                message, msg[action]
-            )
+            message = 'Notifications: {} have been {}.'.format(message, msg[action])
         if fail:
-            fail = (
-                'Notifications: {fail} failed. You are not '
-                'a recipient of them.'.format(fail)
+            fail = 'Notifications: {} failed. You are not a recipient of them.'.format(
+                fail
             )
             status = 'warning'
         return "{message} {fail}".format(message=message, fail=fail), status
