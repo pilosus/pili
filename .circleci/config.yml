@@ -40,7 +40,7 @@ jobs:
       - run:
           name: Run tests
           command: |
-            docker-compose -f ./docker-compose.ci.yml up
+            docker-compose -f ./docker-compose.ci.yml run app pytest -vvs --cov=pili /app/tests/
       - run:
           name: Run linters
           command: |

@@ -1,21 +1,28 @@
 import re
-
-from flask import url_for
+import time
+from unittest.mock import patch
 
 from pili.models import User
 
 
 def test_home_page(app, client):
     with app.test_request_context():
-        response = client.get(url_for('main.index'))
+        response = client.get('/')
         assert b'Stranger' in response.data
 
 
 def test_register_login_logout(app, client):
-    with app.test_request_context():
+    with patch('pili.app.request') as prometheus_mock, patch(
+        'pili.auth.views.send_email'
+    ) as email_mock:
+        prometheus_mock._prometheus_metrics_request_start_time.return_value = (
+            time.time()
+        )
+        email_mock.return_value = True
+
         # register a new account
         response = client.post(
-            url_for('auth.register'),
+            '/auth/register',
             data={
                 'email': 'john@example.com',
                 'username': 'john',
@@ -27,7 +34,7 @@ def test_register_login_logout(app, client):
 
         # login with the new account
         response = client.post(
-            url_for('auth.login'),
+            '/auth/login',
             data={'email': 'john@example.com', 'password': 'cat'},
             follow_redirects=True,
         )
@@ -38,10 +45,10 @@ def test_register_login_logout(app, client):
         user = User.query.filter_by(email='john@example.com').first()
         token = user.generate_confirmation_token()
         response = client.get(
-            url_for('auth.confirm', token=token), follow_redirects=True
+            '/auth/confirm/{token}'.format(token=token), follow_redirects=True
         )
         assert b'You have confirmed your account' in response.data
 
         # log out
-        response = client.get(url_for('auth.logout'), follow_redirects=True)
+        response = client.get('/auth/logout', follow_redirects=True)
         assert b'You have been logged out' in response.data
