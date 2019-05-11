@@ -14,6 +14,10 @@ spec:
         app: pili
         tier: backend
     spec:
+      volumes:
+        - name: pili-pv-uploads
+          persistentVolumeClaim:
+            claimName: pili-pv-claim
       containers:
       - name: pili
         image: registry.pilosus.org/pilosus/pili:0.2.3
@@ -24,6 +28,9 @@ spec:
         ports:
           - name: uwsgi
             containerPort: 8080
+        volumeMounts:
+          - mountPath: "/app/pili/static/uploads"
+            name: pili-pv-uploads
       imagePullSecrets:
         - name: registry-credentials
       restartPolicy: Always
