@@ -105,13 +105,79 @@ Deployment with Kubernetes (experimental)
 
 See Kubernetes configs in ``etc/k8s/`` directory. Assume the following commands are run within that directory.
 
+
+----
+Helm
+----
+
+Install `Helm`_, a package manager for Kubernetes. It's used to set up Redis_, RabbitMQ_ and PostgreSQL_.
+
+.. _Helm: https://helm.sh/docs/using_helm/#installing-helm
+
+
+.. _Redis:
+
+-----
+Redis
+-----
+
+#. Create config file under ``etc/config/values.redis.dev.yaml``
+
+#. Install `stable/redis <https://github.com/helm/charts/tree/master/stable/redis>`_ helm chart::
+
+  # omit --name option or use SemVer for versioning
+  # make sure to specify redis hosts correctly in application's config files and config maps:
+  # <your-release-name>-redis-master
+  # <your-release-name>-redis-slave
+  helm install --name pili-redis stable/redis --values etc/config/values.redis.dev.yaml
+
+.. _RabbitMQ:
+
+--------
+RabbitMQ
+--------
+
+#. Apply ``PersistentVolume`` and ``PersistentVolumeClaim`` for persistent queue storage::
+
+  kubectl apply -f etc/k8s/pv.rabbitmq.dev.yaml
+  kubectl apply -f etc/k8s/pvc.rabbitmq.dev.yaml
+
+
+#. Create config file under ``etc/config/values.rabbitmq.dev.yaml``
+
+#. Install `stable/rabbitmq <https://github.com/helm/charts/tree/master/stable/rabbitmq>`_ helm chart::
+
+  helm install --name pili-rabbitmq -f etc/config/values.rabbitmq.dev.yaml stable/rabbitmq
+
+
+.. _PostgreSQL:
+
+----------
+PostgreSQL
+----------
+
+#. Apply ``PersistentVolume`` and ``PersistentVolumeClaim`` for persistent queue storage::
+
+  kubectl apply -f etc/k8s/pv.postgresql.dev.yaml
+  kubectl apply -f etc/k8s/pvc.postgresql.dev.yaml
+
+
+#. Create config file under ``etc/config/values.postgresql.dev.yaml``
+
+#. Install `stable/postgresql <https://github.com/helm/charts/tree/master/stable/postgresql>`_ helm chart::
+
+  helm install --name pili-db -f etc/config/values.postgresql.dev.yaml stable/postgresql
+
+
+.. _ConfigMap:
+
 -------------
 Configuration
 -------------
 
 #. Add environment variables as a ``ConfigMap``::
 
-  kubectl create configmap pili-config --from-env-file=../env/testing.env
+  kubectl create configmap pili-config --from-env-file=../env/k8s.env
 
 
 #. Make sure config is added correctly::
@@ -130,13 +196,34 @@ Configuration
   kubectl get secret registry-credentials --output="jsonpath={.data.\.dockerconfigjson}" | base64 --decode
 
 
+
+------------------
+Persistent storage
+------------------
+
+Development
+-----------
+
+#. Create a mount point in the cluster::
+
+  minikube ssh
+  sudo mkdir -p /mnt/data/uploads
+
+#. Create ``PersistentVolume``::
+
+  kubectl apply -f pv.app.dev.yaml
+
+#. Create ``PersistentVolumeClaim``::
+
+  kubectl apply -f pvc.app.dev.yaml
+
 ----------------
 Pili backend app
 ----------------
 
 #. Apply ``Deployment``::
 
-  kubectl apply -f pili-deployment.yaml
+  kubectl apply -f deployment.app.dev.yaml
 
 #. Make sure deployment's applied::
 
@@ -144,21 +231,44 @@ Pili backend app
 
 #. Apply ``Service``::
 
-  kubectl apply -f pili-service.yaml
+  kubectl apply -f service.app.dev.yaml
 
 #. Make sure services has started:
 
   kubectl describe service pili
   minikube service pili
 
---------------
-Nginx frontend
---------------
 
-Nginx frontend serves static files and proxy passing requests to the backend. Apply deployment and service wuth::
+-------------
+Nginx Ingress
+-------------
 
-  kubectl apply -f nginx-deployment.yaml
-  kubectl apply -f nginx-service.yaml
+
+Development
+-----------
+
+#. Enable `Ingress`_ addon on minikube::
+
+  minikube addons enable ingress
+
+
+#. Apply ``Ingress`` manifest::
+
+  kubectl apply -f ingress.app.dev.yaml
+
+
+#. After a while get ingress IP-address::
+
+  kubectl get ingress
+
+
+#. Add IP-address to ``/etc/hosts``::
+
+  172.17.0.15 pili.org
+
+
+
+.. _Ingress: https://kubernetes.io/docs/tasks/access-application-cluster/ingress-minikube/
 
 
 .. _DockerDeployment:

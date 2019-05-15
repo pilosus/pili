@@ -7,7 +7,7 @@ x-pili-common: &pili-common
   environment:
     - PILI_CONFIG=${PILI_CONFIG:-testing}
   env_file:
-    - ./etc/env/${PILI_CONFIG:-development}.env
+    - ./etc/config/${PILI_CONFIG:-development}.config
 
 
 services:

@@ -6,6 +6,10 @@ tmp*
 TODO.rst
 app/static/uploads/*
 
+# helm/k8s config files for production environment
+*.prod.yaml
+*.production.yaml
+
 # Mypy cache
 .mypy_cache/
 

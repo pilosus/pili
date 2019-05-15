@@ -1,0 +1,27 @@
+# https://github.com/helm/charts/tree/master/stable/postgresql
+postgresqlUsername: pili
+postgresqlPassword: chah3Xie
+postgresqlDatabase: pili
+
+image:
+  registry: docker.io
+  repository: bitnami/postgresql
+  tag: 10.7.0-r68
+
+persistence:
+  existingClaim: postgresql-pv-claim
+  #mountPath: /mnt/data/postgresql
+
+replication:
+  # TODO find out how to provision a slave node in a PostgreSQL cluster with
+  # an existing PVC instead of letting helm to do dynamic provisioning
+  enabled: true
+  slaveReplicas: 1
+  synchronousCommit: "on"
+  numSynchronousReplicas: 1
+  applicationName: my_application
+  # TODO find out why passing explicit user/password results in
+  # replica failing to connect to master's replication log due to auth error
+  # FATAL:  password authentication failed for user "pili_repl"
+  #user: pili_repl
+  #password: Uz9ukees

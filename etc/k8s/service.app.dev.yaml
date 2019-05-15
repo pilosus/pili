@@ -6,10 +6,10 @@ metadata:
     app: pili
 spec:
   # comment the following line if you want to use a LoadBalancer
-  #type: NodePort
+  type: NodePort
   # if your cluster supports it, uncomment the following line to automatically create
   # an external load-balanced IP for the frontend service
-  type: LoadBalancer
+  #type: LoadBalancer
   ports:
   - protocol: TCP
     port: 8080

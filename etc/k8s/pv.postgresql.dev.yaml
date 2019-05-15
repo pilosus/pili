@@ -1,0 +1,19 @@
+# See https://kubernetes.io/docs/tasks/configure-pod-container/configure-persistent-volume-storage/
+# https://kubernetes.io/docs/concepts/storage/persistent-volumes/
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: postgresql-pv-volume
+  labels:
+    type: local
+spec:
+  storageClassName: standard
+  persistentVolumeReclaimPolicy: Retain
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    # $ minikube ssh
+    # $ sudo mkdir -p /mnt/data/postgresql
+    path: "/mnt/data/postgresql"

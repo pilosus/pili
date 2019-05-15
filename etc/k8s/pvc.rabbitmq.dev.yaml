@@ -1,0 +1,12 @@
+# See https://kubernetes.io/docs/tasks/configure-pod-container/configure-persistent-volume-storage/
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: rabbitmq-pv-claim
+spec:
+  storageClassName: standard
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
