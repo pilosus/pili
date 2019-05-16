@@ -20,8 +20,8 @@ spec:
             claimName: pili-pv-claim
       containers:
       - name: pili
-        image: registry.pilosus.org/pilosus/pili:0.2.3
-        command: ["./docker-entrypoint.sh"]
+        image: registry.pilosus.org/pilosus/pili:dev
+        command: ["pili", "--config=production", "uwsgi", "--section=production"]
         envFrom:
           - configMapRef:
               name: pili-config

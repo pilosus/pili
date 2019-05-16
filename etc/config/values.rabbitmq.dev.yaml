@@ -1,15 +1,15 @@
 # https://github.com/helm/charts/tree/master/stable/rabbitmq
 rabbitmq:
   username: pili
-  password: chah3Xie
+  password: Nit3kohx
 
-persistence:
-  existingClaim: rabbitmq-pv-claim
+#persistence:
+#  existingClaim: rabbitmq-pv-claim
 
-#resources:
-#  requests:
-#    memory: 128Mi
-#    cpu: 50m
-#  limits:
-#    memory: 256Mi
-#    cpu: 100m
+resources:
+  requests:
+    memory: 256Mi
+    cpu: 100m
+  limits:
+    memory: 256Mi
+    cpu: 100m

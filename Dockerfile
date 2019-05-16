@@ -33,4 +33,4 @@ RUN echo '---> Clean up build environment' \
 
 USER pili
 
-CMD ["pili", "uwsgi", "--config=production", "--section=production"]
+CMD ["pili", "--config=production", "uwsgi", "--section=production"]

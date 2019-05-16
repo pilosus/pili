@@ -137,12 +137,6 @@ Redis
 RabbitMQ
 --------
 
-#. Apply ``PersistentVolume`` and ``PersistentVolumeClaim`` for persistent queue storage::
-
-  kubectl apply -f etc/k8s/pv.rabbitmq.dev.yaml
-  kubectl apply -f etc/k8s/pvc.rabbitmq.dev.yaml
-
-
 #. Create config file under ``etc/config/values.rabbitmq.dev.yaml``
 
 #. Install `stable/rabbitmq <https://github.com/helm/charts/tree/master/stable/rabbitmq>`_ helm chart::
@@ -177,7 +171,7 @@ Configuration
 
 #. Add environment variables as a ``ConfigMap``::
 
-  kubectl create configmap pili-config --from-env-file=../env/k8s.env
+  kubectl create configmap pili-config --from-env-file=etc/config/k8s.env
 
 
 #. Make sure config is added correctly::
@@ -211,11 +205,11 @@ Development
 
 #. Create ``PersistentVolume``::
 
-  kubectl apply -f pv.app.dev.yaml
+  kubectl apply -f etc/k8s/pv.app.dev.yaml
 
 #. Create ``PersistentVolumeClaim``::
 
-  kubectl apply -f pvc.app.dev.yaml
+  kubectl apply -f etc/k8s/pvc.app.dev.yaml
 
 ----------------
 Pili backend app
@@ -223,7 +217,7 @@ Pili backend app
 
 #. Apply ``Deployment``::
 
-  kubectl apply -f deployment.app.dev.yaml
+  kubectl apply -f etc/k8s/deployment.app.dev.yaml
 
 #. Make sure deployment's applied::
 
@@ -231,7 +225,7 @@ Pili backend app
 
 #. Apply ``Service``::
 
-  kubectl apply -f service.app.dev.yaml
+  kubectl apply -f etc/k8s/service.app.dev.yaml
 
 #. Make sure services has started:
 
@@ -254,7 +248,7 @@ Development
 
 #. Apply ``Ingress`` manifest::
 
-  kubectl apply -f ingress.app.dev.yaml
+  kubectl apply -f etc/k8s/ingress.app.dev.yaml
 
 
 #. After a while get ingress IP-address::
@@ -266,9 +260,73 @@ Development
 
   172.17.0.15 pili.org
 
-
+#. Go to `http://pili.org <http://pili.org>`_ check everything works as expected
 
 .. _Ingress: https://kubernetes.io/docs/tasks/access-application-cluster/ingress-minikube/
+
+
+========================
+Kubernetes Cluster Setup
+========================
+
+-----------
+Development
+-----------
+
+Helm
+----
+
+Helm is a package manager for Kubernetes. `Install helm <https://helm.sh/docs/using_helm/#installing-helm>`_,
+initialize it with::
+
+  helm init --history-max 200
+
+
+Resource configuration in Minikube
+----------------------------------
+
+Minikube starts with 2 CPU, 2Gb RAM and 20GB disk by default. Although it's sufficient in the most cases,
+sometimes more or less resources needed. You may start your local cluster with arguments (see more options with
+``minijube start -h``::
+
+  minikube start --cpus 4 --memory 4096 --disk-size 20g
+
+To make config options permanent you may edit ``~/.minikube/config/config.json`` file or set the options
+from minikube cli (see more with ``minikube config -h``)::
+
+  minikube config set cpus 4
+  minikube config set memory 4096
+  minikube config set disk-size 20g
+
+Virtual Machine Driver
+----------------------
+
+On GNU/Linux machine install `kvm2 driver`_ and use it as a VM driver::
+
+  minikube config set vm-driver kvm2
+
+
+Beware! In order to improve VM performance further optimizations for ``kvm`` may be needed,
+e.g. **enabling huge pages**. See `KVM`_ article for more information.
+
+.. _kvm2 driver: https://github.com/kubernetes/minikube/blob/master/docs/drivers.md#kvm2-driver
+.. _KVM: https://wiki.archlinux.org/index.php/KVM
+
+
+Monitoring in Minikube
+----------------------
+
+Running ``k8s`` with a bunch of bloodthirsty services may require a tool for `resource monitoring`_.
+In case of ``minikube`` a `heapster`_ and `metrics-server`_ monitoring should be activated::
+
+  # alternatively use minikube addons enable <addon-name>
+  minikube config set heapster true
+  minikube config set metrics-server true
+
+.. _resource monitoring: https://kubernetes.io/docs/tasks/debug-application-cluster/resource-usage-monitoring/
+.. _heapster: https://github.com/kubernetes/minikube/blob/master/docs/addons.md
+.. _metrics-server: https://kubernetes.io/docs/tasks/debug-application-cluster/resource-metrics-pipeline/#metrics-server
+
 
 
 .. _DockerDeployment:
