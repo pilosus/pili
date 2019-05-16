@@ -5,6 +5,8 @@ metadata:
   name: pili-pv-volume
   labels:
     type: local
+#  annotations:
+#    pv.beta.kubernetes.io/gid: "1234"
 spec:
   storageClassName: manual
   capacity:
@@ -14,4 +16,5 @@ spec:
   hostPath:
     # $ minikube ssh
     # $ sudo mkdir -p /mnt/data/uploads
+    # $ sudo chmod -R 777 /mnt/data/uploads
     path: "/mnt/data/uploads"

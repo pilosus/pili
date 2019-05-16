@@ -1,37 +1,30 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: pili
+  name: flower
 spec:
   selector:
     matchLabels:
-      app: pili
+      app: flower
       tier: backend
-  replicas: 3
+  replicas: 1
   template:
     metadata:
       labels:
-        app: pili
+        app: flower
         tier: backend
     spec:
-      volumes:
-        - name: pili-pv-uploads
-          persistentVolumeClaim:
-            claimName: pili-pv-claim
       containers:
-      - name: pili
+      - name: flower
         image: registry.pilosus.org/pilosus/pili:dev
         imagePullPolicy: Always
-        command: ["pili", "--config=production", "uwsgi", "--section=production"]
+        command: ["flower", "-A", "pili.entrypoints.celery.celery", "--loglevel=info"]
         envFrom:
           - configMapRef:
               name: pili-config
         ports:
-          - name: uwsgi
-            containerPort: 8080
-        volumeMounts:
-          - mountPath: "/app/pili/static/uploads"
-            name: pili-pv-uploads
+          - name: flower
+            containerPort: 5678
       imagePullSecrets:
         - name: registry-credentials
       restartPolicy: Always

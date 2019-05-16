@@ -6,14 +6,14 @@ RUN echo '---> Setting up build environment' \
 
 RUN echo '---> Setting up user environment' \
     && adduser -u 1000 pili \
-    && mkdir /app \
-    && chown -R pili:pili /app
+    && mkdir /app
 
 COPY . /app
 WORKDIR /app
 
-RUN echo '---> Setting upload directory' \
-    && chmod 755 -R /app/pili/static/uploads
+RUN echo '---> Setting permissions' \
+    && chmod 755 -R /app/pili/static/uploads \
+    && chown -R pili:pili /app
 
 RUN localedef -c -f UTF-8 -i en_US en_US.UTF-8
 ENV LANG=en_US.UTF-8
