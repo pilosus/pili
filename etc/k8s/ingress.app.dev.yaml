@@ -4,7 +4,7 @@ kind: Ingress
 metadata:
   name: pili-ingress
   annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/rewrite-target: /*
 spec:
   rules:
   - host: pili.org

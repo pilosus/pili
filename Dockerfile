@@ -2,7 +2,7 @@ FROM python:3.7.3
 
 RUN echo '---> Setting up build environment' \
     && apt-get update -y \
-	&& apt-get install -y git gcc make libssl-dev libffi-dev libsqlite3-dev libpq-dev locales
+	&& apt-get install -y git gcc make libssl-dev libffi-dev libsqlite3-dev libpq-dev locales telnet
 
 RUN echo '---> Setting up user environment' \
     && adduser -u 1000 pili \
