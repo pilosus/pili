@@ -7,7 +7,7 @@ x-pili-common: &pili-common
   environment:
     - PILI_CONFIG=${PILI_CONFIG:-testing}
   env_file:
-    - ./etc/config/${PILI_CONFIG:-development}.config
+    - ./etc/config/${PILI_CONFIG:-development}.env
 
 
 services:
@@ -53,8 +53,8 @@ services:
     <<: *pili-common
     build: .
     command: >
-      sh -c "#echo '--> Provision DB' &&
-             #pili --config=${PILI_CONFIG} provision --db_init --db_migrate --db_upgrade --db_prepopulate &&
+      sh -c "echo '--> Provision DB' &&
+             pili --config=${PILI_CONFIG} provision --db_init --db_migrate --db_upgrade --db_prepopulate &&
              echo '--> Run uWSGI' &&
              pili --config=${PILI_CONFIG} uwsgi --section=${PILI_CONFIG}"
     links:
