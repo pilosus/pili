@@ -204,8 +204,10 @@ and cheking service status::
 PostgreSQL
 ----------
 
-#. Apply ``PersistentVolume`` and ``PersistentVolumeClaim`` for persistent queue storage::
+#. (Optionally) Apply ``PersistentVolume`` and ``PersistentVolumeClaim`` for persistent queue storage::
 
+  # If PV/PVC not created explicitly, helm creates its own resources for persistent storage.
+  # Beware! ``stable/postgresql`` helm chart ignores existing PVC for replication nodes and creates its own
   kubectl apply -f etc/k8s/pv.postgresql.dev.yaml
   kubectl apply -f etc/k8s/pvc.postgresql.dev.yaml
 
@@ -215,17 +217,24 @@ PostgreSQL
 #. Install `stable/postgresql <https://github.com/helm/charts/tree/master/stable/postgresql>`_ helm chart::
 
   # Be patient! It may take some time
+  # PV/PVC created automatically by helm
   helm install --name pili-db -f etc/config/values.postgresql.dev.yaml stable/postgresql
+  # Existing PV/PVC
+  helm install --name pili-db -f etc/config/values.postgresql-existing-pvc.dev.yaml stable/postgresql
 
 #. Make sure everything is okay by connecting to the database::
 
-  # get password
+  # Get password
   export POSTGRES_PASSWORD=$(kubectl get secret --namespace default pili-db-postgresql \
          -o jsonpath="{.data.postgresql-password}" | base64 --decode)
-  # connect to the DB
+  # Connect to a master node (read/write)
   kubectl run pili-db-postgresql-client --rm --tty -i --restart='Never' --namespace default \
          --image docker.io/bitnami/postgresql:10.7.0-r68 --env="PGPASSWORD=$POSTGRES_PASSWORD" \
          --command -- psql --host pili-db-postgresql -U pili -d pili
+  # Connect to a slave node (read only)
+  kubectl run pili-db-postgresql-client --rm --tty -i --restart='Never' --namespace default \
+         --image docker.io/bitnami/postgresql:10.7.0-r68 --env="PGPASSWORD=$POSTGRES_PASSWORD" \
+         --command -- psql --host pili-db-postgresql-read -U pili -d pili
 
 
 .. _ConfigMap:
@@ -315,6 +324,10 @@ Flower
 #. Apply ``Service``::
 
   kubectl apply -f etc/k8s/service.flower.dev.yaml
+
+#. Check service is working::
+
+  minikube service flower
 
 
 -------------
