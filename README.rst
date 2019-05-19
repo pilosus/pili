@@ -169,7 +169,7 @@ Install `Helm`_, a package manager for Kubernetes. It's used to set up Redis_, R
 Redis
 -----
 
-#. Create config file under ``etc/config/values.redis.dev.yaml``
+#. Create config file under ``etc/k8s/dev/values.redis.dev.yaml``
 
 #. Install `stable/redis <https://github.com/helm/charts/tree/master/stable/redis>`_ helm chart::
 
@@ -177,7 +177,7 @@ Redis
   # make sure to specify redis hosts correctly in application's config files and config maps:
   # <your-release-name>-redis-master
   # <your-release-name>-redis-slave
-  helm install --name pili-redis stable/redis --values etc/config/values.redis.dev.yaml
+  helm install --name redis stable/redis --values etc/k8s/dev/values.redis.dev.yaml
 
 .. _RabbitMQ:
 
@@ -185,14 +185,14 @@ Redis
 RabbitMQ
 --------
 
-#. Create config file under ``etc/config/values.rabbitmq.dev.yaml``
+#. Create config file under ``etc/k8s/dev/values.rabbitmq.dev.yaml``
 
 #. Install `stable/rabbitmq <https://github.com/helm/charts/tree/master/stable/rabbitmq>`_ helm chart::
 
   # Be patient! It may take time
-  helm install --name pili-rabbitmq -f etc/config/values.rabbitmq.dev.yaml stable/rabbitmq
+  helm install --name messages -f etc/k8s/dev/values.rabbitmq.dev.yaml stable/rabbitmq
 
-#. Make sure everything is okay by forwading RabbitMQ's Management Plugin port to the host machine
+#. Make sure everything is okay by forwarding RabbitMQ's Management Plugin port to the host machine
 and cheking service status::
 
   kubectl port-forward --namespace default svc/pili-rabbitmq 15672:15672
@@ -212,29 +212,29 @@ PostgreSQL
   kubectl apply -f etc/k8s/pvc.postgresql.dev.yaml
 
 
-#. Create config file under ``etc/config/values.postgresql.dev.yaml``
+#. Create config file under ``etc/k8s/dev/values.postgresql.dev.yaml``
 
 #. Install `stable/postgresql <https://github.com/helm/charts/tree/master/stable/postgresql>`_ helm chart::
 
   # Be patient! It may take some time
   # PV/PVC created automatically by helm
-  helm install --name pili-db -f etc/config/values.postgresql.dev.yaml stable/postgresql
+  helm install --name db -f etc/k8s/dev/values.postgresql.dev.yaml stable/postgresql
   # Existing PV/PVC
-  helm install --name pili-db -f etc/config/values.postgresql-existing-pvc.dev.yaml stable/postgresql
+  helm install --name db -f etc/k8s/dev/values.postgresql-existing-pvc.dev.yaml stable/postgresql
 
 #. Make sure everything is okay by connecting to the database::
 
   # Get password
-  export POSTGRES_PASSWORD=$(kubectl get secret --namespace default pili-db-postgresql \
+  export POSTGRES_PASSWORD=$(kubectl get secret --namespace default db-postgresql \
          -o jsonpath="{.data.postgresql-password}" | base64 --decode)
   # Connect to a master node (read/write)
-  kubectl run pili-db-postgresql-client --rm --tty -i --restart='Never' --namespace default \
+  kubectl run db-postgresql-client --rm --tty -i --restart='Never' --namespace default \
          --image docker.io/bitnami/postgresql:10.7.0-r68 --env="PGPASSWORD=$POSTGRES_PASSWORD" \
-         --command -- psql --host pili-db-postgresql -U pili -d pili
+         --command -- psql --host db-postgresql -U pili -d pili
   # Connect to a slave node (read only)
-  kubectl run pili-db-postgresql-client --rm --tty -i --restart='Never' --namespace default \
+  kubectl run db-postgresql-client --rm --tty -i --restart='Never' --namespace default \
          --image docker.io/bitnami/postgresql:10.7.0-r68 --env="PGPASSWORD=$POSTGRES_PASSWORD" \
-         --command -- psql --host pili-db-postgresql-read -U pili -d pili
+         --command -- psql --host db-postgresql-read -U pili -d pili
 
 
 .. _ConfigMap:
@@ -245,7 +245,7 @@ Configuration
 
 #. Add environment variables as a ``ConfigMap``::
 
-  kubectl create configmap pili-config --from-env-file=etc/config/k8s.env
+  kubectl create configmap pili-config --from-env-file=etc/k8s/dev/app.dev.env
 
 
 #. Make sure config is added correctly::
@@ -276,11 +276,11 @@ Persistent storage
 
 #. Create ``PersistentVolume``::
 
-  kubectl apply -f etc/k8s/pv.app.dev.yaml
+  kubectl apply -f etc/k8s/dev/pv.app.dev.yaml
 
 #. Create ``PersistentVolumeClaim``::
 
-  kubectl apply -f etc/k8s/pvc.app.dev.yaml
+  kubectl apply -f etc/k8s/dev/pvc.app.dev.yaml
 
 ----------------
 Pili backend app
@@ -288,7 +288,7 @@ Pili backend app
 
 #. Apply ``Deployment``::
 
-  kubectl apply -f etc/k8s/deployment.app.dev.yaml
+  kubectl apply -f etc/k8s/dev/deployment.app.dev.yaml
 
 #. Make sure deployment's applied::
 
@@ -296,7 +296,7 @@ Pili backend app
 
 #. Apply ``Service``::
 
-  kubectl apply -f etc/k8s/service.app.dev.yaml
+  kubectl apply -f etc/k8s/dev/service.app.dev.yaml
 
 #. Make sure services has started:
 
@@ -309,7 +309,7 @@ Celery
 
 #. Apply ``Deployment``::
 
-  kubectl apply -f etc/k8s/deployment.celery.dev.yaml
+  kubectl apply -f etc/k8s/dev/deployment.celery.dev.yaml
 
 
 ------
@@ -318,12 +318,12 @@ Flower
 
 #. Apply ``Deployment``::
 
-  kubectl apply -f etc/k8s/deployment.flower.dev.yaml
+  kubectl apply -f etc/k8s/dev/deployment.flower.dev.yaml
 
 
 #. Apply ``Service``::
 
-  kubectl apply -f etc/k8s/service.flower.dev.yaml
+  kubectl apply -f etc/k8s/dev/service.flower.dev.yaml
 
 #. Check service is working::
 
@@ -341,7 +341,7 @@ Nginx Ingress
 
 #. Apply ``Ingress`` manifest::
 
-  kubectl apply -f etc/k8s/ingress.app.dev.yaml
+  kubectl apply -f etc/k8s/dev/ingress.app.dev.yaml
 
 
 #. After a while get ingress IP-address::
