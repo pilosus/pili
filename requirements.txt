@@ -65,5 +65,5 @@ ForgeryPy==0.1
 #coverage==4.5.3
 #httpie==1.0.2
 selenium==3.141.0
-pytest==4.4.1
+pytest==4.5.0
 pytest-cov==2.7.1
