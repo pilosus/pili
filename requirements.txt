@@ -3,12 +3,12 @@
 urllib3==1.25.2
 
 # Flask
-Flask==1.0.2
+Flask==1.0.3
 Flask-Bootstrap==3.3.7.1
-Flask-HTTPAuth==3.2.4
+Flask-HTTPAuth==3.3.0
 Flask-Login==0.4.1
 Flask-Mail==0.9.1
-Flask-Migrate==2.4.0
+Flask-Migrate==2.5.1
 Flask-Moment==0.7.0
 Flask-PageDown==0.2.2
 Flask-Script==2.0.6
@@ -41,7 +41,7 @@ hiredis==1.0.0
 uWSGI==2.0.18
 
 # Monitoring
-sentry-sdk[flask]==0.7.14
+sentry-sdk[flask]==0.8.0
 raven[flask]==6.10.0
 uwsgitop==0.11
 flower==0.9.3
@@ -52,7 +52,7 @@ ipython==7.5.0
 ipdb==0.12
 black==19.3b0
 flake8==3.7.7
-isort==4.3.18
+isort==4.3.20
 mypy==0.701
 pycodestyle==2.5.0
 pyflakes==2.1.1
@@ -65,5 +65,5 @@ ForgeryPy==0.1
 #coverage==4.5.3
 #httpie==1.0.2
 selenium==3.141.0
-pytest==4.4.1
+pytest==4.5.0
 pytest-cov==2.7.1
