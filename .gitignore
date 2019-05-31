@@ -4,11 +4,13 @@
 *.env*
 tmp*
 TODO.rst
-app/static/uploads/*
+pili/static/uploads/*
 
 # helm/k8s config files for production environment
 *.prod.yaml
 *.production.yaml
+# git sees symlinks as files, so no trailing slash is removed
+prod
 
 
 # Mypy cache
