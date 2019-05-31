@@ -1,0 +1,19 @@
+# https://github.com/helm/charts/tree/master/stable/postgresql
+postgresqlUsername: pili
+postgresqlPassword: chah3Xie
+postgresqlDatabase: pili
+
+image:
+  registry: docker.io
+  repository: bitnami/postgresql
+  tag: 10.7.0-r68
+
+persistence:
+  existingClaim: postgresql-pv-claim
+
+replication:
+  enabled: true
+  slaveReplicas: 1
+  synchronousCommit: "on"
+  numSynchronousReplicas: 1
+  applicationName: my_application

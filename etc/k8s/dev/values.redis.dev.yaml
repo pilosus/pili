@@ -1,0 +1,20 @@
+# https://github.com/helm/charts/tree/master/stable/redis
+password: Dic9ohzi
+
+master:
+  persistence:
+    enabled: false
+  resources:
+    requests:
+      memory: 128Mi
+      cpu: 50m
+
+slave:
+  persistence:
+    enabled: false
+  resources:
+    requests:
+      memory: 128Mi
+      cpu: 50m
+
+

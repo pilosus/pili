@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pili
+spec:
+  selector:
+    matchLabels:
+      app: pili
+      tier: backend
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: pili
+        tier: backend
+    spec:
+      volumes:
+        - name: pili-pv-uploads
+          persistentVolumeClaim:
+            claimName: pili-pv-claim
+      containers:
+      - name: pili
+        image: registry.pilosus.org/pilosus/pili:dev
+        imagePullPolicy: Always
+        command: ["pili", "--config=production", "uwsgi", "--section=production"]
+        envFrom:
+          - configMapRef:
+              name: pili-config
+        ports:
+          - name: uwsgi
+            containerPort: 8080
+        volumeMounts:
+          - mountPath: "/app/pili/static/uploads"
+            name: pili-pv-uploads
+      imagePullSecrets:
+        - name: registry-credentials
+      restartPolicy: Always

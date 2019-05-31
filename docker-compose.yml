@@ -7,7 +7,7 @@ x-pili-common: &pili-common
   environment:
     - PILI_CONFIG=${PILI_CONFIG:-testing}
   env_file:
-    - ./etc/env/${PILI_CONFIG:-development}.env
+    - ./etc/config/${PILI_CONFIG:-development}.env
 
 
 services:
@@ -79,3 +79,22 @@ services:
       - ./setup.cfg:/app/setup.cfg
       - ./setup.py:/app/setup.py
       - ./config.py:/app/config.py
+
+  nginx:
+    image: pili-nginx
+    init: true
+    build:
+      context: .
+      dockerfile: DockerfileFrontend
+    links:
+      - pili
+    ports:
+      - "80:80"
+
+    stdin_open: true
+    tty: true
+
+    logging:
+      driver: json-file
+      options:
+        max-size: 10k

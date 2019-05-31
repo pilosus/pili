@@ -2,18 +2,13 @@ FROM python:3.7.3
 
 RUN echo '---> Setting up build environment' \
     && apt-get update -y \
-	&& apt-get install -y git gcc make libssl-dev libffi-dev libsqlite3-dev libpq-dev locales
+	&& apt-get install -y git gcc make libssl-dev libffi-dev libsqlite3-dev libpq-dev locales telnet
 
 RUN echo '---> Setting up user environment' \
-    && adduser -u 1000 pili \
-    && mkdir /app \
-    && chown -R pili:pili /app
+    && mkdir /app
 
 COPY . /app
 WORKDIR /app
-
-RUN echo '---> Setting upload directory' \
-    && chmod 755 -R /app/pili/static/uploads
 
 RUN localedef -c -f UTF-8 -i en_US en_US.UTF-8
 ENV LANG=en_US.UTF-8
@@ -31,6 +26,4 @@ RUN echo '---> Clean up build environment' \
     && rm -rf /var/cache/apt \
     && sh -c 'find . | grep -E "(_pycache_|\.pyc|\.pyo$)" | xargs rm -rf'
 
-USER pili
-
-CMD ["pili", "uwsgi", "--config=production", "--section=production"]
+CMD ["pili", "--config=production", "uwsgi", "--section=production"]

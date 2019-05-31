@@ -1,39 +1,18 @@
-.. image:: https://circleci.com/gh/pilosus/pili/tree/master.svg?style=svg
+.. image:: https://img.shields.io/circleci/project/github/pilosus/pili.svg
     :target: https://circleci.com/gh/pilosus/pili/tree/master
 
-########
-Pili App
-########
+.. image:: https://img.shields.io/badge/code%20style-black-000000.svg
+    :target: https://github.com/python/black
 
 Pili is a Python Flask application with a strong inclination
 for social network and blogging features.
 
 .. contents:: Table of Contents
 
-==========
-About Pili
-==========
-	      
------
-Stack
------
 
-Application is based on **Flask**, a light-weight Python web framework
-that gets use of Werkzeug toolkit and Jinja2 template engine. Although
-Flask works fine with both Python 2 and 3, Pili App's written with
-**Python 3** in focus.
-
-Database-agnostic, application uses **SQLAlchemy** ORM, which enables
-user to choose between DBMS ranging from a simple SQLite to an
-enterprise solution of user's choice.
-
-Asynchronous tasks (such as email sending) tackled with **Celery**
-distributed task queue, which is to be used with a message broker
-software of user's choice such as **Redis** or **RabbitMQ**.
-
---------
+========
 Features
---------
+========
 
 #. Users
 
@@ -50,7 +29,7 @@ Features
 #. Posts
 
    * Tagging
-   * Categorization (sectioning, which is useful for websites)
+   * Categorization
    * File upload
 
 #. Comments
@@ -97,6 +76,287 @@ These libraries are found under::
 The libraries belong to their owners and should not be considered as a
 part of the application.
 
+===================================
+(Optional) Kubernetes Cluster Setup
+===================================
+
+-----------
+Development
+-----------
+
+Helm
+----
+
+Helm is a package manager for Kubernetes. `Install helm <https://helm.sh/docs/using_helm/#installing-helm>`_,
+initialize it with::
+
+  helm init --history-max 200
+
+
+Resource configuration in Minikube
+----------------------------------
+
+Minikube starts with 2 CPU, 2Gb RAM and 20GB disk by default. Although it's sufficient in the most cases,
+sometimes more or less resources needed. You may start your local cluster with arguments (see more options with
+``minijube start -h``::
+
+  minikube start --cpus 4 --memory 4096 --disk-size 20g
+
+To make config options permanent you may edit ``~/.minikube/config/config.json`` file or set the options
+from minikube cli (see more with ``minikube config -h``)::
+
+  minikube config set cpus 4
+  minikube config set memory 4096
+  minikube config set disk-size 20g
+
+Virtual Machine Driver
+----------------------
+
+On GNU/Linux machine install `kvm2 driver`_ and use it as a VM driver::
+
+  minikube config set vm-driver kvm2
+
+
+Beware! In order to improve VM performance further optimizations for ``kvm`` may be needed,
+e.g. **enabling huge pages**. See `KVM`_ article for more information.
+
+.. _kvm2 driver: https://github.com/kubernetes/minikube/blob/master/docs/drivers.md#kvm2-driver
+.. _KVM: https://wiki.archlinux.org/index.php/KVM
+
+
+Monitoring in Minikube
+----------------------
+
+Running ``k8s`` with a bunch of bloodthirsty services may require a tool for `resource monitoring`_.
+In case of ``minikube`` a `heapster`_ and `metrics-server`_ monitoring should be activated::
+
+  # alternatively use minikube addons enable <addon-name>
+  minikube config set heapster true
+  minikube config set metrics-server true
+
+Open ``heapster`` with::
+
+  # credentials: admin/admin, open dashboard needed, e.g. cluster
+  minikube addons open heapster
+
+
+.. _resource monitoring: https://kubernetes.io/docs/tasks/debug-application-cluster/resource-usage-monitoring/
+.. _heapster: https://github.com/kubernetes/minikube/blob/master/docs/addons.md
+.. _metrics-server: https://kubernetes.io/docs/tasks/debug-application-cluster/resource-metrics-pipeline/#metrics-server
+
+
+.. _k8s:
+
+==========================
+Deployment with Kubernetes
+==========================
+
+See Kubernetes configs in ``etc/k8s/`` directory. Assume the following commands are run within that directory.
+
+
+----
+Helm
+----
+
+Install `Helm`_, a package manager for Kubernetes. It's used to set up Redis_, RabbitMQ_ and PostgreSQL_.
+
+.. _Helm: https://helm.sh/docs/using_helm/#installing-helm
+
+
+.. _Redis:
+
+-----
+Redis
+-----
+
+#. Create config file under ``etc/k8s/dev/values.redis.dev.yaml``
+
+#. Install `stable/redis <https://github.com/helm/charts/tree/master/stable/redis>`_ helm chart::
+
+  # omit --name option or use SemVer for versioning
+  # make sure to specify redis hosts correctly in application's config files and config maps:
+  # <your-release-name>-redis-master
+  # <your-release-name>-redis-slave
+  helm install --name redis stable/redis --values etc/k8s/dev/values.redis.dev.yaml
+
+.. _RabbitMQ:
+
+--------
+RabbitMQ
+--------
+
+#. Create config file under ``etc/k8s/dev/values.rabbitmq.dev.yaml``
+
+#. Install `stable/rabbitmq <https://github.com/helm/charts/tree/master/stable/rabbitmq>`_ helm chart::
+
+  # Be patient! It may take time
+  helm install --name messages -f etc/k8s/dev/values.rabbitmq.dev.yaml stable/rabbitmq
+
+#. Make sure everything is okay by forwarding RabbitMQ's Management Plugin port to the host machine
+and cheking service status::
+
+  kubectl port-forward --namespace default svc/pili-rabbitmq 15672:15672
+  echo "URL : http://127.0.0.1:15672/"
+
+.. _PostgreSQL:
+
+----------
+PostgreSQL
+----------
+
+#. (Optionally) Apply ``PersistentVolume`` and ``PersistentVolumeClaim`` for persistent queue storage::
+
+  # If PV/PVC not created explicitly, helm creates its own resources for persistent storage.
+  # Beware! ``stable/postgresql`` helm chart ignores existing PVC for replication nodes and creates its own
+  kubectl apply -f etc/k8s/pv.postgresql.dev.yaml
+  kubectl apply -f etc/k8s/pvc.postgresql.dev.yaml
+
+
+#. Create config file under ``etc/k8s/dev/values.postgresql.dev.yaml``
+
+#. Install `stable/postgresql <https://github.com/helm/charts/tree/master/stable/postgresql>`_ helm chart::
+
+  # Be patient! It may take some time
+  # PV/PVC created automatically by helm
+  helm install --name db -f etc/k8s/dev/values.postgresql.dev.yaml stable/postgresql
+  # Existing PV/PVC
+  helm install --name db -f etc/k8s/dev/values.postgresql-existing-pvc.dev.yaml stable/postgresql
+
+#. Make sure everything is okay by connecting to the database::
+
+  # Get password
+  export POSTGRES_PASSWORD=$(kubectl get secret --namespace default db-postgresql \
+         -o jsonpath="{.data.postgresql-password}" | base64 --decode)
+  # Connect to a master node (read/write)
+  kubectl run db-postgresql-client --rm --tty -i --restart='Never' --namespace default \
+         --image docker.io/bitnami/postgresql:10.7.0-r68 --env="PGPASSWORD=$POSTGRES_PASSWORD" \
+         --command -- psql --host db-postgresql -U pili -d pili
+  # Connect to a slave node (read only)
+  kubectl run db-postgresql-client --rm --tty -i --restart='Never' --namespace default \
+         --image docker.io/bitnami/postgresql:10.7.0-r68 --env="PGPASSWORD=$POSTGRES_PASSWORD" \
+         --command -- psql --host db-postgresql-read -U pili -d pili
+
+
+.. _ConfigMap:
+
+-------------
+Configuration
+-------------
+
+#. Add environment variables as a ``ConfigMap``::
+
+  kubectl create configmap pili-config --from-env-file=etc/k8s/dev/app.dev.env
+
+
+#. Make sure config is added correctly::
+
+  kubectl get configmap pili-config -o yaml
+  kubectl describe configmap pili-config
+
+#. Add private docker registry credentials as a ``Secret`` using local ``~/.docker/config.json``::
+
+  kubectl create secret generic registry-credentials \
+      --from-file=.dockerconfigjson=/home/vitaly/.docker/config.json \
+      --type=kubernetes.io/dockerconfigjson
+
+#. Make sure secret's added correctly::
+
+  kubectl get secret registry-credentials --output="jsonpath={.data.\.dockerconfigjson}" | base64 --decode
+
+
+
+------------------
+Persistent storage
+------------------
+
+#. Create a mount point in the cluster::
+
+  minikube ssh
+  sudo mkdir -p /mnt/data/uploads
+
+#. Create ``PersistentVolume``::
+
+  kubectl apply -f etc/k8s/dev/pv.app.dev.yaml
+
+#. Create ``PersistentVolumeClaim``::
+
+  kubectl apply -f etc/k8s/dev/pvc.app.dev.yaml
+
+----------------
+Pili backend app
+----------------
+
+#. Apply ``Deployment``::
+
+  kubectl apply -f etc/k8s/dev/deployment.app.dev.yaml
+
+#. Make sure deployment's applied::
+
+  kubectl get pods
+
+#. Apply ``Service``::
+
+  kubectl apply -f etc/k8s/dev/service.app.dev.yaml
+
+#. Make sure services has started:
+
+  kubectl describe service pili
+  minikube service pili
+
+------
+Celery
+------
+
+#. Apply ``Deployment``::
+
+  kubectl apply -f etc/k8s/dev/deployment.celery.dev.yaml
+
+
+------
+Flower
+------
+
+#. Apply ``Deployment``::
+
+  kubectl apply -f etc/k8s/dev/deployment.flower.dev.yaml
+
+
+#. Apply ``Service``::
+
+  kubectl apply -f etc/k8s/dev/service.flower.dev.yaml
+
+#. Check service is working::
+
+  minikube service flower
+
+
+-------------
+Nginx Ingress
+-------------
+
+#. Enable `Ingress`_ addon on minikube::
+
+  minikube addons enable ingress
+
+
+#. Apply ``Ingress`` manifest::
+
+  kubectl apply -f etc/k8s/dev/ingress.app.dev.yaml
+
+
+#. After a while get ingress IP-address::
+
+  kubectl get ingress
+
+
+#. Add IP-address to ``/etc/hosts``::
+
+  172.17.0.15 pili.org
+
+#. Go to `http://pili.org <http://pili.org>`_ check everything works as expected
+
+.. _Ingress: https://kubernetes.io/docs/tasks/access-application-cluster/ingress-minikube/
+
 
 .. _DockerDeployment:
 
@@ -110,12 +370,9 @@ Local development
 
 #. Install ``docker>=18.06`` and ``docker-compose>=1.23.0``
 #. Set environment variable ``PILI_CONFIG=development`` (you can place it to ``.env`` file in the root directory of the project)
-#. Create file ``/etc/config/development.env`` and save enviroment variables needed for the app, e.g.::
+#. Create file ``/etc/env/development.env`` and save environment variables needed for the app, e.g.::
 
-    FLASK_CONFIG=development
-    FLASK_ENV=development
-    FLASK_INIT=1  # initialize DB with python manage.py initialize
-    FLASK_DEPLOY=1  # prepopulate DB with python manage.py deploy
+    PILI_CONFIG=development
     SECRET_KEY=your_key
     SSL_DISABLE=1  # you don't need this in localhost
     DATABASE_URL=postgresql://pili:pili@db/pili  # use DB as docker-compose service
@@ -156,11 +413,11 @@ The image can be used then in ``docker run``, ``docker-compose`` or in a ``Kuber
 .. _Circle CI: https://circleci.com/
 
 
-==========
-Deployment
-==========
+=============================
+(Deprecated) Local deployment
+=============================
 
-This section considered deprecated, see DockerDeployment_ for the suggested deployment model.
+This section considered deprecated, see k8s_ or DockerDeployment_ for the suggested deployment model.
 
 -----------------
 Environment setup
@@ -383,35 +640,65 @@ used this way:
 Usage
 =====
 
---------------
-Script options
---------------
+------------------
+App CLI entrypoint
+------------------
 
-In addition to providing an apllication entry point ``manage.py``
-provides several other options to be used with ``(venv) $ python manage.py option`` command:
+Containerized application gets installed as an editable package with ``pip install -e .``.
+It ensures that a `click`_ entrypoint ``pili`` also gets registered in the ``$PATH``.
+Execute ``pili --help`` in that container to get some help:
 
-test                          Run unit-tests
-test --coverage               Run unit-tests with the coverage statistics (report is generated under ``tmp/coverage`` directory)
-profiler                      Start the application under the code profiler (25 slowest function included by default)
-profiler --length=N           Include N slowest function in profiler report
-profiler --profile-dir=DIR    Save profiler report in the file under DIR
-initialize                    Create all databases, initialize migration scripts before deploying
-deploy                        Run deployment tasks (to be run after ``initialize`` tasks are done)
-db                            Perform database migrations
-shell                         Run a Python shell inside Flask application context
-runserver                     Run the Flask development server i.e. app.run()
+.. code-block:: shell
+
+   $ pili
+   Usage: pili [OPTIONS] COMMAND [ARGS]...
+
+     Pili App command line tool
+
+   Options:
+     --config TEXT  Configuration name
+     --help         Show this message and exit.
+
+   Commands:
+     provision  Provision Application
+     server     Run Flask Development Server
+     shell      Run Python Shell
+     test       Run Tests
+     uwsgi      Run uWSGI Application server
+
+
+Each command in turn also has ``--help`` argument, e.g.:
+
+.. code-block:: shell
+
+   pili  --config=production provision --help
+     Usage: pili provision [OPTIONS]
+
+     Provision Application
+
+   Options:
+     --db_init / --no-db_init        Initialize migration repository for DB
+     --db_migrate / --no-db_migrate  Generate initial DB migration
+     --db_upgrade / --no-db_upgrade  Apply migration to the DB
+     --db_prepopulate / --no-db_prepopulate
+                                  Prepopulate DB with essential data
+     --help                          Show this message and exit.
+
+
+.. _click: https://click.palletsprojects.com/
 
 ------------------------------------
-Running shell in application context
+Running Shell in Application Context
 ------------------------------------
 
-For testing purposes it's recommended to run Python REPL inside
-application context with the **Flask-Script** built-in ``shell``
-command::
+Some routine operations are much easily done using Python shell with application context loaded:
+a database session, ORM models, etc. You can run Python shell as follows::
 
-  (venv) $ python manage.py shell
+  $ pili --config=<your-config> shell
 
-Examples:
+
+Operation examples
+------------------
 
 Look up a body of the comment with id 10::
   

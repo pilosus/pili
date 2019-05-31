@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: celery
+spec:
+  selector:
+    matchLabels:
+      app: celery
+      tier: backend
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: celery
+        tier: backend
+    spec:
+      containers:
+      - name: celery
+        image: registry.pilosus.org/pilosus/pili:dev
+        imagePullPolicy: Always
+        command: ["celery", "worker", "-A", "pili.entrypoints.celery.celery", "--loglevel=info"]
+        envFrom:
+          - configMapRef:
+              name: pili-config
+      imagePullSecrets:
+        - name: registry-credentials
+      restartPolicy: Always

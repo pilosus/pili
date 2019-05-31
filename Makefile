@@ -1,5 +1,8 @@
 .DEFAULT_GOAL := lint
 
+REGISTRY_URL = registry.pilosus.org
+
+
 .PHONY: install
 install:
 	pip install -U setuptools pip
@@ -9,13 +12,13 @@ install:
 .PHONY: format
 format:
 	isort -rc -w 88 pili tests
-	black -S -l 88 --target-version py36 pili tests
+	black -S -l 88 --target-version py37 pili tests
 
 .PHONY: lint
 lint:
 	python3.7 setup.py check -rms
 	flake8 pili/ pili/
-	black -S -l 88 --target-version py36 --check pili tests
+	black -S -l 88 --target-version py37 --check pili tests
 
 .PHONY: mypy
 mypy:
@@ -35,7 +38,7 @@ down:
 
 .PHONY: test
 test:
-    # could be donw with $(MAKE) up, but that will invoke another make, which is an overkill
+    # could be down with $(MAKE) up, but that will invoke another make, which is an overkill
 	docker-compose up -d
 	docker-compose exec pili pili test
 	docker-compose down -v
@@ -56,3 +59,17 @@ clean:
 	rm -rf build
 	python3.7 setup.py clean
 
+.PHONY: get_version
+get_version:
+	python -c "import pili.version; print(pili.version.get_version())"
+
+
+.PHONY: build_dev
+build_dev:
+	docker build --cache-from=pilosus/pili -t pilosus/pili .
+
+
+.PHONY: push_dev
+push_dev:
+	docker tag pilosus/pili "${REGISTRY_URL}/pilosus/pili:dev"
+	docker push "${REGISTRY_URL}/pilosus/pili:dev"

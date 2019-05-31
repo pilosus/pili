@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flower
+spec:
+  selector:
+    matchLabels:
+      app: flower
+      tier: backend
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: flower
+        tier: backend
+    spec:
+      containers:
+      - name: flower
+        image: registry.pilosus.org/pilosus/pili:dev
+        imagePullPolicy: Always
+        command: ["flower", "-A", "pili.entrypoints.celery.celery", "--loglevel=info"]
+        envFrom:
+          - configMapRef:
+              name: pili-config
+        ports:
+          - name: flower
+            containerPort: 5678
+      imagePullSecrets:
+        - name: registry-credentials
+      restartPolicy: Always
