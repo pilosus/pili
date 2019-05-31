@@ -12,13 +12,13 @@ install:
 .PHONY: format
 format:
 	isort -rc -w 88 pili tests
-	black -S -l 88 --target-version py36 pili tests
+	black -S -l 88 --target-version py37 pili tests
 
 .PHONY: lint
 lint:
 	python3.7 setup.py check -rms
 	flake8 pili/ pili/
-	black -S -l 88 --target-version py36 --check pili tests
+	black -S -l 88 --target-version py37 --check pili tests
 
 .PHONY: mypy
 mypy:
