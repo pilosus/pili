@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := lint
 
-REGISTRY_URL = registry.pilosus.org
+REGISTRY_URL = docker-registry.pilosus.org
 
 
 .PHONY: install

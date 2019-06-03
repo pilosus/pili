@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: flower
-        image: registry.pilosus.org/pilosus/pili:dev
+        image: docker-registry.pilosus.org/pilosus/pili:dev
         imagePullPolicy: Always
         command: ["flower", "-A", "pili.entrypoints.celery.celery", "--loglevel=info"]
         envFrom:

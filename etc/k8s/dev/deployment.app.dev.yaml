@@ -20,7 +20,7 @@ spec:
             claimName: pili-pv-claim
       containers:
       - name: pili
-        image: registry.pilosus.org/pilosus/pili:dev
+        image: docker-registry.pilosus.org/pilosus/pili:dev
         imagePullPolicy: Always
         command: ["pili", "--config=production", "uwsgi", "--section=production"]
         envFrom:

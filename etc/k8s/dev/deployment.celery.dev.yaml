@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: celery
-        image: registry.pilosus.org/pilosus/pili:dev
+        image: docker-registry.pilosus.org/pilosus/pili:dev
         imagePullPolicy: Always
         command: ["celery", "worker", "-A", "pili.entrypoints.celery.celery", "--loglevel=info"]
         envFrom:
