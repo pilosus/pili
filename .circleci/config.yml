@@ -1,3 +1,6 @@
+# Set private variables here (Circle CI web interface is far from being easy to navigate):
+# https://circleci.com/gh/pilosus/pili/edit#env-vars
+
 version: 2
 jobs:
   build:
