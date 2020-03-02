@@ -10,7 +10,7 @@ Flask-PageDown==0.2.2
 Flask-Script==2.0.6
 Flask-SQLAlchemy==2.4.1
 Flask-thumbnails==1.0.6
-Flask-WTF==0.14.2
+Flask-WTF==0.14.3
 WTForms==2.2.1
 Flask-SSLify==0.1.5
 click==7.0.0
