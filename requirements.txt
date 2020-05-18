@@ -50,7 +50,7 @@ black==19.10b0
 flake8==3.8.1
 isort==4.3.21
 mypy==0.770
-pycodestyle==2.5.0
+pycodestyle==2.6.0
 pyflakes==2.1.1
 docutils==0.14
 
