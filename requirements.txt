@@ -37,7 +37,7 @@ hiredis==1.0.1
 uWSGI==2.0.19
 
 # Monitoring
-sentry-sdk[flask]==0.9.0
+sentry-sdk[flask]==0.14.4
 raven[flask]==6.10.0
 uwsgitop==0.11
 flower==0.9.3
