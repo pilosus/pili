@@ -40,7 +40,7 @@ uWSGI==2.0.19.1
 sentry-sdk[flask]==0.16.1
 raven[flask]==6.10.0
 uwsgitop==0.11
-flower==0.9.3
+flower==0.9.5
 prometheus-client==0.7.0
 
 # Development
