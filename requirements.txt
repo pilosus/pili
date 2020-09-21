@@ -20,7 +20,7 @@ Markdown==3.2.2
 Pillow==7.2.0
 Unidecode==1.1.1
 bleach==3.2.1
-ujson==1.35
+ujson==3.2.0
 
 # Queue
 celery==4.3.0
