@@ -45,7 +45,7 @@ prometheus-client==0.8.0
 
 # Development
 ipython==7.19.0
-ipdb==0.12
+ipdb==0.13.4
 black==19.3b0
 flake8==3.7.7
 isort==4.3.20
