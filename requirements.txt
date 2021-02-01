@@ -51,7 +51,7 @@ flake8==3.8.4
 isort==5.7.0
 mypy==0.800
 pycodestyle==2.6.0
-pyflakes==2.1.1
+pyflakes==2.2.0
 docutils==0.14
 
 # Testing
