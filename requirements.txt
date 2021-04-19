@@ -9,7 +9,7 @@ Flask-Moment==0.11.0
 Flask-PageDown==0.3.0
 Flask-Script==2.0.6
 Flask-SQLAlchemy==2.5.1
-Flask-thumbnails==1.0.6
+Flask-thumbnails==1.0.7
 Flask-WTF==0.14.2
 WTForms==2.2.1
 Flask-SSLify==0.1.5
