@@ -29,7 +29,7 @@ celery==5.0.5
 SQLAlchemy==1.4.15
 psycopg2==2.8.6
 alembic==1.6.2
-amqp==2.5.0
+amqp==5.0.6
 redis==3.2.1
 hiredis==1.0.0
 
