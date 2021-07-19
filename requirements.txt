@@ -49,7 +49,7 @@ ipdb==0.13.9
 black==21.7b0
 flake8==3.9.2
 isort==5.9.2
-mypy==0.701
+mypy==0.910
 pycodestyle==2.5.0
 pyflakes==2.1.1
 docutils==0.14
