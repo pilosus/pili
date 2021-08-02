@@ -17,7 +17,7 @@ click==8.0.1
 
 # Data processing
 Markdown==3.3.4
-Pillow==6.0.0
+Pillow==8.3.1
 Unidecode==1.1.0
 bleach==3.1.0
 ujson==1.35
