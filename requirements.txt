@@ -11,7 +11,7 @@ Flask-Script==2.0.6
 Flask-SQLAlchemy==2.5.1
 Flask-thumbnails==1.1.0
 Flask-WTF==0.15.1
-WTForms==2.2.1
+WTForms==2.3.3
 Flask-SSLify==0.1.5
 click==7.0.0
 
