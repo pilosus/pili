@@ -52,7 +52,7 @@ isort==5.10.1
 mypy==0.910
 pycodestyle==2.8.0
 pyflakes==2.4.0
-docutils==0.14
+docutils==0.18.1
 
 # Testing
 ForgeryPy==0.1
