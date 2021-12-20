@@ -30,7 +30,7 @@ SQLAlchemy==1.4.28
 psycopg2==2.9.2
 alembic==1.7.5
 amqp==5.0.9
-redis==3.2.1
+redis==4.0.2
 hiredis==1.0.0
 
 # Servers
