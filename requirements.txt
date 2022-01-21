@@ -44,7 +44,7 @@ flower==0.9.3
 prometheus-client==0.7.0
 
 # Development
-ipython==7.5.0
+ipython==7.16.3
 ipdb==0.12
 black==19.3b0
 flake8==3.7.7
