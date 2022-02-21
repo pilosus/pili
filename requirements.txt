@@ -41,7 +41,7 @@ sentry-sdk[flask]==1.5.5
 raven[flask]==6.10.0
 uwsgitop==0.11
 flower==1.0.0
-prometheus-client==0.7.0
+prometheus-client==0.13.1
 
 # Development
 ipython==7.5.0
