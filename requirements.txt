@@ -13,7 +13,7 @@ Flask-thumbnails==1.1.0
 Flask-WTF==1.0.1
 WTForms==3.0.1
 Flask-SSLify==0.1.5
-click==7.0.0
+click==8.1.2
 
 # Data processing
 Markdown==3.1.1
