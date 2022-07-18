@@ -31,7 +31,7 @@ psycopg2==2.9.3
 alembic==1.8.1
 amqp==5.1.1
 redis==4.3.4
-hiredis==1.0.0
+hiredis==2.0.0
 
 # Servers
 uWSGI==2.0.18
