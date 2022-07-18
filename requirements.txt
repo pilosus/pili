@@ -27,7 +27,7 @@ celery==5.2.7
 
 # Data storage
 SQLAlchemy==1.4.39
-psycopg2==2.8.3
+psycopg2==2.9.3
 alembic==1.0.10
 amqp==2.5.0
 redis==3.2.1
